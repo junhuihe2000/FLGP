@@ -9,7 +9,7 @@
 subsample <- function(X, s, method = "kmeans") {
   if(method == "kmeans") {
     U = kmeans(X, s, iter.max = 20, nstart = 10)$centers
-  } else if(method = "random") {
+  } else if(method == "random") {
     U = X[sample.int(nrow(X), s), ]
   } else {
     stop("The subsample method is not supported!")
