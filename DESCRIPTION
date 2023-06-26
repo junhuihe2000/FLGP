@@ -10,8 +10,7 @@ Description: The underlying package "FLAG" provides algorithms to make inference
     spectral properties of heat kernel. The package also includes 
     Gaussian process logistic regression with Poyla-Gamma samplers and 
     Gaussian regression.
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.0.0
