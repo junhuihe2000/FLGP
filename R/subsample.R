@@ -13,11 +13,14 @@
 #' s <- 10
 #' U = subsample(X, s, method = "kmeans")
 subsample <- function(X, s, method = "kmeans") {
-  stopifnot(is.matrix(X), is.integer(s))
+  stopifnot(is.matrix(X), abs(s-round(s))<.Machine$double.eps^0.5)
   if(method == "kmeans") {
     U = stats::kmeans(X, s, iter.max = 20, nstart = 10)$centers
   } else if(method == "random") {
     U = X[sample.int(nrow(X), s), ]
+    if(s == 1) {
+      U = matrix(U, nrow=1)
+    }
   } else {
     stop("The subsample method is not supported!")
   }
