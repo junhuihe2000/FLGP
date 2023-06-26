@@ -11,7 +11,8 @@ subsample(X, s, method = "kmeans")
 
 \item{s}{An integer indicating the number of the subsampling.}
 
-\item{method}{How to subsample, including kmeans and random selection, the
+\item{method}{How to subsample, characters in c("kmeans", "random"),
+including kmeans and random selection, the
 defaulting subsampling method is kmeans.}
 }
 \value{

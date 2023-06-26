@@ -2,7 +2,8 @@
 #'
 #' @param X Original sample, a (n, d) matrix, each row indicates one point in R^d.
 #' @param s An integer indicating the number of the subsampling.
-#' @param method How to subsample, including kmeans and random selection, the
+#' @param method How to subsample, characters in c("kmeans", "random"),
+#' including kmeans and random selection, the
 #' defaulting subsampling method is kmeans.
 #'
 #' @return A subsampling, a (s, d) matrix, each row indicates one point in R^d.
