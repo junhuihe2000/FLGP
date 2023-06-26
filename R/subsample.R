@@ -5,7 +5,7 @@
 #' @param method How to subsample, including kmeans and random selection, the
 #' defaulting subsampling method is kmeans.
 #'
-#' @return U Subsampling, a (s, d) matrix, each row indicates one point in R^d.
+#' @return A subsampling, a (s, d) matrix, each row indicates one point in R^d.
 #' @export
 #'
 #' @examples

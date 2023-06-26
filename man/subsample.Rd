@@ -15,7 +15,7 @@ subsample(X, s, method = "kmeans")
 defaulting subsampling method is kmeans.}
 }
 \value{
-U Subsampling, a (s, d) matrix, each row indicates one point in R^d.
+A subsampling, a (s, d) matrix, each row indicates one point in R^d.
 }
 \description{
 Subsample in the domain
