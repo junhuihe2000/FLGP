@@ -13,6 +13,7 @@
 #' s <- 10
 #' U = subsample(X, s, method = "kmeans")
 subsample <- function(X, s, method = "kmeans") {
+  stopifnot(is.matrix(X), is.integer(s))
   if(method == "kmeans") {
     U = stats::kmeans(X, s, iter.max = 20, nstart = 10)$centers
   } else if(method == "random") {
