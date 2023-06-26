@@ -1,10 +1,15 @@
 Package: FLAG
-Title: What the Package Does (One Line, Title Case)
+Title: Fast Laplacian adaptive Gaussian process with subsampling
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+    person("Junhui", "He", , "hejh22@mails.tsinghua.edu.cn", role = c("aut", "cre"))
+Description: The underlying package "FLAG" provides algorithms to make inference
+    in large scale data by heat kernel Gaussian process. The fast computation
+    benefits from subsampling, constructing graph Laplacian through transition decomposition
+    and truncated SVD. Then the prior covariance matrix is approximated by 
+    spectral properties of heat kernel. The package also includes 
+    Gaussian process logistic regression with Poyla-Gamma samplers and 
+    Gaussian regression.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
