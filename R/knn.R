@@ -19,12 +19,26 @@
 #' KNN(X, U, r, distance)
 KNN <- function(X, U, r, distance="Euclidean") {
   stopifnot(is.matrix(X), is.matrix(U), abs(r-round(r))<.Machine$double.eps^0.5, ncol(X)==ncol(U))
+  n = nrow(X)
   if(distance=="Euclidean") {
-    distances = rowSums(X^2)-2*X%*%t(U) + matrix(rowSums(U^2), nrow(X), nrow(U), byrow = TRUE)
+    distances = rowSums(X^2)-2*X%*%t(U) + matrix(rowSums(U^2), n, nrow(U), byrow = TRUE)
   } else {
     stop("The distance of KNN is not supported!")
   }
-  ind_knn = apply(X=distances, MARGIN=1, FUN=which_minn, r=r, simplify=FALSE)
+  distances_list = lapply(c(1:n), function(i) {return(distances[i,])})
+  chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+
+  if (nzchar(chk) && chk == "TRUE") {
+    # use 2 cores in CRAN/Travis/AppVeyor
+    num_workers <- 2L
+  } else {
+    # use all cores in devtools::test()
+    num_workers <- parallel::detectCores() - 1
+  }
+
+  cl = parallel::makeCluster(num_workers)
+  ind_knn = parallel::parLapply(cl, distances_list, which_minn, r=r)
+  parallel::stopCluster(cl)
   return(ind_knn)
 }
 

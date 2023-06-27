@@ -26,8 +26,8 @@ system.time(b <- solve(crossprod(X), crossprod(X, y)))
 system.time(rowSums(X))
 ```
 ```{r}
-X <- matrix(rnorm(1e4 * 10), 1e4, 10)
-U <- subsample(X, 100, "random")
+X <- matrix(rnorm(1e4 * 100), 1e4, 100)
+U <- subsample(X, 500, "random")
 ```
 
 ```{r}
@@ -36,6 +36,7 @@ system.time(KNN(X,U,3))
 ```{r}
 system.time(KNN(X,U,3))
 ```
+
 ```{r}
 system.time(KNN(X,U,3))
 ```
@@ -49,7 +50,7 @@ system.time(which_minn(a,3))
 ```
 
 ```{r}
-Z <- matrix(rnorm(1e6 * 10), 1e6, 10)
+Z <- matrix(rnorm(1e5 * 200), 1e5, 200)
 ```
 
 ```{r}
@@ -59,9 +60,23 @@ S <- rowSums(Z)
 ```{r}
 system.time(t(S-t(Z)))
 ```
+
+
++ parallel
 ```{r}
-system.time({
-  matrix(S, nrow(Z), ncol(Z), byrow = TRUE)-Z
-})
+q = 2
+r = 3
+Z_list=lapply(c(1:nrow(Z)), function(i) {return(Z[i,])})
+system.time(lapply(Z_list, which_minn, r=r))
 ```
+
+```{r}
+cores = detectCores() - 1
+cl = makeCluster(cores)
+system.time(parLapply(cl, Z_list, which_minn, r=r))
+stopCluster(cl)
+```
+
+
+
 
