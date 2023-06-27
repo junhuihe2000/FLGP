@@ -20,7 +20,7 @@
 KNN <- function(X, U, r, distance="Euclidean") {
   stopifnot(is.matrix(X), is.matrix(U), abs(r-round(r))<.Machine$double.eps^0.5, ncol(X)==ncol(U))
   if(distance=="Euclidean") {
-    distances = t(apply(X=X, MARGIN=1, FUN=euclidean_distance, U=U))
+    distances = rowSums(X^2)-2*X%*%t(U) + matrix(rowSums(U^2), nrow(X), nrow(U), byrow = TRUE)
   } else {
     stop("The distance of KNN is not supported!")
   }
@@ -30,29 +30,9 @@ KNN <- function(X, U, r, distance="Euclidean") {
 
 
 
-#' Euclidean distance between one point and reference points
-#'
-#' @param x One original point, a vector of length d.
-#' @param U Reference points, a (s,d) matrix, each row indicates one reference point.
-#'
-#' @return The Euclidean distance between x and U, a vector of length s.
-#' @export
-#'
-#' @examples
-#' x <- rnorm(3)
-#' U <- matrix(rnorm(30), nrow=10, ncol=3)
-#' euclidean_distance(x, U)
-euclidean_distance <- function(x, U) {
-  stopifnot(is.vector(x), is.matrix(U), length(x)==ncol(U))
-  ed2 = sqrt(rowSums(t(x-t(U))^2))
-  return(ed2)
-}
-
-
-
 #' Find indexes of the first r smallest elements in arrays based on Bubblesorting
 #'
-#' @param z a vector of length s, including elements to be sorted.
+#' @param z A vector of length s, including elements to be sorted.
 #' @param r The number of the smallest elements, an integer.
 #'
 #' @return A vector of length r, indicating the indexes of the first r smallest elements.
@@ -63,14 +43,6 @@ euclidean_distance <- function(x, U) {
 #' r <- 2
 #' which_minn(z, r)
 which_minn <- function(z, r) {
-  n = length(z)
-  ind_z = c(1:n)
-  for(i in 1:r) {
-    for (j in n:(i+1)) {
-      if(z[ind_z[j]]<z[ind_z[j-1]]) {
-        tem = ind_z[j]; ind_z[j] = ind_z[j-1]; ind_z[j-1] = tem
-      }
-    }
-  }
-  return(ind_z[1:r])
+  stopifnot(is.vector(z), abs(r-round(r))<.Machine$double.eps^0.5)
+  return(order(z)[1:r])
 }

@@ -7,7 +7,7 @@
 which_minn(z, r)
 }
 \arguments{
-\item{z}{a vector of length s, including elements to be sorted.}
+\item{z}{A vector of length s, including elements to be sorted.}
 
 \item{r}{The number of the smallest elements, an integer.}
 }

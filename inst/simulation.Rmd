@@ -1,0 +1,67 @@
+---
+title: "simulation"
+author: "He Junhui"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
++ knn
+
+```{r}
+X <- matrix(rnorm(1e6 * 100), 1e6, 100)
+dim(X)
+b <- rnorm(100)
+y <- drop(X %*% b) + rnorm(1e6)
+```
+
+```{r}
+system.time(b <- solve(crossprod(X), crossprod(X, y)))
+```
+
+```{r}
+system.time(rowSums(X))
+```
+```{r}
+X <- matrix(rnorm(1e4 * 10), 1e4, 10)
+U <- subsample(X, 100, "random")
+```
+
+```{r}
+system.time(KNN(X,U,3))
+```
+```{r}
+system.time(KNN(X,U,3))
+```
+```{r}
+system.time(KNN(X,U,3))
+```
+
+```{r}
+a = rnorm(1e8)
+system.time(order(a))
+```
+```{r}
+system.time(which_minn(a,3))
+```
+
+```{r}
+Z <- matrix(rnorm(1e6 * 10), 1e6, 10)
+```
+
+```{r}
+S <- rowSums(Z)
+```
+
+```{r}
+system.time(t(S-t(Z)))
+```
+```{r}
+system.time({
+  matrix(S, nrow(Z), ncol(Z), byrow = TRUE)-Z
+})
+```
+
