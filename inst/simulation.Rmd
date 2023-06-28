@@ -9,6 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(microbenchmark)
+```
+
+```{r}
+Sys.setlocale("LC_ALL","English")
+```
+
 + knn
 
 ```{r}
@@ -18,65 +26,21 @@ b <- rnorm(100)
 y <- drop(X %*% b) + rnorm(1e6)
 ```
 
+
++ OpenBLAS
 ```{r}
-system.time(b <- solve(crossprod(X), crossprod(X, y)))
+microbenchmark({b <- solve(crossprod(X), crossprod(X, y))}, times=20)
+```
+
++ kmeans
+```{r}
+Z <- matrix(rnorm(1e4*10), 1e4, 10)
+s <- 100
 ```
 
 ```{r}
-system.time(rowSums(X))
+system.time({subsample(Z, s)})
 ```
 ```{r}
-X <- matrix(rnorm(1e4 * 100), 1e4, 100)
-U <- subsample(X, 500, "random")
+system.time({subsample(Z, s)})
 ```
-
-```{r}
-system.time(KNN(X,U,3))
-```
-```{r}
-system.time(KNN(X,U,3))
-```
-
-```{r}
-system.time(KNN(X,U,3))
-```
-
-```{r}
-a = rnorm(1e8)
-system.time(order(a))
-```
-```{r}
-system.time(which_minn(a,3))
-```
-
-```{r}
-Z <- matrix(rnorm(1e5 * 200), 1e5, 200)
-```
-
-```{r}
-S <- rowSums(Z)
-```
-
-```{r}
-system.time(t(S-t(Z)))
-```
-
-
-+ parallel
-```{r}
-q = 2
-r = 3
-Z_list=lapply(c(1:nrow(Z)), function(i) {return(Z[i,])})
-system.time(lapply(Z_list, which_minn, r=r))
-```
-
-```{r}
-cores = detectCores() - 1
-cl = makeCluster(cores)
-system.time(parLapply(cl, Z_list, which_minn, r=r))
-stopCluster(cl)
-```
-
-
-
-
