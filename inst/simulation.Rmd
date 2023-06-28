@@ -44,3 +44,71 @@ system.time({subsample(Z, s)})
 ```{r}
 system.time({subsample(Z, s)})
 ```
+
+```{r}
+system.time({crossprod(X)})
+```
+```{r}
+system.time({t(X)%*%X})
+```
+```{r}
+is = rep(c(1:1e4),each=3)
+js = lapply(c(1:1e4),function(i) {return(sample.int(2000, 3))})
+```
+
+```{r}
+x <- lapply(c(1:1e4),function(i) {return(rnorm(3))})
+```
+
+```{r}
+X <- matrix(0, 1e4, 2000)
+for(i in 1:1e4) {
+  X[i,js[[i]]] = x[[i]]
+}
+object.size(X)
+```
+
+```{r}
+library(Matrix)
+X_sparse <- sparseMatrix(i=is, j=unlist(js), x=unlist(x))
+object.size(X_sparse)
+```
+
+```{r}
+system.time(t(X)%*%X)
+```
+```{r}
+system.time(t(X_sparse)%*%X_sparse)
+```
+
+```{r}
+system.time(eigen(t(X)%*%X))
+```
+
+```{r}
+system.time(eigen(t(X_sparse)%*%X_sparse))
+```
+```{r}
+X_cp <- t(X)%*%X
+X_sparse_cp <- t(X_sparse)%*%X_sparse
+```
+
+```{r}
+system.time({
+  colScale(X, colSums(X)^{-1})
+})
+```
+
+```{r}
+system.time({
+  colScale(X_sparse, Matrix::colSums(X_sparse)^{-1})
+})
+```
+
+```{r}
+object.size(t(X_sparse)%*%X_sparse)
+```
+
+```{r}
+object.size(t(X)%*%X)
+```

@@ -9,7 +9,7 @@ KNN(X, U, r, distance = "Euclidean")
 \arguments{
 \item{X}{Original points, a (n,d) matrix, each row indicates one original point.}
 
-\item{U}{Reference points, a (s,d) matrix, each row indicates one reference point.}
+\item{U}{Reference points, a (s,d) or (s,d+1) matrix, each row indicates one reference point.}
 
 \item{r}{The number of k-nearest neighbor points, an integer.}
 
@@ -26,7 +26,7 @@ k-nearest neighbor reference points
 }
 \examples{
 X <- matrix(rnorm(300), nrow=100, ncol=3)
-U <- subsample(X, 10)
+U <- matrix(rnorm(30), nrow=10, ncol=3)
 r <- 3
 distance <- "Euclidean"
 KNN(X, U, r, distance)

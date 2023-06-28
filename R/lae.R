@@ -1,45 +1,97 @@
-# Local anchor embedding
-
-# Local anchor embedding of original sample
-# para:
-#     X: (n, d) matrix, original sample, each row indicates one original point
-#     U: (s, d) matrix, sub-sample, each row indicates one representative point
-#     r: integer, the number of the nearest neighbors
-# return value:
-#     Z: (n, s) matrix, stochastic transition matrix from X to U
-LAE <- function(X, U, r) {
+#' Local anchor embedding
+#'
+#' @param X A numeric matrix with dim (n,d), original sample,
+#' each row indicates one original point in R^d.
+#' @param U A numeric matrix with dim (s,d) or (s,d+1), sub-sample,
+#' each row indicates one representative point in R^d,
+#' where the d+1 column indicates the number of points in each cluster if it exists.
+#' @param r An integer, the number of the nearest neighbor points.
+#' @param gl A character vector in c("rw", "normalized", "cluster-normalized"),
+#' indicates how to construct the stochastic transition matrix. "rw" means random walk,
+#' "normalized" means normalized random walk, "cluster-normalized" means
+#' normalized random walk with cluster membership re-balance. The defaulting gl
+#' is "rw".
+#'
+#' @return A numeric 'sparse' matrix with dim (n,s) and n*r non-zero entries, r << s,
+#' the stochastic transition matrix from X to U.
+#' @export
+#'
+#' @examples
+#' X <- matrix(rnorm(10*3),10,3)
+#' r <- 3
+#' U_1 <- matrix(rnorm(5*3),5,3)
+#' LAE(X, U_1, r)
+#' U_2 <- matrix(rnorm(5*4),5,4)
+#' LAE(X, U_2, r)
+LAE <- function(X, U, r=3L, gl="rw") {
+  stopifnot(is.matrix(X), is.matrix(U), abs(r-round(r))<.Machine$double.eps^0.5)
+  stopifnot(ncol(U)-ncol(X)==0||ncol(U)-ncol(X)==1)
   n = nrow(X); s = nrow(U); d = ncol(X)
-  ind_knn = KNN(X, U, r)
-  lae_units = lapply(c(1:n), function(i){return(list("x"=X[i, ], "U"=U[ind_knn[[i]], ]))})
-  Z_list = lapply(lae_units, local_anchor_embedding)
-  Z = matrix(0, nrow=n, ncol=s) # Z is a sparse matrix
-  for(i in 1:n) {
-    Z[i, ind_knn[[i]]] = Z_list[[i]]
+  ind_knn = KNN(X, U[,1:d], r)
+  lae_units = lapply(c(1:n), function(i){return(list("x"=X[i, ], "U"=U[ind_knn[[i]], 1:d]))})
+
+  chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+  if (nzchar(chk) && chk == "TRUE") {
+    # use 2 cores in CRAN/Travis/AppVeyor
+    num_workers <- 2L
+  } else {
+    # use all cores in devtools::test()
+    num_workers <- parallel::detectCores() - 1
+  }
+  cl = parallel::makeCluster(num_workers)
+  Z_list = parallel::parLapply(cl, lae_units,
+                                function(unit) {return(local_anchor_embedding(unit$x, unit$U))})
+  parallel::stopCluster(cl)
+
+  Z = Matrix::sparseMatrix(i=rep(c(1:n), each=r),
+                           j=unlist(ind_knn),
+                           x=unlist(Z_list))
+
+  if(gl=="rw") {}
+  else if(gl=="normalized") {
+    Z_norm = Matrix::colScale(Z, Matrix::colSums(Z)^{-1})
+    Z = Matrix::rowScale(Z_norm, Matrix::rowSums(Z_norm)^{-1})
+  } else if(gl=="cluster-normalized") {
+    stopifnot(ncol(U)==(ncol(X)+1))
+    Z_norm = Matrix::colScale(Z, Matrix::colSums(Z)^{-1})
+    Z_cl = Matrix::colScale(Z_norm, U[,d+1])
+    Z = Matrix::rowScale(Z_cl, Matrix::rowSums(Z_cl)^{-1})
+  } else {
+    stop("Error: the type of graph Laplacian is not supported!")
   }
   return(Z)
 }
 
 
 
-# Local anchor embedding of one single point
-# Gradient descent projection with Nesterov's methods
-# para:
-#     data: a list of x and U, where x is d-column vector, U is (r, d) matrix
-# return value:
-#     z_curr: r-column vector, convex combination coefficients
-local_anchor_embedding <- function(data) {
-  x = matrix(data$x, ncol=1); U = t(data$U)
+#' Local anchor embedding of one single point by
+#' gradient descent projection with Nesterov's methods
+#'
+#' @param x A numeric vector with length d, indicates the single point to be embedded.
+#' @param U A numeric matrix with dimension (r, d), the columns of U
+#' are equal to the length of x, including KNN reference points.
+#'
+#' @return A numeric vector with the length r, convex combination coefficients.
+#' @export
+#'
+#' @examples
+#' x <- rnorm(3)
+#' U <- matrix(rnorm(3*3),3,3)
+#' local_anchor_embedding(x, U)
+local_anchor_embedding <- function(x, U) {
+  stopifnot(is.vector(x), is.matrix(U), length(x)==ncol(U))
+  x = matrix(x, ncol=1); U = t(U)
   r = ncol(U); d = nrow(U)
 
   # initialize
-  z_prev = matrix(rep(1/r,r),ncol=1); z_curr = z_prev
+  z_prev = matrix(1/r,r,1); z_curr = z_prev
   delta_prev = 0; delta_curr = 1
   beta_curr = 1
   # stop criterion
   tol = 1e-5; t = 0; T = 100
 
   # useful inter-quantity
-  UtU = t(U)%*%U
+  UtU = crossprod(U)
 
   # Nesterov momentum method
   while(t<T) {
@@ -54,13 +106,13 @@ local_anchor_embedding <- function(data) {
     grad_v = UtU%*%v-t(U)%*%x
     # backtracking search
     j = 0
-    while(TRUE) {
+    repeat {
       # backtrack
       beta = 2^j*beta_curr
       # gradient descent
       v_tilde = v - 1/beta*grad_v
       # projection
-      z = v_to_z(v_tilde)
+      z = matrix(v_to_z(v_tilde), ncol = 1)
       # update condition
       g_z = sum((x-U%*%z)^2)/2
       g_tilde = g_v + t(grad_v)%*%(z-v) + beta*sum((z-v)^2)/2
@@ -77,17 +129,23 @@ local_anchor_embedding <- function(data) {
     # repeat until convergence
     if(sum((z_curr-z_prev)^2)<tol) {break}
   }
-  # cat("iterations t =",t,"\n")
-  return(z_curr)
+  return(as.vector(z_curr))
 }
 
 
 
-# Simplex projection
-# para:
-#     v: r column vector
-# return value:
-#     z: r column vector, each entry non-negative, convex combination coefficients
+
+#' Simplex projection into convex combination coefficients
+#'
+#' @param v A numeric vector to be projected.
+#'
+#' @return A numeric vector of convex combination coefficients with
+#' the same length of v.
+#' @export
+#'
+#' @examples
+#' v <- rnorm(3)
+#' v_to_z(v)
 v_to_z <- function(v) {
   v_desc = sort(v, decreasing=TRUE)
   r = length(v)
@@ -96,6 +154,6 @@ v_to_z <- function(v) {
     if(v_star[rho]>0) {break}
   }
   theta = (sum(v_desc[1:rho])-1)/rho
-  z = sapply(v-theta, function(x){return(max(x,0))})
-  return(matrix(z, ncol=1))
+  z = vapply(v-theta, function(x){return(max(x,0))}, FUN.VALUE = 0.5)
+  return(z)
 }

@@ -6,7 +6,8 @@
 #' including kmeans and random selection, the
 #' defaulting subsampling method is kmeans.
 #'
-#' @return A subsampling, a (s, d) matrix, each row indicates one point in R^d.
+#' @return A subsampling, a (s, d) or (s, d+1) matrix, each row indicates one point in R^d,
+#' where the d+1 column indicates the number of points in each cluster if it exists.
 #' @export
 #'
 #' @examples
@@ -16,14 +17,15 @@
 subsample <- function(X, s, method = "kmeans") {
   stopifnot(is.matrix(X), abs(s-round(s))<.Machine$double.eps^0.5)
   if(method == "kmeans") {
-    U = stats::kmeans(X, s, iter.max = 20, nstart = 10)$centers
+    cluster_kmeans = stats::kmeans(X, s, iter.max = 20, nstart = 10)
+    U = cbind(cluster_kmeans$centers, size=cluster_kmeans$size)
   } else if(method == "random") {
     U = X[sample.int(nrow(X), s), ]
     if(s == 1) {
       U = matrix(U, nrow=1)
     }
   } else {
-    stop("The subsample method is not supported!")
+    stop("Error: the subsample method is not supported!")
   }
   return(U)
 }

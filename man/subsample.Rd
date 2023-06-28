@@ -16,7 +16,8 @@ including kmeans and random selection, the
 defaulting subsampling method is kmeans.}
 }
 \value{
-A subsampling, a (s, d) matrix, each row indicates one point in R^d.
+A subsampling, a (s, d) or (s, d+1) matrix, each row indicates one point in R^d,
+where the d+1 column indicates the number of points in each cluster if it exists.
 }
 \description{
 Subsample in the domain

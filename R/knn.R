@@ -1,7 +1,7 @@
 #' k-nearest neighbor reference points
 #'
 #' @param X Original points, a (n,d) matrix, each row indicates one original point.
-#' @param U Reference points, a (s,d) matrix, each row indicates one reference point.
+#' @param U Reference points, a (s,d) or (s,d+1) matrix, each row indicates one reference point.
 #' @param r The number of k-nearest neighbor points, an integer.
 #' @param distance The distance to compute k-nearest neighbor points, characters in c("Euclidean", "geodesic"),
 #'  including Euclidean distance and geodesic distance, the defaulting distance
@@ -13,7 +13,7 @@
 #'
 #' @examples
 #' X <- matrix(rnorm(300), nrow=100, ncol=3)
-#' U <- subsample(X, 10)
+#' U <- matrix(rnorm(30), nrow=10, ncol=3)
 #' r <- 3
 #' distance <- "Euclidean"
 #' KNN(X, U, r, distance)
@@ -23,7 +23,7 @@ KNN <- function(X, U, r, distance="Euclidean") {
   if(distance=="Euclidean") {
     distances = rowSums(X^2)-2*X%*%t(U) + matrix(rowSums(U^2), n, nrow(U), byrow = TRUE)
   } else {
-    stop("The distance of KNN is not supported!")
+    stop("Error: the distance of KNN is not supported!")
   }
   distances_list = lapply(c(1:n), function(i) {return(distances[i,])})
   chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
