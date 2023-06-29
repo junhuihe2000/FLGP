@@ -36,19 +36,18 @@ LAE <- function(X, U, r=3L, gl="rw") {
     num_workers <- 2L
   } else {
     # use all cores in devtools::test()
-    num_workers <- parallel::detectCores() - 1
+    num_workers <- parallel::detectCores() - 4
   }
   cl = parallel::makeCluster(num_workers)
-  Z_list = parallel::parLapply(cl, lae_units,
-                                function(unit) {return(local_anchor_embedding(unit$x, unit$U))})
-  parallel::stopCluster(cl)
+  Z_list = parallel::parLapply(cl, lae_units, local_anchor_embedding)
+  on.exit(parallel::stopCluster(cl))
 
   Z = Matrix::sparseMatrix(i=rep(c(1:n), each=r),
                            j=unlist(ind_knn),
                            x=unlist(Z_list))
 
-  if(gl=="rw") {}
-  else if(gl=="normalized") {
+  if(gl=="rw") {
+  } else if(gl=="normalized") {
     Z_norm = Matrix::colScale(Z, Matrix::colSums(Z)^{-1})
     Z = Matrix::rowScale(Z_norm, Matrix::rowSums(Z_norm)^{-1})
   } else if(gl=="cluster-normalized") {
@@ -67,8 +66,10 @@ LAE <- function(X, U, r=3L, gl="rw") {
 #' Local anchor embedding of one single point by
 #' gradient descent projection with Nesterov's methods
 #'
-#' @param x A numeric vector with length d, indicates the single point to be embedded.
-#' @param U A numeric matrix with dimension (r, d), the columns of U
+#' @param unit A list of x and U:
+#'
+#' x is a numeric vector with length d, indicates the single point to be embedded.
+#' U is a numeric matrix with dimension (r, d), the columns of U
 #' are equal to the length of x, including KNN reference points.
 #'
 #' @return A numeric vector with the length r, convex combination coefficients.
@@ -77,8 +78,9 @@ LAE <- function(X, U, r=3L, gl="rw") {
 #' @examples
 #' x <- rnorm(3)
 #' U <- matrix(rnorm(3*3),3,3)
-#' local_anchor_embedding(x, U)
-local_anchor_embedding <- function(x, U) {
+#' local_anchor_embedding(list("x"=x,"U"=U))
+local_anchor_embedding <- function(unit) {
+  x = unit$x; U = unit$U
   stopifnot(is.vector(x), is.matrix(U), length(x)==ncol(U))
   x = matrix(x, ncol=1); U = t(U)
   r = ncol(U); d = nrow(U)
@@ -131,7 +133,6 @@ local_anchor_embedding <- function(x, U) {
   }
   return(as.vector(z_curr))
 }
-
 
 
 

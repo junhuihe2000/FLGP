@@ -5,12 +5,13 @@
 \title{Local anchor embedding of one single point by
 gradient descent projection with Nesterov's methods}
 \usage{
-local_anchor_embedding(x, U)
+local_anchor_embedding(unit)
 }
 \arguments{
-\item{x}{A numeric vector with length d, indicates the single point to be embedded.}
+\item{unit}{A list of x and U:
 
-\item{U}{A numeric matrix with dimension (r, d), the columns of U
+x is a numeric vector with length d, indicates the single point to be embedded.
+U is a numeric matrix with dimension (r, d), the columns of U
 are equal to the length of x, including KNN reference points.}
 }
 \value{
@@ -23,5 +24,5 @@ gradient descent projection with Nesterov's methods
 \examples{
 x <- rnorm(3)
 U <- matrix(rnorm(3*3),3,3)
-local_anchor_embedding(x, U)
+local_anchor_embedding(list("x"=x,"U"=U))
 }

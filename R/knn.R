@@ -33,12 +33,12 @@ KNN <- function(X, U, r, distance="Euclidean") {
     num_workers <- 2L
   } else {
     # use all cores in devtools::test()
-    num_workers <- parallel::detectCores() - 1
+    num_workers <- parallel::detectCores() - 4
   }
 
   cl = parallel::makeCluster(num_workers)
   ind_knn = parallel::parLapply(cl, distances_list, which_minn, r=r)
-  parallel::stopCluster(cl)
+  on.exit(parallel::stopCluster(cl))
   return(ind_knn)
 }
 

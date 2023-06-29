@@ -51,6 +51,7 @@ system.time({crossprod(X)})
 ```{r}
 system.time({t(X)%*%X})
 ```
++ Sparse Matrix
 ```{r}
 is = rep(c(1:1e4),each=3)
 js = lapply(c(1:1e4),function(i) {return(sample.int(2000, 3))})
@@ -111,4 +112,91 @@ object.size(t(X_sparse)%*%X_sparse)
 
 ```{r}
 object.size(t(X)%*%X)
+```
+
+```{r}
+microbenchmark(
+  t(X)%*%X,
+  t(X_sparse)%*%X_sparse, 
+  times=20)
+```
+
+```{r}
+library(RSpectra)
+```
+
+```{r}
+microbenchmark({Z_1=eigen(t(X_sparse)%*%X_sparse)},
+               {Z_2=eigs_sym(t(X_sparse)%*%X_sparse,k=50)},
+               {Z_3=svds(X_sparse,k=50,nu=0,nv=50)},
+               times=10)
+```
+```{r}
+microbenchmark({X_sparse%*%eigs_sym(t(X_sparse)%*%X_sparse, k=2000)$vectors},
+               times = 10)
+```
+```{r}
+x = rnorm(3)
+U = matrix(rnorm(3*3),3,3)
+z = local_anchor_embedding(x,U)
+sum(z)
+```
+
+```{r}
+cl = parallel::makeCluster(4)
+parallel::clusterExport(cl, "local_anchor_embedding")
+Z_list = parallel::parLapply(cl, lae_units,
+                              function(unit) {return(local_anchor_embedding(unit[[1]], unit[[2]]))})
+parallel::stopCluster(cl)
+```
+
+```{r}
+Z_list = lapply(lae_units,function(unit) {return(local_anchor_embedding(unit[[1]], unit[[2]]))})
+```
+
+```{r}
+X <- matrix(rnorm(7291, 256), 7291, 256)
+```
+
+```{r}
+microbenchmark({
+  U = subsample(X, 2000, method = "random")
+  Z = LAE(X, U)
+  pairs = truncated_SVD(Z)
+},times = 10)
+```
+```{r}
+microbenchmark({U = subsample(X, 2000, method = "kmeans")},
+  {Z = LAE(X, U)},
+  {pairs = truncated_SVD(Z)},
+  times = 10)
+```
+```{r}
+microbenchmark({U = subsample(X, 2000, method = "kmeans")},
+  {Z = LAE(X, U)},
+  {pairs = truncated_SVD(Z)},
+  times = 10)
+```
+
+```{r}
+microbenchmark({
+  U = subsample(X, 2000, method = "random")
+}, times = 10)
+```
+
+```{r}
+microbenchmark({
+  U = subsample(X, 2000, method = "kmeans")
+}, times = 10)
+```
+```{r}
+microbenchmark({
+  cl = parallel::makeCluster(8)
+  parallel::stopCluster(cl)
+}, times = 10)
+```
+```{r}
+microbenchmark({
+  KNN(X, U[,1:ncol(X)],3L)
+}, times = 10)
 ```

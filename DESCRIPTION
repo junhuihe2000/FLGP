@@ -19,9 +19,11 @@ Suggests:
 Config/testthat/edition: 3
 Imports: 
     Matrix,
+    methods,
     parallel,
     Rcpp,
     RcppEigen,
+    RSpectra,
     stats
 LinkingTo: 
     Rcpp
