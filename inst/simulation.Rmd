@@ -11,192 +11,32 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(microbenchmark)
+library(parallel)
+library(Matrix)
+library(RSpectra)
 ```
 
 ```{r}
 Sys.setlocale("LC_ALL","English")
 ```
-
-+ knn
-
 ```{r}
-X <- matrix(rnorm(1e6 * 100), 1e6, 100)
-dim(X)
-b <- rnorm(100)
-y <- drop(X %*% b) + rnorm(1e6)
+n = 2400
+d = 2
+s = 600
+r = 3
+X = matrix(rnorm(n*d), n, d)
 ```
 
 
-+ OpenBLAS
 ```{r}
-microbenchmark({b <- solve(crossprod(X), crossprod(X, y))}, times=20)
-```
-
-+ kmeans
-```{r}
-Z <- matrix(rnorm(1e4*10), 1e4, 10)
-s <- 100
-```
-
-```{r}
-system.time({subsample(Z, s)})
-```
-```{r}
-system.time({subsample(Z, s)})
-```
-
-```{r}
-system.time({crossprod(X)})
-```
-```{r}
-system.time({t(X)%*%X})
-```
-+ Sparse Matrix
-```{r}
-is = rep(c(1:1e4),each=3)
-js = lapply(c(1:1e4),function(i) {return(sample.int(2000, 3))})
-```
-
-```{r}
-x <- lapply(c(1:1e4),function(i) {return(rnorm(3))})
-```
-
-```{r}
-X <- matrix(0, 1e4, 2000)
-for(i in 1:1e4) {
-  X[i,js[[i]]] = x[[i]]
-}
-object.size(X)
-```
-
-```{r}
-library(Matrix)
-X_sparse <- sparseMatrix(i=is, j=unlist(js), x=unlist(x))
-object.size(X_sparse)
-```
-
-```{r}
-system.time(t(X)%*%X)
-```
-```{r}
-system.time(t(X_sparse)%*%X_sparse)
-```
-
-```{r}
-system.time(eigen(t(X)%*%X))
-```
-
-```{r}
-system.time(eigen(t(X_sparse)%*%X_sparse))
-```
-```{r}
-X_cp <- t(X)%*%X
-X_sparse_cp <- t(X_sparse)%*%X_sparse
-```
-
-```{r}
-system.time({
-  colScale(X, colSums(X)^{-1})
-})
-```
-
-```{r}
-system.time({
-  colScale(X_sparse, Matrix::colSums(X_sparse)^{-1})
-})
-```
-
-```{r}
-object.size(t(X_sparse)%*%X_sparse)
-```
-
-```{r}
-object.size(t(X)%*%X)
-```
-
-```{r}
-microbenchmark(
-  t(X)%*%X,
-  t(X_sparse)%*%X_sparse, 
-  times=20)
-```
-
-```{r}
-library(RSpectra)
-```
-
-```{r}
-microbenchmark({Z_1=eigen(t(X_sparse)%*%X_sparse)},
-               {Z_2=eigs_sym(t(X_sparse)%*%X_sparse,k=50)},
-               {Z_3=svds(X_sparse,k=50,nu=0,nv=50)},
-               times=10)
-```
-```{r}
-microbenchmark({X_sparse%*%eigs_sym(t(X_sparse)%*%X_sparse, k=2000)$vectors},
-               times = 10)
-```
-```{r}
-x = rnorm(3)
-U = matrix(rnorm(3*3),3,3)
-z = local_anchor_embedding(x,U)
-sum(z)
-```
-
-```{r}
-cl = parallel::makeCluster(4)
-parallel::clusterExport(cl, "local_anchor_embedding")
-Z_list = parallel::parLapply(cl, lae_units,
-                              function(unit) {return(local_anchor_embedding(unit[[1]], unit[[2]]))})
-parallel::stopCluster(cl)
-```
-
-```{r}
-Z_list = lapply(lae_units,function(unit) {return(local_anchor_embedding(unit[[1]], unit[[2]]))})
-```
-
-```{r}
-X <- matrix(rnorm(7291, 256), 7291, 256)
-```
-
-```{r}
+cl = makeCluster(8)
 microbenchmark({
-  U = subsample(X, 2000, method = "random")
-  Z = LAE(X, U)
-  pairs = truncated_SVD(Z)
-},times = 10)
-```
-```{r}
-microbenchmark({U = subsample(X, 2000, method = "kmeans")},
-  {Z = LAE(X, U)},
-  {pairs = truncated_SVD(Z)},
-  times = 10)
-```
-```{r}
-microbenchmark({U = subsample(X, 2000, method = "kmeans")},
-  {Z = LAE(X, U)},
-  {pairs = truncated_SVD(Z)},
-  times = 10)
+  U = subsample(X, s, method = "random")
+  Z = LAE(X, U, r, cl=cl)
+  eigenpairs = truncated_SVD(Z)
+},
+times = 1)
+stopCluster(cl)
 ```
 
-```{r}
-microbenchmark({
-  U = subsample(X, 2000, method = "random")
-}, times = 10)
-```
 
-```{r}
-microbenchmark({
-  U = subsample(X, 2000, method = "kmeans")
-}, times = 10)
-```
-```{r}
-microbenchmark({
-  cl = parallel::makeCluster(8)
-  parallel::stopCluster(cl)
-}, times = 10)
-```
-```{r}
-microbenchmark({
-  KNN(X, U[,1:ncol(X)],3L)
-}, times = 10)
-```

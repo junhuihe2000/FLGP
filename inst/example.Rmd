@@ -1,0 +1,26 @@
+---
+title: "Example codes"
+author: "He Junhui"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
++ parallel example codes
+
+```{r}
+chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+if (nzchar(chk) && chk == "TRUE") {
+  # use 2 cores in CRAN/Travis/AppVeyor
+  num_workers <- 2L
+} else {
+  # use all cores in devtools::test()
+  num_workers <- parallel::detectCores() - 4
+}
+cl = parallel::makeCluster(num_workers)
+Z_list = parallel::parLapply(cl, lae_units, local_anchor_embedding)
+on.exit(parallel::stopCluster(cl))
+```
