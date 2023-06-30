@@ -20,10 +20,7 @@ subsample <- function(X, s, method = "kmeans") {
     cluster_kmeans = stats::kmeans(X, s, iter.max = 20, nstart = 10)
     U = cbind(cluster_kmeans$centers, size=cluster_kmeans$size)
   } else if(method == "random") {
-    U = X[sample.int(nrow(X), s), ]
-    if(s == 1) {
-      U = matrix(U, nrow=1)
-    }
+    U = X[sample.int(nrow(X), s), ,drop = FALSE]
   } else {
     stop("Error: the subsample method is not supported!")
   }

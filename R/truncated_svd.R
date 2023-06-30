@@ -1,13 +1,16 @@
-#' Truncated SVD, compute the non-trivial spectrums of A%*%t(A) by calculating the spectrums
+#' Truncated SVD, compute the non-trivial spectrums of A%\*%t(A) by calculating the spectrums
 #' of t(A)%*%A firstly.
 #'
 #' @param A A (n,s) numeric matrix, sparseMatrix is supported as well.
 #' The eigenvalues and eigenvectors of A%*%t(A) will be computed.
 #' @param K An integer, the number of eigenvalues requested.
 #'
-#' @return A list of converged eigenvalues and eigenvectors. The return results
+#' @return A list of converged eigenvalues and eigenvectors of AA^T. The return results
 #' should be the same as svd(A, nu=K, nv=0). When ncol(A) << nrow(A), truncated_svd
-#' will be much faster than svd.
+#' will be much faster than svd:
+#' * values: a vector containing the K eigenvalues of AA^T, sorted in decreasing order.
+#' * vectors: a n \* K matrix whose columns contain the eigenvectors of AA^T.
+#' The vectors are normalized to unit length.
 #' @export
 #'
 #' @examples
