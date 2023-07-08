@@ -3,6 +3,7 @@
 export(HK_from_spectrum)
 export(KNN)
 export(LAE)
+export(SBMultinomialGP)
 export(cross_similarity)
 export(heat_kernel_covariance)
 export(local_anchor_embedding)
