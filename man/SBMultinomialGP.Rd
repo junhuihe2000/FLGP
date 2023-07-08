@@ -22,6 +22,6 @@ Construct stick breaking multinomial Gaussian process models
 \examples{
 A <- matrix(rnorm(3*3),3,3)
 C <- A\%*\%t(A)
-Y <- diag(rep(1,3))
+Y <- matrix(sample.int(3*3 ,replace=TRUE),3,3)
 SBMultinomialGP(C,Y)
 }
