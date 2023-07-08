@@ -19,7 +19,7 @@ N_vec <- function(Y) {
       N[,j] = N[,j-1] - Y[,j-1]
     }
   }
-  if(sum(abs(N[,J-1]-Y[,J-1]-Y[J]))>.Machine$double.eps^0.5) {
+  if(sum(abs(N[,J-1]-Y[,J-1]-Y[,J]))>.Machine$double.eps^0.5) {
     stop("Error: N fails to compute!")
   }
   return(N)

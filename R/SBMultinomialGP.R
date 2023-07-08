@@ -21,10 +21,10 @@ SBMultinomialGP <- function(C, Y) {
   N = N_vec(Y); kappa = kappa_vec(Y, N)
 
   # initialize the auxiliary variable
-  omega = matrix(1, M, J-1)
+  omega = matrix(1, m, J-1)
 
   # initialize a "sample" from f
-  f = matrix(0, M, J-1)
+  f = matrix(0, m, J-1)
 
   model = list(J=J,
                m=m,
