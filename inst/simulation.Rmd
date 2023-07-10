@@ -19,6 +19,7 @@ library(RSpectra)
 ```{r}
 Sys.setlocale("LC_ALL","English")
 ```
+
 ```{r}
 n = 2400
 d = 2
@@ -28,7 +29,6 @@ m = 100
 t = 1
 X = matrix(rnorm(n*d), n, d)
 ```
-
 
 ```{r}
 cl = makeCluster(8)
@@ -87,21 +87,40 @@ Y <- matrix(sample.int(9,replace = TRUE),3,3)
 SBMultinomialGP(C,Y)
 ```
 
-```{r}
-new_stack <- function(items) {
-  structure(list(items=items), class="stack")
+```{Rcpp}
+#include <Rcpp.h>
+#include <iostream>
+using namespace Rcpp;
+//[[Rcpp::export]]
+void add(int &x, int y) {
+  x = x + y;
+  std::cout << x << std::endl;
 }
 
-push <- function(x, y) {
-  x$items = c(x$items, y)
-  x
+//[[Rcpp::export]]
+void add2(int &x, int y) {
+  add(x, y);
+  x = x + y;
+  std::cout << x << std::endl;
 }
 ```
 
 ```{r}
-x = new_stack(1)
+add_r <- function(x, y) {
+  x = x + y
+}
 ```
 
 ```{r}
-push(x, 2)
+a = 1; b = 1
+c = 1
+add(a,c)
+add_r(b,c)
+print(a)
+print(b)
+```
+
+```{r}
+add(a,c)
+add2(a,c)
 ```

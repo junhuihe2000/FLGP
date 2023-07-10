@@ -4,10 +4,10 @@
 \alias{collapsed_predict}
 \title{Predict multinomial probability given omega}
 \usage{
-collapsed_predict(model = SBMultinomialGP(), Cnv)
+collapsed_predict(aug_data = AugmentedData(), Cnv)
 }
 \arguments{
-\item{model}{A SBMultinomialGP model.}
+\item{aug_data}{An augmented data for polya-gamma sampling.}
 
 \item{Cnv}{A numeric matrix with dim(m_new,m), cross covariance matrix
 between new sample and training sample.}

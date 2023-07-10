@@ -17,8 +17,8 @@ log_likelihood <- function(f, Y) {
 
 
 # Predict the GP value at the inputs X_new by Cnv and evaluate the log likelihood of Y_new
-predictive_log_likelihood <- function(model=SBMultinomialGP(), Cnv, Y_new) {
-  pi = collapsed_predict(model, Cnv)
+predictive_log_likelihood <- function(aug_data=AugmentedData(), Cnv, Y_new) {
+  pi = collapsed_predict(aug_data, Cnv)
   pll = sum(lgamma(rowSums(Y_new)+1)) - sum(lgamma(Y_new+1)) + sum(Y_new*log(pi))
   return(pll)
 }
@@ -29,7 +29,7 @@ predictive_log_likelihood <- function(model=SBMultinomialGP(), Cnv, Y_new) {
 #' by first integrating out the value of f, given
 #' omega and the kernel parameters.
 #'
-#' @param model A SBMultinomialGP model.
+#' @param aug_data An augmented data for polya-gamma sampling.
 #' @param Cnv A numeric matrix with dim(m_new,m), cross covariance matrix
 #' between new sample and training sample.
 #'
@@ -37,18 +37,18 @@ predictive_log_likelihood <- function(model=SBMultinomialGP(), Cnv, Y_new) {
 #' the predictive multinomial probability in the corresponding new sample point.
 #' @export
 #'
-collapsed_predict <- function(model=SBMultinomialGP(), Cnv) {
-  stopifnot(methods::is(model, "SBMultinomialGP"), ncol(Cnv)==model$m)
+collapsed_predict <- function(aug_data=AugmentedData(), Cnv) {
+  stopifnot(methods::is(aug_data, "AugmentedData"), ncol(Cnv)==aug_data$m)
   m_new = nrow(Cnv)
 
-  mu_fs_new = matrix(0, m_new, model$J-1)
+  mu_fs_new = matrix(0, m_new, aug_data$J-1)
 
-  for(j in c(1:(model$J-1))) {
-    omegaj = model$omega[,j] + 1e-16
-    kappaj = model$kappa[,j]
+  for(j in c(1:(aug_data$J-1))) {
+    omegaj = aug_data$omega[,j] + 1e-16
+    kappaj = aug_data$kappa[,j]
     # account for the mean from the omega potentials
     y = kappaj / omegaj
-    Cvv_noisy = model$C + diag(1/omegaj)
+    Cvv_noisy = aug_data$C + diag(1/omegaj)
     mu_fs_new[,j] = Cnv%*%solve(Cvv_noisy, y)
   }
 
