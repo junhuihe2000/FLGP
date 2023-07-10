@@ -21,3 +21,11 @@ Predict the multinomial probability vector at Cnv
 by first integrating out the value of f, given
 omega and the kernel parameters.
 }
+\examples{
+A <- matrix(rnorm(3*3),3,3)
+C <- A\%*\%t(A)
+Y <- matrix(sample.int(3*3 ,replace=TRUE),3,3)
+aug_data <- AugmentedData(C,Y)
+Cnv <- matrix(rnorm(5*3),5,3)
+collapsed_predict(aug_data, Cnv)
+}

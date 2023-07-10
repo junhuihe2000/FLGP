@@ -37,6 +37,13 @@ predictive_log_likelihood <- function(aug_data=AugmentedData(), Cnv, Y_new) {
 #' the predictive multinomial probability in the corresponding new sample point.
 #' @export
 #'
+#' @examples
+#' A <- matrix(rnorm(3*3),3,3)
+#' C <- A%*%t(A)
+#' Y <- matrix(sample.int(3*3 ,replace=TRUE),3,3)
+#' aug_data <- AugmentedData(C,Y)
+#' Cnv <- matrix(rnorm(5*3),5,3)
+#' collapsed_predict(aug_data, Cnv)
 collapsed_predict <- function(aug_data=AugmentedData(), Cnv) {
   stopifnot(methods::is(aug_data, "AugmentedData"), ncol(Cnv)==aug_data$m)
   m_new = nrow(Cnv)
@@ -58,3 +65,32 @@ collapsed_predict <- function(aug_data=AugmentedData(), Cnv) {
   return(pis_new)
 }
 
+
+#' Predict labels given omega and Cnv
+#'
+#' @param aug_data An augmented data for polya-gamma sampling.
+#' @param Cnv A numeric matrix with dim(m_new,m), cross covariance matrix
+#' between new sample and training sample.
+#'
+#' @return `Y_new` A numeric matrix with dim(m_new, J), each row indicates
+#' the predictive "label" of the corresponding new sample.
+#' @export
+#'
+#' @examples
+#' A <- matrix(rnorm(3*3),3,3)
+#' C <- A%*%t(A)
+#' Y <- matrix(sample.int(3*3 ,replace=TRUE),3,3)
+#' aug_data <- AugmentedData(C,Y)
+#' Cnv <- matrix(rnorm(5*3), 5, 3)
+#' collapsed_predict_label(aug_data, Cnv)
+collapsed_predict_label <- function(aug_data=AugmentedData(), Cnv) {
+  pis_new = collapsed_predict(aug_data, Cnv)
+  m_new = nrow(Cnv); J = aug_data$J
+  Y_new = matrix(0, m_new, J)
+  # find the maximum index of pi
+  ind_new = apply(pis_new, 1, which.max)
+
+  Y_new[cbind(c(1:m_new),ind_new)] = 1
+
+  return(Y_new)
+}
