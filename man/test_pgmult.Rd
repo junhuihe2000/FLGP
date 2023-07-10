@@ -8,7 +8,7 @@ test_pgmult(C, Y, Cnv, N_sample = 1000)
 }
 \arguments{
 \item{C}{A numeric matrix with dim(m,m), the self covariance matrix
-in the training samples}
+in the training samples.}
 
 \item{Y}{A numeric matrix with dim(m,J), each row is a one hot vector indicating
 the label.}

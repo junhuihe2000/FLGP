@@ -1,7 +1,7 @@
 #' Predict multinomial probabilities on new samples
 #'
 #' @param C A numeric matrix with dim(m,m), the self covariance matrix
-#' in the training samples
+#' in the training samples.
 #' @param Y A numeric matrix with dim(m,J), each row is a one hot vector indicating
 #' the label.
 #' @param Cnv A numeric matrix with dim(m_new,m), cross covariance matrix

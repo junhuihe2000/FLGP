@@ -18,3 +18,8 @@ the label.}
 \description{
 Compute the log likelihood of the observed
 }
+\examples{
+f <- matrix(rnorm(3*2),3,2)
+Y <- matrix(sample.int(3*3 ,replace=TRUE),3,3)
+log_likelihood(f, Y)
+}

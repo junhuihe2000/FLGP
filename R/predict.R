@@ -6,8 +6,13 @@
 #'
 #' @return `ll` a double, log likelihood value.
 #' @export
+#'
+#' @examples
+#' f <- matrix(rnorm(3*2),3,2)
+#' Y <- matrix(sample.int(3*3 ,replace=TRUE),3,3)
+#' log_likelihood(f, Y)
 log_likelihood <- function(f, Y) {
-  stopifnot(all(dim(f)==dim(Y)))
+  stopifnot(nrow(f)==nrow(Y), ncol(Y)-ncol(f)==1)
 
   pi = f_to_pi(f)
 
@@ -90,7 +95,7 @@ collapsed_predict_label <- function(aug_data=AugmentedData(), Cnv) {
   # find the maximum index of pi
   ind_new = apply(pis_new, 1, which.max)
 
-  Y_new[cbind(c(1:m_new),ind_new)] = 1
+  Y_new[cbind(c(1:m_new),ind_new)] = 1L
 
   return(Y_new)
 }

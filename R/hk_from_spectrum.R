@@ -24,7 +24,7 @@ HK_from_spectrum <- function(eigenpairs, m, K, t) {
             0<=t)
   n = nrow(eigenpairs$vectors)
   eigenvalues = 1 - eigenpairs$values[1:K]
-  H_t = Matrix::colScale(eigenpairs$vectors[,1:K], exp(-eigenvalues*t))%*%
+  H_t = n*Matrix::colScale(eigenpairs$vectors[,1:K], exp(-eigenvalues*t))%*%
     Matrix::t(eigenpairs$vectors[1:m,1:K])
   return(H_t)
 }
