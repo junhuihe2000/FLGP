@@ -124,3 +124,15 @@ print(b)
 add(a,c)
 add2(a,c)
 ```
+
+```{r}
+i = 0
+repeat{
+  if(i>2) {break}
+  i = i + 1
+  cat("i =",i,"\n")
+}
+```
+```{r}
+diag(1,3)
+```
