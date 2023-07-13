@@ -8,7 +8,7 @@
 #' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
 #' the defaulting value is 1e-3.
 #'
-#' @return `nll` functional with parameter t.
+#' @return `nll` negative log marginal likelihood functional with parameter t.
 #' @export
 #'
 #' @examples

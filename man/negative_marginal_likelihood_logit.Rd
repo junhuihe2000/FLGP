@@ -21,7 +21,7 @@ negative_marginal_likelihood_logit(eigenpair, Y, m, K, N = NULL, sigma = 0.001)
 the defaulting value is 1e-3.}
 }
 \value{
-\code{nll} functional with parameter t.
+\code{nll} negative log marginal likelihood functional with parameter t.
 }
 \description{
 Create negative log marginal likelihood functional

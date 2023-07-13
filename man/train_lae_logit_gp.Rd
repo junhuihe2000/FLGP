@@ -11,6 +11,7 @@ train_lae_logit_gp(
   K,
   sigma = 0.001,
   N = NULL,
+  approach = "posterior",
   t0 = NULL,
   lower = 0.001,
   upper = 100
@@ -29,6 +30,9 @@ train_lae_logit_gp(
 the defaulting value is 1e-3.}
 
 \item{N}{A numeric vector with length(m), total count.}
+
+\item{approach}{A character vector, taking value in c("posterior", "marginal"),
+decides which objective function to be optimized, defaulting value is \code{posterior}.}
 
 \item{t0}{A positive double, the initial guess for t, defaulting value \code{10}.}
 

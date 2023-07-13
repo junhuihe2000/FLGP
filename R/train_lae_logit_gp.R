@@ -7,6 +7,8 @@
 #' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
 #' the defaulting value is 1e-3.
 #' @param N A numeric vector with length(m), total count.
+#' @param approach A character vector, taking value in c("posterior", "marginal"),
+#' decides which objective function to be optimized, defaulting value is `posterior`.
 #' @param t0 A positive double, the initial guess for t, defaulting value `10`.
 #' @param lower the lower bound on t, defaulting value `1e-3`.
 #' @param upper the upper bound on t, defaulting value `100`.
@@ -30,22 +32,37 @@
 #' m <- 6; K <- 3
 #' eigenpair <- heat_kernel_spectrum(X, X_new, s, r, K=K)
 #' train_lae_logit_gp(eigenpair, Y, m, K)
-train_lae_logit_gp <- function(eigenpair, Y, m, K, sigma=1e-3, N=NULL, t0=NULL, lower=1e-3, upper=100) {
+train_lae_logit_gp <- function(eigenpair, Y, m, K, sigma=1e-3, N=NULL,
+                               approach="posterior", t0=NULL, lower=1e-3, upper=100) {
   eigenpair$vectors = eigenpair$vectors[1:m,]
   # initialize t
   if(is.null(t0)) {
     t0 = 10
   }
 
-  # optimize negative log marginal likelihood
-  opt = stats::optim(t0,
-                     negative_marginal_likelihood_logit(eigenpair, Y, m, K, N, sigma),
-                     NULL,
-                     method = "L-BFGS-B",
-                     lower = lower,
-                     upper = upper)
+  if(approach=="marginal") {
+    # optimize negative log marginal likelihood
+    opt = stats::optim(t0,
+                       negative_marginal_likelihood_logit(eigenpair, Y, m, K, N, sigma),
+                       NULL,
+                       method = "L-BFGS-B",
+                       lower = lower,
+                       upper = upper)
+    cat("For local anchor embedding, optimal t =",opt$par,", log marginal likelihood is",opt$value,".\n")
+  } else if(approach=="posterior") {
+    # optimize negative log posterior
+    opt = stats::optim(t0,
+                       negative_log_posterior_logit(eigenpair, Y, m, K, N, sigma),
+                       NULL,
+                       method = "L-BFGS-B",
+                       lower = lower,
+                       upper = upper)
+    cat("For local anchor embedding, optimal t =",opt$par,", log posterior is",opt$value,".\n")
+  } else {
+    stop("This model selection approach is not supported!")
+  }
+
   t = opt$par
   mll = -opt$value
-  cat("For local anchor embedding, optimal t =",t,", log marginal likelihood is",mll,".\n")
   return(list(t=t,mll=mll))
 }
