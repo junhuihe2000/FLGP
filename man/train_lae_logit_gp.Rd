@@ -12,7 +12,7 @@ train_lae_logit_gp(
   sigma = 0.001,
   N = NULL,
   t0 = NULL,
-  lower = 0,
+  lower = 0.001,
   upper = 100
 )
 }
@@ -32,7 +32,7 @@ the defaulting value is 1e-3.}
 
 \item{t0}{A positive double, the initial guess for t, defaulting value \code{10}.}
 
-\item{lower}{the lower bound on t, defaulting value \code{0}.}
+\item{lower}{the lower bound on t, defaulting value \code{1e-3}.}
 
 \item{upper}{the upper bound on t, defaulting value \code{100}.}
 }

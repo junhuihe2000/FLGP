@@ -14,6 +14,7 @@ library(microbenchmark)
 library(parallel)
 library(Matrix)
 library(RSpectra)
+library(ggplot2)
 ```
 
 ```{r}
@@ -133,6 +134,7 @@ repeat{
   cat("i =",i,"\n")
 }
 ```
+
 ```{r}
 Y_pred = vapply(res$f, function(x){
   if(x>0){
@@ -141,4 +143,25 @@ Y_pred = vapply(res$f, function(x){
       return(0)
       }
   }, FUN.VALUE = 0)
+```
+
+```{r}
+X0 <- matrix(rnorm(3*3), 3, 3)
+X1 <- matrix(rnorm(3*3, 3), 3, 3)
+Y <- c(1,1,1,0,0,0)
+X <- rbind(X0,X1)
+X0_new <- matrix(rnorm(10*3),50,3)
+X1_new <- matrix(rnorm(10*3, 3),50,3)
+X_new <- rbind(X0_new, X1_new)
+Y_new <- c(rep(1,50),rep(0,50))
+s <- 10; r <- 3
+K <- 10
+Y_pred <- fit_lae_logit_gp(X, Y, X_new, s, r, K)
+error_rate(Y_new, Y_pred)
+```
+
+```{r}
+X_total = rbind(X,X_new)
+Y_total = c(Y,Y_new)
+ggplot() + geom_point(aes(X_total[,1],X_total[,2],col=Y_total))
 ```

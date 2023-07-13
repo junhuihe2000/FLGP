@@ -8,7 +8,7 @@
 #' the defaulting value is 1e-3.
 #' @param N A numeric vector with length(m), total count.
 #' @param t0 A positive double, the initial guess for t, defaulting value `10`.
-#' @param lower the lower bound on t, defaulting value `0`.
+#' @param lower the lower bound on t, defaulting value `1e-3`.
 #' @param upper the upper bound on t, defaulting value `100`.
 #'
 #' @return A list with two components
@@ -30,7 +30,7 @@
 #' m <- 6; K <- 3
 #' eigenpair <- heat_kernel_spectrum(X, X_new, s, r, K=K)
 #' train_lae_logit_gp(eigenpair, Y, m, K)
-train_lae_logit_gp <- function(eigenpair, Y, m, K, sigma=1e-3, N=NULL, t0=NULL, lower=0, upper=100) {
+train_lae_logit_gp <- function(eigenpair, Y, m, K, sigma=1e-3, N=NULL, t0=NULL, lower=1e-3, upper=100) {
   eigenpair$vectors = eigenpair$vectors[1:m,]
   # initialize t
   if(is.null(t0)) {

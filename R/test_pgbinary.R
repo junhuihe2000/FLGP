@@ -9,7 +9,7 @@
 #' @param N_sample An integer, the length of the Gibbs sampler chain.
 #' @param full_out Bool, whether or not to output pi_new, defaulting value is `FALSE`.
 #'
-#' @return `Y_new` if `full_out=FALSE`, otherwise `list(pi_new,Y_new)`.
+#' @return `Y_pred` if `full_out=FALSE`, otherwise `list(pi_pred,Y_pred)`.
 #' @export
 #'
 #' @examples
@@ -25,15 +25,15 @@ test_pgbinary <- function(C, Y, Cnv, N=NULL, N_sample=1000, full_out=FALSE) {
   }
 
   # predict pi by Polya-Gamma auxiliary variables
-  pi_new = test_pgmult(C, cbind(Y,N-Y), Cnv, N_sample)[,1]
-  Y_new = vapply(pi_new, function(pi) {
+  pi_pred = test_pgmult(C, cbind(Y,N-Y), Cnv, N_sample)[,1]
+  Y_pred = vapply(pi_pred, function(pi) {
     if(pi>0.5) {return(1)}
     else {return(0)}
   }, FUN.VALUE = 0)
 
   if(full_out) {
-    return(list(pi_new=pi_new, Y_new=Y_new))
+    return(list(pi_pred=pi_pred, Y_pred=Y_pred))
   }
 
-  return(Y_new)
+  return(Y_pred)
 }
