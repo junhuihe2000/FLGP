@@ -17,6 +17,9 @@
 #' eigens <- eigen(X)
 #' HK_from_spectrum(eigens, 2, 2, 0.1)
 HK_from_spectrum <- function(eigenpairs, m, K, t) {
+  if(is.null(K)) {
+    K = ncol(eigenpairs$vectors)
+  }
   stopifnot(K<=length(eigenpairs$values),
             m<=nrow(eigenpairs$vectors),
             abs(m-round(m))<.Machine$double.eps^0.5,

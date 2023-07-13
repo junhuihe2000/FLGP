@@ -6,7 +6,7 @@
 #' @param r An integer, the number of the nearest neighbor points.
 #' @param t A non-negative number, the heat diffusion time.
 #' @param K An integer, the number of used eigenpairs to construct heat kernel,
-#' the defaulting value is `NULL`, that is, `K=min(n,s)`.
+#' the defaulting value is `NULL`, that is, `K=s`.
 #' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
 #' the defaulting value is 1e-3.
 #' @param cl The cluster to make parallel computing,
@@ -35,13 +35,8 @@ heat_kernel_covariance <- function(X, X_new, s, r, t, K=NULL, sigma=1e-3, cl=NUL
                                                gl="rw",
                                                root=FALSE)) {
   m = nrow(X)
-  X = rbind(X, X_new)
-  U = subsample(X, s, models$subsample)
-  Z = cross_similarity(X, U, r, models$kernel, models$gl, cl)
-  if(is.null(K)) {
-    K = min(nrow(X), s)
-  }
-  eigenpairs = spectrum_from_Z(Z, K, models$root)
+
+  eigenpairs = heat_kernel_spectrum(X, X_new, s, r, K, cl, models)
   H = HK_from_spectrum(eigenpairs, m, K, t)
   H[cbind(c(1:m),c(1:m))] = H[cbind(c(1:m),c(1:m))] + sigma # ridge penalty
   return(H)

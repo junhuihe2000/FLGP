@@ -28,7 +28,7 @@ heat_kernel_covariance(
 \item{t}{A non-negative number, the heat diffusion time.}
 
 \item{K}{An integer, the number of used eigenpairs to construct heat kernel,
-the defaulting value is \code{NULL}, that is, \code{K=min(n,s)}.}
+the defaulting value is \code{NULL}, that is, \code{K=s}.}
 
 \item{sigma}{A non-negative number, the weight coefficient of ridge penalty on H,
 the defaulting value is 1e-3.}

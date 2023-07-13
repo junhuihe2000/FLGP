@@ -63,7 +63,9 @@ fit_lae_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3,
   t = opt$t
 
   # construct covariance matrix
-  C = heat_kernel_covariance(X, X_new, s, r, t, K, sigma, cl, models)
+  # C = heat_kernel_covariance(X, X_new, s, r, t, K, sigma, cl, models)
+  C = HK_from_spectrum(eigenpair, m, K, t)
+  C[cbind(rep(1:m),rep(1:m))] = C[cbind(rep(1:m),rep(1:m))] + sigma
   Cvv = C[1:m,]
   Cnv = C[(m+1):n,]
 
