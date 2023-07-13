@@ -18,6 +18,10 @@ the defaulting value is FALSE.}
 }
 \value{
 A list of converged eigenvalues and eigenvectors of W.
+\describe{
+\item{values}{eigenvalues, descending order.}
+\item{vectors}{eigenvectors, the vectors are normalized to sqrt(n) length.}
+}
 }
 \description{
 The transition matrix W is the two step composition of

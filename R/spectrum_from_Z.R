@@ -10,6 +10,10 @@
 #' the defaulting value is FALSE.
 #'
 #' @return A list of converged eigenvalues and eigenvectors of W.
+#' \describe{
+#' \item{values}{eigenvalues, descending order.}
+#' \item{vectors}{eigenvectors, the vectors are normalized to sqrt(n) length.}
+#' }
 #' @export
 #'
 #' @examples
@@ -23,5 +27,7 @@ spectrum_from_Z <- function(Z, K=NULL, root=FALSE) {
   if(root) {
     eigenpairs$values = sqrt(eigenpairs$values)
   }
+  n = nrow(Z)
+  eigenpairs$vectors = sqrt(n)*eigenpairs$vectors
   return(eigenpairs)
 }

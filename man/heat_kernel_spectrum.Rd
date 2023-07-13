@@ -42,6 +42,10 @@ the defaulting value is \code{FALSE}.
 }
 \value{
 A list of converged eigenvalues and eigenvectors of W.
+\describe{
+\item{values}{eigenvalues, descending order.}
+\item{vectors}{eigenvectors.}
+}
 }
 \description{
 Compute spectrum of graph Laplacian by FLAG

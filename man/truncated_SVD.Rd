@@ -17,10 +17,10 @@ The eigenvalues and eigenvectors of A\%*\%t(A) will be computed.}
 A list of converged eigenvalues and eigenvectors of AA^T. The return results
 should be the same as svd(A, nu=K, nv=0). When ncol(A) << nrow(A), truncated_svd
 will be much faster than svd:
-\itemize{
-\item values: a vector containing the K eigenvalues of AA^T, sorted in decreasing order.
-\item vectors: a n \* K matrix whose columns contain the eigenvectors of AA^T.
-The vectors are normalized to unit length.
+\describe{
+\item{values}{a vector containing the K eigenvalues of AA^T, sorted in decreasing order.}
+\item{vectors}{a n \* K matrix whose columns contain the eigenvectors of AA^T.
+The vectors are normalized to unit length.}
 }
 }
 \description{

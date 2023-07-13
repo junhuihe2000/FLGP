@@ -4,12 +4,21 @@
 \alias{marginal_log_likelihood_logit_la}
 \title{Mode-finding for binary Laplace GPC with logit link function}
 \usage{
-marginal_log_likelihood_logit_la(C, Y, f = NULL, tol = 1e-05, max_iter = 100)
+marginal_log_likelihood_logit_la(
+  C,
+  Y,
+  N = NULL,
+  f = NULL,
+  tol = 1e-05,
+  max_iter = 100
+)
 }
 \arguments{
 \item{C}{A numeric matrix with dim(m,m), covariance matrix.}
 
-\item{Y}{A numeric vector with length(m), binary label vector with {0,1}.}
+\item{Y}{A numeric vector with length(m), count of the positive class.}
+
+\item{N}{A numeric vector with length(m), total count.}
 
 \item{f}{A numeric vector with length(m), initial guess for newton methods,
 the defaulting value is \code{NULL}, that is, \code{f=rep(0,m)}.}

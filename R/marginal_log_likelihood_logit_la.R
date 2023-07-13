@@ -1,7 +1,8 @@
 #' Mode-finding for binary Laplace GPC with logit link function
 #'
 #' @param C A numeric matrix with dim(m,m), covariance matrix.
-#' @param Y A numeric vector with length(m), binary label vector with {0,1}.
+#' @param Y A numeric vector with length(m), count of the positive class.
+#' @param N A numeric vector with length(m), total count.
 #' @param f A numeric vector with length(m), initial guess for newton methods,
 #' the defaulting value is `NULL`, that is, `f=rep(0,m)`.
 #' @param tol A double, convergence criterion, the defaulting value is `1e-5`.
@@ -21,11 +22,14 @@
 #' C <- A%*%t(A)
 #' Y <- sample(c(0,1), 3,replace=TRUE)
 #' marginal_log_likelihood_logit_la(C, Y)
-marginal_log_likelihood_logit_la <- function(C, Y, f=NULL, tol=1e-5, max_iter=100) {
+marginal_log_likelihood_logit_la <- function(C, Y, N=NULL, f=NULL, tol=1e-5, max_iter=100) {
   stopifnot(is.vector(Y))
   m = nrow(C)
   if(is.null(f)) {
     f = rep(0,m)
+  }
+  if(is.null(N)) {
+    N = rep(1,m)
   }
 
   # Newton method
@@ -36,11 +40,11 @@ marginal_log_likelihood_logit_la <- function(C, Y, f=NULL, tol=1e-5, max_iter=10
     iter = iter + 1
 
     pi = ilogit(f)
-    W = pi*(1-pi)
+    W = N*pi*(1-pi)
     sqrtW = sqrt(W)
     B = diag(1,m) + Matrix::dimScale(C, sqrtW)
     R = chol(B)
-    b = W*f + Y - pi
+    b = W*f + Y*(1-pi) + (N-Y)*(-pi)
     a = b - sqrtW*backsolve(R, forwardsolve(t(R), sqrtW*(C%*%cbind(b))))
     f_new = C%*%cbind(a)
 
@@ -56,7 +60,7 @@ marginal_log_likelihood_logit_la <- function(C, Y, f=NULL, tol=1e-5, max_iter=10
   pi = ilogit(f)
   # approximate marginal log likelihood
   amll = -0.5*sum(a*f)
-  amll = amll + sum(Y*log(pi)) + sum((1-Y)*log(1-pi))
+  amll = amll + sum(Y*log(pi)) + sum((N-Y)*log(1-pi))
   amll = amll - sum(log(diag(R)))
   return(list(f=f,amll=amll,converge=converge))
 }
