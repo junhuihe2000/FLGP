@@ -1,8 +1,10 @@
-#' Fit Gaussian process logistic regression with local anchor embedding kernels
+#' Fit Gaussian process logistic mulotinomial regression with local anchor embedding kernels
 #'
+#' @description Compose J-1 binary logistic regression to implement the multinomial regression.
 #' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
 #' @param Y A numeric vector with length(m), count of the positive class.
 #' @param X_new Testing sample, a (n-m, d) matrix, each row indicates one point in R^d.
+#' @param J An integer, the number of classes.
 #' @param s An integer indicating the number of the subsampling.
 #' @param r An integer, the number of the nearest neighbor points.
 #' @param K An integer, the number of used eigenpairs to construct heat kernel,
@@ -32,44 +34,55 @@
 #' @examples
 #' X0 <- matrix(rnorm(3*3), 3, 3)
 #' X1 <- matrix(rnorm(3*3, 5), 3, 3)
-#' Y <- c(1,1,1,0,0,0)
-#' X <- rbind(X0,X1)
+#' X2 <- matrix(rnorm(3*3, -5), 3, 3)
+#' Y <- c(rep(0,3), rep(1,3), rep(2,3))
+#' X <- rbind(X0,X1,X2)
 #' X0_new <- matrix(rnorm(10*3),10,3)
 #' X1_new <- matrix(rnorm(10*3, 5),10,3)
-#' X_new <- rbind(X0_new, X1_new)
-#' Y_new <- c(rep(1,10),rep(0,10))
+#' X2_new <- matrix(rnorm(10*3, -5),10,3)
+#' X_new <- rbind(X0_new, X1_new, X2_new)
+#' Y_new <- c(rep(0,10),rep(1,10),rep(2,10))
 #' s <- 6; r <- 3
 #' K <- 5
-#' Y_pred <- fit_lae_logit_gp(X, Y, X_new, s, r, K)
-fit_lae_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3,
-                             approach ="posterior", cl=NULL,
-                             models=list(subsample="kmeans",
-                                         kernel="lae",
-                                         gl="rw",
-                                         root=FALSE)) {
-  m = nrow(X)
-  n = m + nrow(X_new)
+#' J <- 3
+#' Y_pred <- fit_lae_logit_mult_gp(X, Y, X_new, J, s, r, K)
+fit_lae_logit_mult_gp <- function(X, Y, X_new, J, s, r, K=NULL, N=NULL, sigma=1e-3,
+                                  approach ="posterior", cl=NULL,
+                                  models=list(subsample="kmeans",
+                                              kernel="lae",
+                                              gl="rw",
+                                              root=FALSE)) {
+  stopifnot(J>=2)
+  m = nrow(X); m_new = nrow(X_new)
+  n = m + m_new
 
   if(is.null(K)) {
     K = s
   }
 
-
   eigenpair = heat_kernel_spectrum(X, X_new, s, r, K, cl, models)
 
-  # empirical Bayes to optimize t
-  opt = train_lae_logit_gp(eigenpair, Y, c(1:m), K, sigma, N, approach)
-  t = opt$t
+  # train model
+  model_list = train_lae_logit_mult_gp(eigenpair, Y, K, J, sigma, N, approach)
 
-  # construct covariance matrix
-  # C = heat_kernel_covariance(X, X_new, s, r, t, K, sigma, cl, models)
-  C = HK_from_spectrum(eigenpair, K, t, NULL, c(1:m))
-  C[cbind(rep(1:m),rep(1:m))] = C[cbind(rep(1:m),rep(1:m))] + sigma
-  Cvv = C[1:m,]
-  Cnv = C[(m+1):n,]
-
-  # predict labels on new samples
-  Y_pred = test_pgbinary(as.matrix(Cvv), Y, as.matrix(Cnv), N)
-
+  # test model
+  idx = c(1:m_new)
+  Y_pred = rep(J-1, m_new)
+  for(j in c(0:(J-2))) {
+    modelj = model_list[[j+1]]
+    tj = modelj$t
+    idxj = modelj$idx
+    mj = length(idxj)
+    Yj = modelj$Y
+    # Construct heat kernel covariance
+    Cvv = HK_from_spectrum(eigenpair, K, tj, idxj, idxj)
+    Cvv[cbind(rep(1:mj),rep(1:mj))] = Cvv[cbind(rep(1:mj),rep(1:mj))] + sigma
+    Cnv = HK_from_spectrum(eigenpair, K, tj, idx+m, idxj)
+    # predict binary labels on new samples
+    Yj_pred = test_pgbinary(as.matrix(Cvv), Yj, as.matrix(Cnv), N)
+    idx1 = idx[which(Yj_pred==1)]
+    Y_pred[idx1] = j
+    idx = idx[-idx1]
+  }
   return(Y_pred)
 }

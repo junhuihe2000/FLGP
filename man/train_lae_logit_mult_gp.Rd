@@ -64,7 +64,7 @@ X1_new <- matrix(rnorm(10*3, 5),10,3)
 X2_new <- matrix(rnorm(10*3, -5),10,3)
 X_new <- rbind(X0_new, X1_new, X2_new)
 s <- 6; r <- 3
-m <- 6; K <- 3
+K <- 3
 J <- 3
 eigenpair <- heat_kernel_spectrum(X, X_new, s, r, K=K)
 train_lae_logit_mult_gp(eigenpair, Y, K, J)
