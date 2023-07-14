@@ -4,20 +4,22 @@
 \alias{HK_from_spectrum}
 \title{Construct heat kernel covariance matrix from the spectrum of W}
 \usage{
-HK_from_spectrum(eigenpairs, m, K, t)
+HK_from_spectrum(eigenpairs, K, t, idx0 = NULL, idx1 = NULL)
 }
 \arguments{
 \item{eigenpairs}{A list of converged eigenvalues and eigenvectors of W,
 including \code{values} and \code{vectors}.}
 
-\item{m}{An integer, the number of labeled samples.}
-
 \item{K}{An integer, the number of used eigenpairs.}
 
 \item{t}{A non-negative number, the heat diffusion time.}
+
+\item{idx0, }{An integer vector with length(m0), index vector.}
+
+\item{idx1, }{An integer vector with length(m1), index vector.}
 }
 \value{
-A numeric matrix with dim (n,m), the covariance matrix of heat kernel
+A numeric matrix with dim (m0,m1), the covariance matrix of heat kernel
 Gaussian processes.
 }
 \description{
@@ -27,5 +29,5 @@ The graph Laplacian L = I - W.
 Z <- matrix(rnorm(3*3),3,3)
 X <- Z\%*\%t(Z)
 eigens <- eigen(X)
-HK_from_spectrum(eigens, 2, 2, 0.1)
+HK_from_spectrum(eigens, 2, 0.1, c(1:2), c(1:3))
 }

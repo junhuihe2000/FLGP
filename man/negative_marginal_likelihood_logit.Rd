@@ -4,14 +4,21 @@
 \alias{negative_marginal_likelihood_logit}
 \title{Create negative log marginal likelihood functional}
 \usage{
-negative_marginal_likelihood_logit(eigenpair, Y, m, K, N = NULL, sigma = 0.001)
+negative_marginal_likelihood_logit(
+  eigenpair,
+  Y,
+  idx,
+  K,
+  N = NULL,
+  sigma = 0.001
+)
 }
 \arguments{
 \item{eigenpair}{A list includes values and vectors.}
 
 \item{Y}{A numeric vector with length(m), count of the positive class.}
 
-\item{m}{An integer, the number of labeled samples.}
+\item{idx}{An integer vector with length(m), the index of training samples.}
 
 \item{K}{An integer, the number of used eigenpairs.}
 
@@ -31,5 +38,5 @@ Z <- matrix(rnorm(3*3),3,3)
 X <- Z\%*\%t(Z)
 eigenpair <- eigen(X)
 Y <- sample(c(0,1),3, replace=TRUE)
-negative_marginal_likelihood_logit(eigenpair, Y, 3, 2)
+negative_marginal_likelihood_logit(eigenpair, Y, c(1:3), 2)
 }

@@ -146,9 +146,9 @@ Y_pred = vapply(res$f, function(x){
 ```
 
 ```{r}
-X0 <- matrix(rnorm(3*3), 3, 3)
-X1 <- matrix(rnorm(3*3, 3), 3, 3)
-Y <- c(1,1,1,0,0,0)
+X0 <- matrix(rnorm(20*3), 20, 3)
+X1 <- matrix(rnorm(20*3, 3), 20, 3)
+Y <- c(rep(1,20),rep(0,20))
 X <- rbind(X0,X1)
 X0_new <- matrix(rnorm(50*3),50,3)
 X1_new <- matrix(rnorm(50*3, 3),50,3)
@@ -161,8 +161,18 @@ error_rate(Y_new, Y_pred)
 ```
 
 ```{r}
-X_total = rbind(X,X_new)
-Y_total = c(Y,Y_new)
-ggplot() + geom_point(aes(X_total[,1],X_total[,2],col=Y_total))
-ggplot() + geom_point(aes(X_total[,1],X_total[,2],col=c(Y,Y_pred)))
+X0 <- matrix(rnorm(3*3), 3, 3)
+X1 <- matrix(rnorm(3*3, 5), 3, 3)
+X2 <- matrix(rnorm(3*3, -5), 3, 3)
+Y <- c(0,0,0,1,1,1,2,2,2)
+X <- rbind(X0,X1,X2)
+X0_new <- matrix(rnorm(10*3),10,3)
+X1_new <- matrix(rnorm(10*3, 5),10,3)
+X2_new <- matrix(rnorm(10*3, -5),10,3)
+X_new <- rbind(X0_new, X1_new, X2_new)
+s <- 6; r <- 3
+m <- 6; K <- 3
+J <- 3
+eigenpair <- heat_kernel_spectrum(X, X_new, s, r, K=K)
+train_lae_logit_mult_gp(eigenpair, Y, K, J)
 ```

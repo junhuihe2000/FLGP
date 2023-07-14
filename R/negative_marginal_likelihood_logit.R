@@ -2,7 +2,7 @@
 #'
 #' @param eigenpair A list includes values and vectors.
 #' @param Y A numeric vector with length(m), count of the positive class.
-#' @param m An integer, the number of labeled samples.
+#' @param idx An integer vector with length(m), the index of training samples.
 #' @param K An integer, the number of used eigenpairs.
 #' @param N A numeric vector with length(m), total count.
 #' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
@@ -16,10 +16,11 @@
 #' X <- Z%*%t(Z)
 #' eigenpair <- eigen(X)
 #' Y <- sample(c(0,1),3, replace=TRUE)
-#' negative_marginal_likelihood_logit(eigenpair, Y, 3, 2)
-negative_marginal_likelihood_logit <- function(eigenpair, Y, m, K, N=NULL, sigma=1e-3) {
+#' negative_marginal_likelihood_logit(eigenpair, Y, c(1:3), 2)
+negative_marginal_likelihood_logit <- function(eigenpair, Y, idx, K, N=NULL, sigma=1e-3) {
+  m = length(idx)
   nll <- function(t) {
-    C = HK_from_spectrum(eigenpair, m, K, t)
+    C = HK_from_spectrum(eigenpair, K, t, idx, idx)
     C[cbind(rep(1:m),rep(1:m))] = C[cbind(rep(1:m),rep(1:m))] + sigma
     mll = marginal_log_likelihood_logit_la(as.matrix(C), Y, N)$amll
     return(-mll)

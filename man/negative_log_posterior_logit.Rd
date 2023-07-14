@@ -7,13 +7,13 @@
 negative_log_posterior_logit(
   eigenpair,
   Y,
-  m,
+  idx,
   K,
   N = NULL,
   sigma = 0.001,
-  p = 0.001,
+  p = 0.01,
   q = 10,
-  theta = 1
+  theta = 2
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ negative_log_posterior_logit(
 
 \item{Y}{A numeric vector with length(m), count of the positive class.}
 
-\item{m}{An integer, the number of labeled samples.}
+\item{idx}{An integer vector with length(m), the index of training samples.}
 
 \item{K}{An integer, the number of used eigenpairs.}
 
@@ -30,11 +30,11 @@ negative_log_posterior_logit(
 \item{sigma}{A non-negative number, the weight coefficient of ridge penalty on H,
 the defaulting value is 1e-3.}
 
-\item{p}{A positive double, hyper-parameter, defaulting value is 1e-3.}
+\item{p}{A positive double, hyper-parameter, defaulting value is 1e-2.}
 
 \item{q}{A positive double, hyper-parameter, defaulting value is 10.}
 
-\item{theta}{A positive double, hyper-parameter, defaulting value is 1.}
+\item{theta}{A positive double, hyper-parameter, defaulting value is 2.}
 }
 \value{
 \code{nlp} negative log posterior functional with parameter t.
@@ -47,5 +47,5 @@ Z <- matrix(rnorm(3*3),3,3)
 X <- Z\%*\%t(Z)
 eigenpair <- eigen(X)
 Y <- sample(c(0,1),3, replace=TRUE)
-negative_log_posterior_logit(eigenpair, Y, 3, 2)
+negative_log_posterior_logit(eigenpair, Y, c(1:3), 2)
 }

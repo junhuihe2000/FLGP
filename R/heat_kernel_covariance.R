@@ -37,7 +37,7 @@ heat_kernel_covariance <- function(X, X_new, s, r, t, K=NULL, sigma=1e-3, cl=NUL
   m = nrow(X)
 
   eigenpairs = heat_kernel_spectrum(X, X_new, s, r, K, cl, models)
-  H = HK_from_spectrum(eigenpairs, m, K, t)
+  H = HK_from_spectrum(eigenpairs, K, t, NULL, c(1:m))
   H[cbind(c(1:m),c(1:m))] = H[cbind(c(1:m),c(1:m))] + sigma # ridge penalty
   return(H)
 }

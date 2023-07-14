@@ -1,8 +1,8 @@
-#' Learn diffusion time t by maximizing log marginal likelihood
+#' Learn diffusion time t by maximizing log marginal likelihood or log posterior
 #'
 #' @param eigenpair A list includes values and vectors.
 #' @param Y A numeric vector with length(m), count of the positive class.
-#' @param m An integer, the number of labeled samples.
+#' @param idx An integer vector with length(m), the index of training samples.
 #' @param K An integer, the number of used eigenpairs.
 #' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
 #' the defaulting value is 1e-3.
@@ -16,7 +16,7 @@
 #' @return A list with two components
 #' \describe{
 #' \item{t}{the optimal diffusion time.}
-#' \item{mll}{the corresponding optimal log marginal likelihood value.}
+#' \item{obj}{the corresponding optimal objective function value.}
 #' }
 #' @export
 #'
@@ -31,10 +31,11 @@
 #' s <- 6; r <- 3
 #' m <- 6; K <- 3
 #' eigenpair <- heat_kernel_spectrum(X, X_new, s, r, K=K)
-#' train_lae_logit_gp(eigenpair, Y, m, K)
-train_lae_logit_gp <- function(eigenpair, Y, m, K, sigma=1e-3, N=NULL,
+#' train_lae_logit_gp(eigenpair, Y, c(1:m), K)
+train_lae_logit_gp <- function(eigenpair, Y, idx, K, sigma=1e-3, N=NULL,
                                approach="posterior", t0=NULL, lower=1e-3, upper=100) {
-  eigenpair$vectors = eigenpair$vectors[1:m,]
+  m = length(idx)
+  eigenpair$vectors = eigenpair$vectors[idx,]
   # initialize t
   if(is.null(t0)) {
     t0 = 10
@@ -43,26 +44,26 @@ train_lae_logit_gp <- function(eigenpair, Y, m, K, sigma=1e-3, N=NULL,
   if(approach=="marginal") {
     # optimize negative log marginal likelihood
     opt = stats::optim(t0,
-                       negative_marginal_likelihood_logit(eigenpair, Y, m, K, N, sigma),
+                       negative_marginal_likelihood_logit(eigenpair, Y, c(1:m), K, N, sigma),
                        NULL,
                        method = "L-BFGS-B",
                        lower = lower,
                        upper = upper)
-    cat("For local anchor embedding, optimal t =",opt$par,", log marginal likelihood is",opt$value,".\n")
+    cat("For local anchor embedding, optimal t =",opt$par,", log marginal likelihood is",-opt$value,".\n")
   } else if(approach=="posterior") {
     # optimize negative log posterior
     opt = stats::optim(t0,
-                       negative_log_posterior_logit(eigenpair, Y, m, K, N, sigma),
+                       negative_log_posterior_logit(eigenpair, Y, c(1:m), K, N, sigma),
                        NULL,
                        method = "L-BFGS-B",
                        lower = lower,
                        upper = upper)
-    cat("For local anchor embedding, optimal t =",opt$par,", log posterior is",opt$value,".\n")
+    cat("For local anchor embedding, optimal t =",opt$par,", log posterior is",-opt$value,".\n")
   } else {
     stop("This model selection approach is not supported!")
   }
 
   t = opt$par
-  mll = -opt$value
-  return(list(t=t,mll=mll))
+  obj = -opt$value
+  return(list(t=t,obj=obj))
 }

@@ -59,12 +59,12 @@ fit_lae_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3,
   eigenpair = heat_kernel_spectrum(X, X_new, s, r, K, cl, models)
 
   # empirical Bayes to optimize t
-  opt = train_lae_logit_gp(eigenpair, Y, m, K, sigma, N, approach)
+  opt = train_lae_logit_gp(eigenpair, Y, c(1:m), K, sigma, N, approach)
   t = opt$t
 
   # construct covariance matrix
   # C = heat_kernel_covariance(X, X_new, s, r, t, K, sigma, cl, models)
-  C = HK_from_spectrum(eigenpair, m, K, t)
+  C = HK_from_spectrum(eigenpair, K, t, NULL, c(1:m))
   C[cbind(rep(1:m),rep(1:m))] = C[cbind(rep(1:m),rep(1:m))] + sigma
   Cvv = C[1:m,]
   Cnv = C[(m+1):n,]
