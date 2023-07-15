@@ -22,7 +22,7 @@ negative_log_posterior_reg <- function(eigenpair, Y, K,
                                              p=1e-2, q=10, tau=2) {
   nll = negative_marginal_likelihood_reg(eigenpair, Y, K)
   nlp <- function(theta) {
-    nlpr = nlpr = p*log(theta[1]+1e-5) + (theta[1]/tau)^{-q}
+    nlpr = p*log(theta[1]+1e-5) + (theta[1]/tau)^{-q}
     return(nll(theta)+nlpr)
   }
   return(nlp)

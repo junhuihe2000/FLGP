@@ -17,7 +17,7 @@
 #' test_pgbinary(C, Y, Cnv)
 test_reg <- function(C, Y, Cnv) {
   m = length(Y)
-  C[cbind(rep(1:m),rep(1,m))] = C[cbind(rep(1:m),rep(1,m))] + 1e-3
+  # C[cbind(rep(1:m),rep(1,m))] = C[cbind(rep(1:m),rep(1,m))] + 1e-3
   # posterior expectation
   Y_pred = Cnv%*%solve(C, Y)
   return(as.vector(Y_pred))

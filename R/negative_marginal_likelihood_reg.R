@@ -19,9 +19,13 @@ negative_marginal_likelihood_reg <- function(eigenpair, Y, K) {
   m = length(Y)
   idx = c(1:m)
   nll <- function(theta) {
+    if(FALSE) {
     C = HK_from_spectrum(eigenpair, K, theta[1], idx, idx)
-    C[cbind(rep(1,m),rep(1,m))] = C[cbind(rep(1,m),rep(1,m))] + theta[2]
+    C[cbind(rep(1,m),rep(1,m))] = C[cbind(rep(1,m),rep(1,m))] + theta[2]^2
     mll = marginal_log_likelihood_reg(C, Y)
+    }
+
+    mll = marginal_log_likelihood_reg_robust(eigenpair, Y, theta, K)
     return(-mll)
   }
   return(nll)

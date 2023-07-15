@@ -49,19 +49,25 @@ fit_lae_reg_gp <- function(X, Y, X_new, s, r, K=NULL,
 
   eigenpair = heat_kernel_spectrum(X, X_new, s, r, K, cl, models)
 
+  # train model
   # empirical Bayes to optimize theta
   opt = train_lae_reg_gp(eigenpair, Y, K, approach)
   theta = opt$theta
   t = theta[1]; sigma = theta[2]
 
+  # test model
+  if(FALSE) {
   # construct covariance matrix
   C = HK_from_spectrum(eigenpair, K, t, NULL, c(1:m))
-  C[cbind(rep(1:m),rep(1:m))] = C[cbind(rep(1:m),rep(1:m))] + sigma
+  C[cbind(rep(1:m),rep(1:m))] = C[cbind(rep(1:m),rep(1:m))] + sigma^2
   Cvv = C[1:m,]
   Cnv = C[(m+1):n,]
 
   # predict labels on new samples
   Y_pred = test_reg(as.matrix(Cvv), Y, as.matrix(Cnv))
+  }
+
+  Y_pred = test_reg_robust(eigenpair, Y, theta, K)
 
   return(Y_pred)
 }
