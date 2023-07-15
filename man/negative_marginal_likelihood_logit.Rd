@@ -2,7 +2,7 @@
 % Please edit documentation in R/negative_marginal_likelihood_logit.R
 \name{negative_marginal_likelihood_logit}
 \alias{negative_marginal_likelihood_logit}
-\title{Create negative log marginal likelihood functional}
+\title{Create negative log marginal likelihood functional for logistic regression}
 \usage{
 negative_marginal_likelihood_logit(
   eigenpair,
@@ -31,7 +31,7 @@ the defaulting value is 1e-3.}
 \code{nll} negative log marginal likelihood functional with parameter t.
 }
 \description{
-Create negative log marginal likelihood functional
+Create negative log marginal likelihood functional for logistic regression
 }
 \examples{
 Z <- matrix(rnorm(3*3),3,3)

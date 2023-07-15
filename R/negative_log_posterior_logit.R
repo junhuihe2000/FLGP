@@ -1,4 +1,4 @@
-#' Create negative log posterior functional with inverse gamma prior
+#' Create negative log posterior functional with inverse gamma prior for logistic regression
 #'
 #' @param eigenpair A list includes values and vectors.
 #' @param Y A numeric vector with length(m), count of the positive class.
@@ -9,7 +9,7 @@
 #' the defaulting value is 1e-3.
 #' @param p A positive double, hyper-parameter, defaulting value is 1e-2.
 #' @param q A positive double, hyper-parameter, defaulting value is 10.
-#' @param theta A positive double, hyper-parameter, defaulting value is 2.
+#' @param tau A positive double, hyper-parameter, defaulting value is 2.
 #'
 #' @return `nlp` negative log posterior functional with parameter t.
 #' @export
@@ -21,12 +21,12 @@
 #' Y <- sample(c(0,1),3, replace=TRUE)
 #' negative_log_posterior_logit(eigenpair, Y, c(1:3), 2)
 negative_log_posterior_logit <- function(eigenpair, Y, idx, K, N=NULL, sigma=1e-3,
-                                         p=1e-2, q=10, theta=2) {
+                                         p=1e-2, q=10, tau=2) {
   m = length(idx)
   nll = negative_marginal_likelihood_logit(eigenpair, Y, idx, K, N=NULL, sigma=1e-3)
 
   nlp <- function(t) {
-    nlpr = p*log(t+1e-5) + (t/theta)^{-q}
+    nlpr = p*log(t+1e-5) + (t/tau)^{-q}
     return(nll(t)+nlpr)
   }
 

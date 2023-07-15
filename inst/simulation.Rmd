@@ -203,3 +203,19 @@ ggplot() + geom_point(aes(X_new[,1],X_new[,2],col=Y_new)) +
   geom_point(aes(X[,1],X[,2]),col="red")
 ```
 
+```{r}
+X <- matrix(rnorm(50), 50, 1)
+Y <- c(X)^2
+X_new <- matrix(rnorm(100),100,1)
+Y_new <- c(X_new)^2
+s <- 10; r <- 3
+K <- 5
+Y_pred = fit_lae_reg_gp(X, Y, X_new, s, r, K)
+```
+
+```{r}
+ggplot() + geom_line(aes(X_new, Y_new), col="red") +
+  geom_line(aes(X_new, Y_pred), col="blue")
+```
+
+

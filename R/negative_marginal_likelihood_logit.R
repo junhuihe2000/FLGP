@@ -1,4 +1,4 @@
-#' Create negative log marginal likelihood functional
+#' Create negative log marginal likelihood functional for logistic regression
 #'
 #' @param eigenpair A list includes values and vectors.
 #' @param Y A numeric vector with length(m), count of the positive class.

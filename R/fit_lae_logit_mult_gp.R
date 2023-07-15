@@ -8,7 +8,7 @@
 #' @param s An integer indicating the number of the subsampling.
 #' @param r An integer, the number of the nearest neighbor points.
 #' @param K An integer, the number of used eigenpairs to construct heat kernel,
-#' the defaulting value is `NULL`, that is, `K=min(n,s)`.
+#' the defaulting value is `NULL`, that is, `K=s`.
 #' @param N A numeric vector with length(m), total count.
 #' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
 #' the defaulting value is 1e-3.

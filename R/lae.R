@@ -25,7 +25,7 @@ LAE <- function(X, U, r=3L, cl=NULL) {
   stopifnot(ncol(U)-ncol(X)==0)
   n = nrow(X)
   ind_knn = KNN(X, U, r)
-  lae_units = lapply(c(1:n), function(i){return(list("x"=X[i, ], "U"=U[ind_knn[[i]],]))})
+  lae_units = lapply(c(1:n), function(i){return(list("x"=X[i, ], "U"=U[ind_knn[[i]], , drop=FALSE]))})
 
   if(is.null(cl)) {
     Z_list = lapply(lae_units, local_anchor_embedding)

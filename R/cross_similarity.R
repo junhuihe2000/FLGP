@@ -30,7 +30,7 @@ cross_similarity <- function(X, U, r=3L, kernel="lae", gl="rw", cl=NULL) {
   d = ncol(X)
 
   if(kernel=="lae") {
-    Z = LAE(X, U[,1:d], r, cl=cl)
+    Z = LAE(X, U[,1:d, drop=FALSE], r, cl=cl)
   } else {
     stop("Error: the kernel is not supported!")
   }

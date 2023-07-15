@@ -2,7 +2,7 @@
 % Please edit documentation in R/negative_log_posterior_logit.R
 \name{negative_log_posterior_logit}
 \alias{negative_log_posterior_logit}
-\title{Create negative log posterior functional with inverse gamma prior}
+\title{Create negative log posterior functional with inverse gamma prior for logistic regression}
 \usage{
 negative_log_posterior_logit(
   eigenpair,
@@ -13,7 +13,7 @@ negative_log_posterior_logit(
   sigma = 0.001,
   p = 0.01,
   q = 10,
-  theta = 2
+  tau = 2
 )
 }
 \arguments{
@@ -34,13 +34,13 @@ the defaulting value is 1e-3.}
 
 \item{q}{A positive double, hyper-parameter, defaulting value is 10.}
 
-\item{theta}{A positive double, hyper-parameter, defaulting value is 2.}
+\item{tau}{A positive double, hyper-parameter, defaulting value is 2.}
 }
 \value{
 \code{nlp} negative log posterior functional with parameter t.
 }
 \description{
-Create negative log posterior functional with inverse gamma prior
+Create negative log posterior functional with inverse gamma prior for logistic regression
 }
 \examples{
 Z <- matrix(rnorm(3*3),3,3)
