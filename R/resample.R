@@ -40,9 +40,11 @@ resample_omega <- function(aug_data=AugmentedData()) {
 resample_f <- function(aug_data=AugmentedData()) {
   m = aug_data$m; J = aug_data$J
   f = matrix(0, m, J-1)
-  C_inv = aug_data$C_inv
+  C = aug_data$C
+  # C_inv = aug_data$C_inv
 
   for(j in c(1:(J-1))) {
+    if(FALSE) {
     # compute posterior parameters
     C_post = C_inv + diag(aug_data$omega[,j])
     R_post = chol(C_post)
@@ -51,6 +53,26 @@ resample_f <- function(aug_data=AugmentedData()) {
     # sample f from posterior Gaussian distributions
     rand_vec = stats::rnorm(m)
     f[,j] = mu_post + backsolve(R_post, rand_vec)
+    }
+
+    omegaj = aug_data$omega[,j]
+    kappaj = aug_data$kappa[,j]
+    sqrt_omegaj = sqrt(omegaj)
+    B = diag(1,m) + Matrix::dimScale(C, sqrt_omegaj)
+    R = Matrix::chol(B)
+    R_inv = backsolve(R, diag(1,m))
+    B_inv = Matrix::tcrossprod(R_inv)
+
+    # compute posterior parameters
+    # using equation 3.27 in GPML
+    sigma_post = C - C%*%(sqrt_omegaj*B_inv%*%(sqrt_omegaj*C))
+    mu_post = sigma_post%*%kappaj
+    R_post = Matrix::chol(sigma_post)
+
+    # sample f from posterior Gaussian distributions
+    rand_vec = stats::rnorm(m)
+    f[,j] = mu_post + Matrix::t(R_post)%*%rand_vec
   }
+
   return(f)
 }

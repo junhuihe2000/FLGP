@@ -17,8 +17,8 @@
 #' C <- A%*%t(A)
 #' Y <- matrix(sample.int(3*3 ,replace=TRUE),3,3)
 #' Cnv <- matrix(rnorm(5*3),5,3)
-#' test_pgmult(C, Y, Cnv, 1000)
-test_pgmult <- function(C, Y, Cnv, N_sample=1000) {
+#' test_pgmult(C, Y, Cnv, 100)
+test_pgmult <- function(C, Y, Cnv, N_sample=100) {
   stopifnot(nrow(C)==nrow(Y), nrow(C)==ncol(Cnv))
   aug_data = AugmentedData(C, Y)
   aug_data = PG_Gibbs_sampler(aug_data, N_sample)
@@ -46,7 +46,7 @@ test_pgmult <- function(C, Y, Cnv, N_sample=1000) {
 #' C <- A%*%t(A)
 #' Y <- matrix(sample.int(3*3 ,replace=TRUE),3,3)
 #' Cnv <- matrix(rnorm(5*3),5,3)
-#' test_pgmult_label(C, Y, Cnv, 1000)
+#' test_pgmult_label(C, Y, Cnv, 100)
 test_pgmult_label <- function(C, Y, Cnv, N_sample=1000) {
   stopifnot(nrow(C)==nrow(Y), nrow(C)==ncol(Cnv))
   aug_data = AugmentedData(C, Y)

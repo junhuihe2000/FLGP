@@ -4,7 +4,7 @@
 \alias{test_pgbinary}
 \title{Predict labels on new samples with Polya-Gamma}
 \usage{
-test_pgbinary(C, Y, Cnv, N = NULL, N_sample = 1000, full_out = FALSE)
+test_pgbinary(C, Y, Cnv, N = NULL, N_sample = 100, full_out = FALSE)
 }
 \arguments{
 \item{C}{A numeric matrix with dim(m,m), the self covariance matrix

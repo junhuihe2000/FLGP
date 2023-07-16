@@ -4,7 +4,7 @@
 \alias{AugmentedData}
 \title{Construct stick breaking multinomial Gaussian process models}
 \usage{
-AugmentedData(C, Y)
+AugmentedData(C, Y, inverse = FALSE)
 }
 \arguments{
 \item{C}{A numeric matrix with dim(m, m), the covariance matrix of training samples,
@@ -12,6 +12,8 @@ where \code{C[i,j]} indicates the covariance between \code{X_i} and \code{X_j}.}
 
 \item{Y}{A numeric matrix with dim(m,J), each row is a one hot vector indicating
 the label.}
+
+\item{inverse}{Bool, whether to compute C inverse firstly, defaulting value is FALSE.}
 }
 \value{
 An instance of the class \code{AugmentedData}.

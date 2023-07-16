@@ -53,15 +53,27 @@ collapsed_predict <- function(aug_data=AugmentedData(), Cnv) {
   stopifnot(methods::is(aug_data, "AugmentedData"), ncol(Cnv)==aug_data$m)
   m_new = nrow(Cnv)
 
+  C = aug_data$C
   mu_fs_new = matrix(0, m_new, aug_data$J-1)
 
   for(j in c(1:(aug_data$J-1))) {
     omegaj = aug_data$omega[,j] + 1e-16
     kappaj = aug_data$kappa[,j]
-    # account for the mean from the omega potentials
-    y = kappaj / omegaj
-    Cvv_noisy = aug_data$C + diag(1/omegaj)
-    mu_fs_new[,j] = Cnv%*%solve(Cvv_noisy, y)
+
+    if(FALSE) {
+      # account for the mean from the omega potentials
+      y = kappaj / omegaj
+      Cvv_noisy = aug_data$C + diag(1/omegaj)
+      mu_fs_new[,j] = Cnv%*%solve(Cvv_noisy, y)
+    }
+
+    m = aug_data$m
+    # using equation 3.27 in GPML
+    sqrt_omegaj = sqrt(omegaj)
+    B = diag(1,m) + Matrix::dimScale(C, sqrt_omegaj)
+    R = chol(B)
+    b = kappaj - sqrt_omegaj*backsolve(R, forwardsolve(t(R), sqrt_omegaj*(C%*%kappaj)))
+    mu_fs_new[,j] = Cnv%*%b
   }
 
   # convert f to pi

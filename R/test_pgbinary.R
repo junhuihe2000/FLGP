@@ -18,7 +18,7 @@
 #' Y <- sample(c(0,1),3, replace=TRUE)
 #' Cnv <- matrix(rnorm(5*3),5,3)
 #' test_pgbinary(C, Y, Cnv)
-test_pgbinary <- function(C, Y, Cnv, N=NULL, N_sample=1000, full_out=FALSE) {
+test_pgbinary <- function(C, Y, Cnv, N=NULL, N_sample=100, full_out=FALSE) {
   m = nrow(C)
   if(is.null(N)) {
     N = rep(1,m)
@@ -27,9 +27,9 @@ test_pgbinary <- function(C, Y, Cnv, N=NULL, N_sample=1000, full_out=FALSE) {
   # predict pi by Polya-Gamma auxiliary variables
   pi_pred = test_pgmult(C, cbind(Y,N-Y), Cnv, N_sample)[,1]
   Y_pred = vapply(pi_pred, function(pi) {
-    if(pi>0.5) {return(1)}
-    else {return(0)}
-  }, FUN.VALUE = 0)
+                                          if(pi>0.5) {return(1)}
+                                          else {return(0)}
+                                        }, FUN.VALUE = 0)
 
   if(full_out) {
     return(list(pi_pred=pi_pred, Y_pred=Y_pred))

@@ -1,0 +1,197 @@
+---
+title: "Torus example"
+author: "He Junhui"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(kernlab)
+```
+
+```{r}
+#######################################################
+# The first example
+# Torus examples
+
+set.seed(1234)
+```
+
+```{r}
+# generate samples of torus
+n = 2400; n_each = 400; d = 3
+thetas = runif(n, 0, 2*pi)
+X = matrix(0, nrow=n, ncol=2); Y = matrix(0, nrow=n, ncol=1)
+X[,1] = cos(thetas); X[,2] = sin(thetas)
+for(i in 0:5) {
+  X[(i*n_each+1):((i+1)*n_each),] = (0.5+0.1*i)*X[(i*n_each+1):((i+1)*n_each),]
+  Y[(i*n_each+1):((i+1)*n_each),] = as.numeric((-1)^i>0)
+}
+
+Y = as.factor(Y)
+torus.df = data.frame(X,Y)
+```
+
+```{r}
+# plot torus samples
+ggplot(data = torus.df) + geom_point(aes(X1,X2,color=Y)) +
+  theme(legend.position="none", 
+        axis.title.x=element_blank(), axis.title.y=element_blank()) +
+  ggtitle("Torus samples")
+```
+
+
+```{r}
+# classification
+  
+train.index = sample.int(n, m); test.index = c(1:n)[-train.index]
+train.data = torus.df[train.index,]; test.data = torus.df[-train.index,]
+```
+
+```{r}
+# radial basis kernel function
+rbf.torus = gausspr(x=train.data[,1:2], y=train.data[,3], type="classification")
+pred_prob.torus = predict(rbf.torus, test.data[,1:2], type="probabilities")
+pred_label.torus = as.factor(apply(pred_prob.torus, 1, function(x) {return(which.max(x)-1)}))
+err.rbf.torus = sum((as.double(test.data[,3])!=as.double(pred_label.torus))^2)/(n-m)
+err.rbf.torus
+```
+
+```{r}
+# plot
+ggplot() + geom_point(aes(test.data[,1],test.data[,2],color=pred_label.torus)) + 
+  geom_point(aes(train.data[,1],train.data[,2]), color="black") + 
+  theme(legend.position="none", 
+        axis.title.x=element_blank(), axis.title.y=element_blank()) + 
+  ggtitle("RBF GP")
+```
+
+```{r}
+# ksvm
+ksvm.torus = ksvm(x=as.matrix(train.data[,1:(d-1)]), y=as.factor(train.data[,d]), 
+            type="C-svc")
+# sigma =  1.11782928223624 
+# epsilon = 0.4729141
+pred_label.ksvm.torus = predict(ksvm.torus, as.matrix(test.data[,1:(d-1)]))
+err.ksvm.torus = sum((test.data[,d]!=pred_label.ksvm.torus)^2)/(n-m)
+err.ksvm.torus
+```
+
+
+```{r}
+# plot
+ggplot() + geom_point(aes(test.data[,1],test.data[,2],color=pred_label.ksvm.torus)) + 
+  geom_point(aes(train.data[,1],train.data[,2]), color="black") + 
+  theme(legend.position="none", 
+        axis.title.x=element_blank(), axis.title.y=element_blank()) + 
+  ggtitle("KSVM")
+```
+
+```{r}
+# Representative GLGP
+# process data
+torus.order = torus.df[c(train.index, test.index), ]
+X.scale.torus = scale(as.matrix(torus.order[ ,1:(d-1)]), center = TRUE, scale = TRUE)
+X.scale.torus = X.scale.torus / sqrt(ncol(X.scale.torus))
+
+f.torus = as.numeric(train.data[,d])-1
+```
+
+```{r}
+# hyper parameters
+s = 600; r = 3; K = 100
+```
+
+```{r}
+t1 = Sys.time()
+y_pred_flag.torus = as.factor(fit_lae_logit_gp(X.scale.torus[1:m,], f.torus, X.scale.torus[(m+1):n,], s, r, K))
+t2 = Sys.time()
+t2 - t1
+```
+
+```{r}
+err_flag.torus = sum((test.data[,d]!=y_pred_flag.torus)^2)/(n-m)
+err_flag.torus
+```
+
+```{r}
+# plot
+ggplot() + geom_point(aes(test.data[,1],test.data[,2],color=y_pred_flag.torus)) + 
+  geom_point(aes(train.data[,1],train.data[,2]), color="black") + 
+  theme(legend.position="none", 
+        axis.title.x=element_blank(), axis.title.y=element_blank()) + 
+  ggtitle("FLAG")
+```
+
+```{r}
+# plot
+k = 1
+cov_rgl.torus = H_rgl.torus[(m+k), ]/H_rgl.torus[(m+k),(m+k)]
+ggplot() + geom_point(aes(torus.order[,1],torus.order[,2],color=cov_rgl.torus)) + 
+  scale_color_gradient(low="blue", high="red") + 
+  geom_point(aes(test.data[k,1],test.data[k,2]), color="black", size=3) + 
+  theme(legend.position="none", 
+        axis.title.x=element_blank(), axis.title.y=element_blank()) + 
+  ggtitle(paste("H of RepGLGP with s =",s))
+
+a = 0.4729141
+H_rbf.torus = Kernel_Matrix(scale(as.matrix(torus.order[ ,1:(d-1)]), center = TRUE, scale = TRUE), a)
+cov_rbf.torus = H_rbf.torus[(m+k),]/H_rbf.torus[(m+k),(m+k)]
+ggplot() + geom_point(aes(torus.order[,1],torus.order[,2],color=cov_rbf.torus)) + 
+  scale_color_gradient(low="blue", high="red") + 
+  geom_point(aes(test.data[k,1],test.data[k,2]), color="black", size=3) + 
+  theme(legend.position="none", 
+        axis.title.x=element_blank(), axis.title.y=element_blank()) + 
+  ggtitle("H of RBF kernel")
+
+
+# plot error rates versus representative points' counts s
+# hyper parameters
+rps = seq(200, 1500, by=20); r = 3; Ks = rps
+err_rgl_reg_s.torus = rep(0, length(rps))
+
+t1 = Sys.time()
+for(i in 1:length(rps)) {
+  H_rgl.torus = Rep_GL_Reg_PM_NR(X.scale.torus, f.torus, rps[i], r, m, ks[i])
+  z_rgl.torus = solve(H_rgl.torus[1:m,1:m]+1e-10*diag(rep(1,m)), f.torus)
+  f_pred_rgl.torus = H_rgl.torus[(m+1):n, 1:m]%*%z_rgl.torus
+  y_pred_rgl_reg.torus = as.factor(as.numeric(f_pred_rgl.torus>0))
+  err_rgl_reg_s.torus[i] = sum((test.data[,d]!=y_pred_rgl_reg.torus)^2)/(n-m)
+}
+
+t2 = Sys.time()
+t2 - t1
+
+# plot
+ggplot() + geom_point(aes(x=rps,y=err_rgl_reg_s.torus)) +
+  geom_smooth(aes(x=rps,y=err_rgl_reg_s.torus), color="red") +
+  xlab("representative points' count s") + ylab("error rates") + 
+  ggtitle("error rates versus representative points' count")
+
+
+
+# plot the log posterior density function versus diffusion time t
+# hyper parameters
+s = 600; r = 3; Ks = s
+
+ts = seq(1, 60, by=0.1)
+t1 = Sys.time()
+eigenpairs = Rep_SVD_from_data(X.scale.torus, s, r)
+logps = sapply(X=ts, FUN=Log_Posterior, eigenpairs=eigenpairs, Y=f.torus, K=K)
+t2 = Sys.time()
+t2 - t1
+
+# plot
+ggplot() + geom_point(aes(x=ts,y=logps)) +
+  xlab("diffusion time t") + ylab("log(p(t|f))") +
+  ggtitle("log posterior density versus diffusion time")
+
+
+
+```
+

@@ -24,6 +24,7 @@
 #' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
 #' the defaulting value is `FALSE`.}
 #' }
+#' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #'
 #' @return `Y_pred` A numeric vector with length(m_new), each element indicates
 #' the label in the corresponding new sample point.
@@ -46,7 +47,8 @@ fit_lae_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3,
                              models=list(subsample="kmeans",
                                          kernel="lae",
                                          gl="rw",
-                                         root=FALSE)) {
+                                         root=FALSE),
+                             output_cov=FALSE) {
   m = nrow(X)
   n = m + nrow(X_new)
 
@@ -70,6 +72,10 @@ fit_lae_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3,
 
   # predict labels on new samples
   Y_pred = test_pgbinary(as.matrix(Cvv), Y, as.matrix(Cnv), N)
+
+  if(output_cov) {
+    return(list(Y_pred=Y_pred, C=C))
+  }
 
   return(Y_pred)
 }

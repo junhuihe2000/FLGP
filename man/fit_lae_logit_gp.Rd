@@ -15,7 +15,8 @@ fit_lae_logit_gp(
   sigma = 0.001,
   approach = "posterior",
   cl = NULL,
-  models = list(subsample = "kmeans", kernel = "lae", gl = "rw", root = FALSE)
+  models = list(subsample = "kmeans", kernel = "lae", gl = "rw", root = FALSE),
+  output_cov = FALSE
 )
 }
 \arguments{
@@ -53,6 +54,8 @@ defaulting value is \code{lae}.}
 \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
 the defaulting value is \code{FALSE}.}
 }}
+
+\item{output_cov}{Bool, whether to output covariance, defaulting value is \code{FALSE}.}
 }
 \value{
 \code{Y_pred} A numeric vector with length(m_new), each element indicates

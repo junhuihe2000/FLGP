@@ -11,7 +11,7 @@ train_lae_reg_gp(
   approach = "posterior",
   theta0 = NULL,
   lower = c(0.001, -Inf),
-  upper = c(100, Inf)
+  upper = c(Inf, Inf)
 )
 }
 \arguments{
@@ -28,7 +28,7 @@ decides which objective function to be optimized, defaulting value is \code{post
 
 \item{lower}{the lower bound on theta, defaulting value \code{c(1e-3,-Inf)}.}
 
-\item{upper}{the upper bound on theta, defaulting value \code{c(100,Inf)}.}
+\item{upper}{the upper bound on theta, defaulting value \code{c(Inf,Inf)}.}
 }
 \value{
 A list with two components

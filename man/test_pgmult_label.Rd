@@ -30,5 +30,5 @@ A <- matrix(rnorm(3*3),3,3)
 C <- A\%*\%t(A)
 Y <- matrix(sample.int(3*3 ,replace=TRUE),3,3)
 Cnv <- matrix(rnorm(5*3),5,3)
-test_pgmult_label(C, Y, Cnv, 1000)
+test_pgmult_label(C, Y, Cnv, 100)
 }

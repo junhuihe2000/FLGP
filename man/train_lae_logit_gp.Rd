@@ -14,7 +14,7 @@ train_lae_logit_gp(
   approach = "posterior",
   t0 = NULL,
   lower = 0.001,
-  upper = 100
+  upper = Inf
 )
 }
 \arguments{
@@ -38,7 +38,7 @@ decides which objective function to be optimized, defaulting value is \code{post
 
 \item{lower}{the lower bound on t, defaulting value \code{1e-3}.}
 
-\item{upper}{the upper bound on t, defaulting value \code{100}.}
+\item{upper}{the upper bound on t, defaulting value \code{Inf}.}
 }
 \value{
 A list with two components

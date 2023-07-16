@@ -7,7 +7,7 @@
 #' decides which objective function to be optimized, defaulting value is `posterior`.
 #' @param theta0 The initial guess for theta, defaulting value `c(10,1)`.
 #' @param lower the lower bound on theta, defaulting value `c(1e-3,-Inf)`.
-#' @param upper the upper bound on theta, defaulting value `c(100,Inf)`.
+#' @param upper the upper bound on theta, defaulting value `c(Inf,Inf)`.
 #'
 #' @return A list with two components
 #' \describe{
@@ -25,7 +25,7 @@
 #' eigenpair <- heat_kernel_spectrum(X, X_new, s, r, K=K)
 #' train_lae_reg_gp(eigenpair, Y, K)
 train_lae_reg_gp <- function(eigenpair, Y, K, approach="posterior",
-                             theta0=NULL, lower = c(1e-3, -Inf), upper = c(100, Inf)) {
+                             theta0=NULL, lower = c(1e-3, -Inf), upper = c(Inf, Inf)) {
   m = length(Y)
   eigenpair$vectors = eigenpair$vectors[1:m,]
   # initialize theta

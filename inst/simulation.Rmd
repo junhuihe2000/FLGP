@@ -146,9 +146,9 @@ Y_pred = vapply(res$f, function(x){
 ```
 
 ```{r}
-X0 <- matrix(rnorm(20*3), 20, 3)
-X1 <- matrix(rnorm(20*3, 3), 20, 3)
-Y <- c(rep(1,20),rep(0,20))
+X0 <- matrix(rnorm(50*3), 50, 3)
+X1 <- matrix(rnorm(50*3, 3), 50, 3)
+Y <- c(rep(1,50),rep(0,50))
 X <- rbind(X0,X1)
 X0_new <- matrix(rnorm(50*3),50,3)
 X1_new <- matrix(rnorm(50*3, 3),50,3)

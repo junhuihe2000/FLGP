@@ -4,7 +4,7 @@
 \alias{test_pgmult}
 \title{Predict multinomial probabilities on new samples}
 \usage{
-test_pgmult(C, Y, Cnv, N_sample = 1000)
+test_pgmult(C, Y, Cnv, N_sample = 100)
 }
 \arguments{
 \item{C}{A numeric matrix with dim(m,m), the self covariance matrix
@@ -30,5 +30,5 @@ A <- matrix(rnorm(3*3),3,3)
 C <- A\%*\%t(A)
 Y <- matrix(sample.int(3*3 ,replace=TRUE),3,3)
 Cnv <- matrix(rnorm(5*3),5,3)
-test_pgmult(C, Y, Cnv, 1000)
+test_pgmult(C, Y, Cnv, 100)
 }

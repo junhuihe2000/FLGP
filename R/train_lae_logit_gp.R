@@ -11,7 +11,7 @@
 #' decides which objective function to be optimized, defaulting value is `posterior`.
 #' @param t0 A positive double, the initial guess for t, defaulting value `10`.
 #' @param lower the lower bound on t, defaulting value `1e-3`.
-#' @param upper the upper bound on t, defaulting value `100`.
+#' @param upper the upper bound on t, defaulting value `Inf`.
 #'
 #' @return A list with two components
 #' \describe{
@@ -33,7 +33,7 @@
 #' eigenpair <- heat_kernel_spectrum(X, X_new, s, r, K=K)
 #' train_lae_logit_gp(eigenpair, Y, c(1:m), K)
 train_lae_logit_gp <- function(eigenpair, Y, idx, K, sigma=1e-3, N=NULL,
-                               approach="posterior", t0=NULL, lower=1e-3, upper=100) {
+                               approach="posterior", t0=NULL, lower=1e-3, upper=Inf) {
   m = length(idx)
   eigenpair$vectors = eigenpair$vectors[idx,]
   # initialize t
