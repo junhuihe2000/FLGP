@@ -150,6 +150,9 @@ X0 <- matrix(rnorm(50*3), 50, 3)
 X1 <- matrix(rnorm(50*3, 3), 50, 3)
 Y <- c(rep(1,50),rep(0,50))
 X <- rbind(X0,X1)
+train_ind = sample(50*2)
+X <- X[train_ind,]
+Y <- Y[train_ind]
 X0_new <- matrix(rnorm(50*3),50,3)
 X1_new <- matrix(rnorm(50*3, 3),50,3)
 X_new <- rbind(X0_new, X1_new)
@@ -157,25 +160,10 @@ Y_new <- c(rep(1,50),rep(0,50))
 s <- 10; r <- 3
 K <- 10
 Y_pred <- fit_lae_logit_gp(X, Y, X_new, s, r, K, approach = "posterior")
+# Y_pred <- fit_se_logit_gp(X, Y, X_new, s, r, K, approach = "posterior")
 error_rate(Y_new, Y_pred)
 ```
 
-```{r}
-X0 <- matrix(rnorm(3*3), 3, 3)
-X1 <- matrix(rnorm(3*3, 5), 3, 3)
-X2 <- matrix(rnorm(3*3, -5), 3, 3)
-Y <- c(0,0,0,1,1,1,2,2,2)
-X <- rbind(X0,X1,X2)
-X0_new <- matrix(rnorm(10*3),10,3)
-X1_new <- matrix(rnorm(10*3, 5),10,3)
-X2_new <- matrix(rnorm(10*3, -5),10,3)
-X_new <- rbind(X0_new, X1_new, X2_new)
-s <- 6; r <- 3
-m <- 6; K <- 3
-J <- 3
-eigenpair <- heat_kernel_spectrum(X, X_new, s, r, K=K)
-train_lae_logit_mult_gp(eigenpair, Y, K, J)
-```
 
 ```{r}
 X0 <- matrix(rnorm(10*3), 10, 3)
@@ -183,6 +171,9 @@ X1 <- matrix(rnorm(10*3, 3), 10, 3)
 X2 <- matrix(rnorm(10*3, -3), 10, 3)
 Y <- c(rep(0,10), rep(1,10), rep(2,10))
 X <- rbind(X0,X1,X2)
+train_ind = sample(10*3)
+X <- X[train_ind,]
+Y <- Y[train_ind]
 X0_new <- matrix(rnorm(50*3),50,3)
 X1_new <- matrix(rnorm(50*3, 3),50,3)
 X2_new <- matrix(rnorm(50*3, -3),50,3)
@@ -192,6 +183,7 @@ s <- 10; r <- 3
 K <- 10
 J <- 3
 Y_pred <- fit_lae_logit_mult_gp(X, Y, X_new, J, s, r, K)
+# Y_pred <- fit_se_logit_mult_gp(X, Y, X_new, J, s, r, K)
 error_rate(Y_new, Y_pred)
 ```
 

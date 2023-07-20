@@ -1,4 +1,4 @@
-#' Fit Gaussian process logistic mulotinomial regression with local anchor embedding kernels
+#' Fit Gaussian process logistic mulotinomial regression with square exponential kernels
 #'
 #' @description Compose J-1 binary logistic regression to implement the multinomial regression.
 #' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
@@ -12,6 +12,7 @@
 #' @param N A numeric vector with length(m), total count.
 #' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
 #' the defaulting value is 1e-3.
+#' @param a2s A numeric vector, the searching range for bandwidth.
 #' @param approach A character vector, taking value in c("posterior", "marginal"),
 #' decides which objective function to be optimized, defaulting value is `posterior`.
 #' @param cl The cluster to make parallel computing,
@@ -45,14 +46,14 @@
 #' s <- 6; r <- 3
 #' K <- 5
 #' J <- 3
-#' Y_pred <- fit_lae_logit_mult_gp(X, Y, X_new, J, s, r, K)
-fit_lae_logit_mult_gp <- function(X, Y, X_new, J, s, r, K=NULL, N=NULL, sigma=1e-3,
+#' Y_pred <- fit_se_logit_mult_gp(X, Y, X_new, J, s, r, K)
+fit_se_logit_mult_gp <- function(X, Y, X_new, J, s, r, K=NULL, N=NULL, sigma=1e-3, a2s=NULL,
                                   approach ="posterior", cl=NULL,
                                   models=list(subsample="kmeans",
-                                              kernel="lae",
+                                              kernel="se",
                                               gl="rw",
                                               root=FALSE)) {
-  cat("Local anchor embedding :\n")
+  cat("Square exponential kernel:\n")
   stopifnot(J>=2)
   m = nrow(X); m_new = nrow(X_new)
   n = m + m_new
@@ -61,14 +62,51 @@ fit_lae_logit_mult_gp <- function(X, Y, X_new, J, s, r, K=NULL, N=NULL, sigma=1e
     K = s
   }
 
-  eigenpair = heat_kernel_spectrum(X, X_new, s, r, K, cl, models)
+  if(is.null(a2s)) {
+    a2s = exp(seq(log(0.1),log(10),length.out=10))
+  }
+
+  d = ncol(X)
+  U = subsample(rbind(X,X_new), s, models$subsample)
+  res_knn = KNN(rbind(X,X_new), U[,1:d,drop=FALSE], r, output=TRUE, cl=cl)
+  ind_knn = res_knn[[1]]
+  distances_sp = res_knn[[2]]
+  distance_mean = sum(distances_sp) / (n*r)
+  i_sp = rep(c(1:n),each=r); j_sp = unlist(ind_knn)
+  Z = distances_sp
+
+  # initialize model
+  best_model = list(a2=NA,model_list=NA, obj=-Inf, eigenpair=NULL)
+
 
   # train model
   cat("Training...\n")
-  model_list = train_lae_logit_mult_gp(eigenpair, Y, K, J, sigma, N, approach)
+  for(a2 in a2s) {
+    Z[cbind(i_sp,j_sp)] = exp(-distances_sp[cbind(i_sp,j_sp)]/(a2*distance_mean))
+    Z = graphLaplacian(Z, models$gl)
+    eigenpair = spectrum_from_Z(Z, K, models$root)
+    # empirical Bayes to optimize t
+    cat("When epsilon =", sqrt(a2),": ")
+    model_list = train_lae_logit_mult_gp(eigenpair, Y, K, J, sigma, N, approach)
+    obj = 0
+    for(j in c(1:(J-1))) {
+      obj = obj + model_list[[j]]$obj
+    }
+    # update model parameters
+    if(obj>best_model$obj) {
+      best_model$a2 = a2; best_model$model_list = model_list; best_model$obj = obj
+      best_model$eigenpair = eigenpair
+    }
+  }
+
+  cat("\nTraining over \n\n")
+  cat("The optimal epsilon =",sqrt(best_model$a2),
+      ", log", approach, "=",best_model$obj,".\n")
 
   # test model
   cat("Testing...\n")
+  eigenpair = best_model$eigenpair
+  model_list = best_model$model_list
   idx = c(1:m_new)
   Y_pred = rep(J-1, m_new)
   for(j in c(0:(J-2))) {
@@ -80,9 +118,10 @@ fit_lae_logit_mult_gp <- function(X, Y, X_new, J, s, r, K=NULL, N=NULL, sigma=1e
     # Construct heat kernel covariance
     Cvv = HK_from_spectrum(eigenpair, K, tj, idxj, idxj)
     Cvv[cbind(rep(1:mj),rep(1:mj))] = Cvv[cbind(rep(1:mj),rep(1:mj))] + sigma
+    Cvv = Matrix::symmpart(Cvv)
     Cnv = HK_from_spectrum(eigenpair, K, tj, idx+m, idxj)
     # predict binary labels on new samples
-    Yj_pred = test_pgbinary(as.matrix(Cvv), Yj, as.matrix(Cnv), N)
+    Yj_pred = test_pgbinary(as.matrix(Cvv), Yj, as.matrix(Cnv), N) # Bug occurs
     idx1 = idx[which(Yj_pred==1)]
     Y_pred[idx1] = j
     idx = idx[-idx1]

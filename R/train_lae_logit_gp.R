@@ -49,7 +49,7 @@ train_lae_logit_gp <- function(eigenpair, Y, idx, K, sigma=1e-3, N=NULL,
                        method = "L-BFGS-B",
                        lower = lower,
                        upper = upper)
-    cat("For local anchor embedding, optimal t =",opt$par,", log marginal likelihood is",-opt$value,".\n")
+    cat("Optimal t =",opt$par,", log marginal likelihood is",-opt$value,".\n")
   } else if(approach=="posterior") {
     # optimize negative log posterior
     opt = stats::optim(t0,
@@ -58,7 +58,7 @@ train_lae_logit_gp <- function(eigenpair, Y, idx, K, sigma=1e-3, N=NULL,
                        method = "L-BFGS-B",
                        lower = lower,
                        upper = upper)
-    cat("For local anchor embedding, optimal t =",opt$par,", log posterior is",-opt$value,".\n")
+    cat("Optimal t =",opt$par,", log posterior is",-opt$value,".\n")
   } else {
     stop("This model selection approach is not supported!")
   }

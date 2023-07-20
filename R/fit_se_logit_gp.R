@@ -1,4 +1,4 @@
-#' Fit Gaussian process logistic regression with local anchor embedding kernels
+#' Fit Gaussian process logistic regression with square exponential kernels
 #'
 #' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
 #' @param Y A numeric vector with length(m), count of the positive class.
@@ -10,6 +10,7 @@
 #' @param N A numeric vector with length(m), total count.
 #' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
 #' the defaulting value is 1e-3.
+#' @param a2s A numeric vector, the searching range for bandwidth.
 #' @param approach A character vector, taking value in c("posterior", "marginal"),
 #' decides which objective function to be optimized, defaulting value is `posterior`.
 #' @param cl The cluster to make parallel computing,
@@ -41,15 +42,15 @@
 #' Y_new <- c(rep(1,10),rep(0,10))
 #' s <- 6; r <- 3
 #' K <- 5
-#' Y_pred <- fit_lae_logit_gp(X, Y, X_new, s, r, K)
-fit_lae_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3,
+#' Y_pred <- fit_se_logit_gp(X, Y, X_new, s, r, K)
+fit_se_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3, a2s=NULL,
                              approach ="posterior", cl=NULL,
                              models=list(subsample="kmeans",
-                                         kernel="lae",
+                                         kernel="se",
                                          gl="rw",
                                          root=FALSE),
                              output_cov=FALSE) {
-  cat("Local anchor embedding:\n")
+  cat("Square exponential kernel:\n")
 
   m = nrow(X)
   n = m + nrow(X_new)
@@ -58,20 +59,47 @@ fit_lae_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3,
     K = s
   }
 
+  if(is.null(a2s)) {
+    a2s = exp(seq(log(0.1),log(10),length.out=10))
+  }
 
-  eigenpair = heat_kernel_spectrum(X, X_new, s, r, K, cl, models)
 
-  # train model
+  d = ncol(X)
+  U = subsample(rbind(X,X_new), s, models$subsample)
+  res_knn = KNN(rbind(X,X_new), U[,1:d,drop=FALSE], r, output=TRUE, cl=cl)
+  ind_knn = res_knn[[1]]
+  distances_sp = res_knn[[2]]
+  distance_mean = sum(distances_sp) / (n*r)
+  i = rep(c(1:n),each=r); j = unlist(ind_knn)
+  Z = distances_sp
+
+  # initialize model
+  best_model = list(a2=NA,t=NA, obj=-Inf, eigenpair=NULL)
+
+  # Train model
   cat("Training...\n")
-  # empirical Bayes to optimize t
-  opt = train_lae_logit_gp(eigenpair, Y, c(1:m), K, sigma, N, approach)
-  t = opt$t
+  for(a2 in a2s) {
+    Z[cbind(i,j)] = exp(-distances_sp[cbind(i,j)]/(a2*distance_mean))
+    Z = graphLaplacian(Z, models$gl)
+    eigenpair = spectrum_from_Z(Z, K, models$root)
+    # empirical Bayes to optimize t
+    cat("When epsilon =", sqrt(a2),": ")
+    opt = train_lae_logit_gp(eigenpair, Y, c(1:m), K, sigma, N, approach)
+    # update model parameters
+    if(opt$obj>best_model$obj) {
+      best_model$a2 = a2; best_model$t = opt$t; best_model$obj = opt$obj
+      best_model$eigenpair = eigenpair
+    }
+  }
 
-  # test model
+  cat("\nTraining over \n\n")
+  cat("The optimal epsilon =",sqrt(best_model$a2),", t =", best_model$t,
+      ", log", approach, "=",best_model$obj,".\n")
+
+  # Test model
   cat("Testing...\n")
   # construct covariance matrix
-  # C = heat_kernel_covariance(X, X_new, s, r, t, K, sigma, cl, models)
-  C = HK_from_spectrum(eigenpair, K, t, NULL, c(1:m))
+  C = HK_from_spectrum(best_model$eigenpair, K, best_model$t, NULL, c(1:m))
   C[cbind(rep(1:m),rep(1:m))] = C[cbind(rep(1:m),rep(1:m))] + sigma
   Cvv = C[1:m,]
   Cnv = C[(m+1):n,]
@@ -82,7 +110,7 @@ fit_lae_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3,
   if(output_cov) {
     return(list(Y_pred=Y_pred, C=C))
   }
-
   cat("Testing over\n")
+
   return(Y_pred)
 }

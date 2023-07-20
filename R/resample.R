@@ -59,6 +59,7 @@ resample_f <- function(aug_data=AugmentedData()) {
     kappaj = aug_data$kappa[,j]
     sqrt_omegaj = sqrt(omegaj)
     B = diag(1,m) + Matrix::dimScale(C, sqrt_omegaj)
+    B = Matrix::symmpart(B) # (B+t(B))/2
     R = Matrix::chol(B)
     R_inv = backsolve(R, diag(1,m))
     B_inv = Matrix::tcrossprod(R_inv)
