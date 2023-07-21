@@ -10,11 +10,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+library(devtools)
 library(microbenchmark)
 library(parallel)
 library(Matrix)
 library(RSpectra)
 library(ggplot2)
+library(Rcpp)
+library(RcppEigen)
 ```
 
 ```{r}
@@ -229,5 +232,123 @@ for(t in ts) {
 }
 ```
 
+```{Rcpp}
+//[[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+#include <iostream>
+using namespace Rcpp;
+
+//[[Rcpp::export]]
+void testeigen() {
+  Eigen::MatrixXd A(2,2);
+  A << 1,2,
+       3,4;
+  std::cout << "A:\n" << A << std::endl;
+  Eigen::VectorXd v(2);
+  v << 1,2;
+  std::cout << "A.array().colwise()*v.array():\n" << A.array().colwise()*v.array() << std::endl;
+  A.diagonal().array() += 1;
+  std::cout << "A:\n" << A << std::endl;
+}
+
+//[[Rcpp::export]]
+void testdiagonal() {
+  Eigen::MatrixXd A = Eigen::MatrixXd::Random(1000,1000);
+  Eigen::MatrixXd B = A.diagonal().asDiagonal();
+  Eigen::DiagonalMatrix<double,1000> C = A.diagonal().asDiagonal();
+  A*C;
+}
+
+//[[Rcpp::export]]
+void testdiag() {
+  Eigen::MatrixXd A = Eigen::MatrixXd::Random(1000,1000);
+  Eigen::MatrixXd B = A.diagonal().asDiagonal();
+  Eigen::DiagonalMatrix<double,1000> C = A.diagonal().asDiagonal();
+  A*A;
+}
+
+```
+
+```{Rcpp}
+// [[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+#include <iostream>
+using namespace Rcpp;
+
+//[[Rcpp::export]]
+void testdiagvec() {
+  Eigen::MatrixXd A = Eigen::MatrixXd::Random(1000,1000);
+  Eigen::MatrixXd B = A.diagonal().asDiagonal();
+  Eigen::DiagonalMatrix<double,1000> C = A.diagonal().asDiagonal();
+  Eigen::ArrayXd v = A.diagonal();
+  A.array().rowwise() *= v.transpose();
+}
+```
+
+```{Rcpp}
+#include <iostream>
+//[[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+ 
+using namespace std;
+//[[Rcpp::export]]
+void testbc()
+{
+  Eigen::MatrixXd A = Eigen::MatrixXd::Random(1000,1000);
+  Eigen::MatrixXd B = A.diagonal().asDiagonal();
+  Eigen::DiagonalMatrix<double,1000> C = A.diagonal().asDiagonal();
+  Eigen::ArrayXd v = A.diagonal();
+  for(int i=0;i<1000;i++) {
+    for(int j=0;j<1000;j++) {
+      A(i,j)*v(j);
+}
+}
+}
+```
+
+
+
+```{r}
+microbenchmark({testdiagonal()},
+               {testdiag()},
+               {testdiagvec()},
+               {testbc()},
+               {
+                 A = matrix(rnorm(1000*1000),1000,1000)
+                 A*diag(A)
+               },
+               times=10)
+```
+
+```{Rcpp}
+#include <iostream>
+//[[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+ 
+using namespace std;
+//[[Rcpp::export]]
+void testexp() {
+  Eigen::VectorXd v(4);
+  v << 1,2,3,4;
+  cout << "v is\n" << v << endl;
+  Eigen::VectorXd expv = 1/Eigen::exp(v.array());
+  cout << "1/exp(v) is\n" << expv << endl;
+}
+```
+
+```{Rcpp}
+#include <iostream>
+//[[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+ 
+using namespace std;
+using namespace Eigen;
+//[[Rcpp::export]]
+void testgreater() {
+  Map<VectorXd> vmap = Rcpp::as<Map<VectorXd>>(Rcpp::NumericVector::create(1,2,3,4));
+  cout << "vmap is \n" << vmap << endl;
+  cout << (vmap.array() + 1e-16) << endl;
+}
+```
 
 

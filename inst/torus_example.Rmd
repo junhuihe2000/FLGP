@@ -48,7 +48,7 @@ ggplot(data = torus.df) + geom_point(aes(X1,X2,color=Y)) +
 
 ```{r}
 # classification
-  
+m = 100
 train.index = sample.int(n, m); test.index = c(1:n)[-train.index]
 train.data = torus.df[train.index,]; test.data = torus.df[-train.index,]
 ```

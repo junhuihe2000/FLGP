@@ -27,4 +27,5 @@ Imports:
     RSpectra,
     stats
 LinkingTo: 
-    Rcpp
+    Rcpp,
+    RcppEigen
