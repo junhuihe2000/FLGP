@@ -79,74 +79,10 @@ microbenchmark({lapply(c(1:1e3), function(i) {for(j in 1:10) {x*x}})},
                times = 10)
 ```
 
-```{r}
-s = list("cov"=1,"name"="mickey")
-class(s) = "mouth"
-```
 
-```{r}
-A <- matrix(rnorm(3*3),3,3)
-C <- A%*%t(A)
-Y <- matrix(sample.int(9,replace = TRUE),3,3)
-SBMultinomialGP(C,Y)
-```
 
-```{Rcpp}
-#include <Rcpp.h>
-#include <iostream>
-using namespace Rcpp;
-//[[Rcpp::export]]
-void add(int &x, int y) {
-  x = x + y;
-  std::cout << x << std::endl;
-}
++ test pgbinary
 
-//[[Rcpp::export]]
-void add2(int &x, int y) {
-  add(x, y);
-  x = x + y;
-  std::cout << x << std::endl;
-}
-```
-
-```{r}
-add_r <- function(x, y) {
-  x = x + y
-}
-```
-
-```{r}
-a = 1; b = 1
-c = 1
-add(a,c)
-add_r(b,c)
-print(a)
-print(b)
-```
-
-```{r}
-add(a,c)
-add2(a,c)
-```
-
-```{r}
-i = 0
-repeat{
-  if(i>2) {break}
-  i = i + 1
-  cat("i =",i,"\n")
-}
-```
-
-```{r}
-Y_pred = vapply(res$f, function(x){
-  if(x>0){
-  return(1)
-    } else {
-      return(0)
-      }
-  }, FUN.VALUE = 0)
-```
 
 ```{r}
 X0 <- matrix(rnorm(50*3), 50, 3)
@@ -162,10 +98,21 @@ X_new <- rbind(X0_new, X1_new)
 Y_new <- c(rep(1,50),rep(0,50))
 s <- 10; r <- 3
 K <- 10
-Y_pred <- fit_lae_logit_gp(X, Y, X_new, s, r, K, approach = "posterior")
+results <- fit_lae_logit_gp(X, Y, X_new, s, r, K, approach = "posterior", output_cov = TRUE)
+Y_pred <- results$Y_pred
+C <- results$C
+Cvv <- as.matrix(C[1:100,])
+Cnv <- as.matrix(C[101:200,])
+aug_data <- AugmentedData(Cvv, cbind(Y,1-Y))
 # Y_pred <- fit_se_logit_gp(X, Y, X_new, s, r, K, approach = "posterior")
 error_rate(Y_new, Y_pred)
 ```
+
+```{r}
+Y_pred = test_pgbinary_cpp(Cvv,Y,Cnv)$Y_pred
+error_rate(Y_new, Y_pred)
+```
+
 
 
 ```{r}
@@ -214,23 +161,8 @@ ggplot() + geom_line(aes(X_new, Y_new), col="red") +
   geom_point(aes(X, Y), col="black")
 ```
 
-```{r}
-vectors = eigenpair$vectors
-values = eigenpair$values
-Q = crossprod(vectors[1:m,]) + (1e-3+theta[2]^2)*diag(exp((1-values)*theta[1]))
-Y_p = as.vector(vectors[(m+1):n,]%*%solve(Q, t(vectors[1:m,])%*%Y))
-```
 
-```{r}
-ts = seq(0,100,1)
-sigmas = seq(0,1,0.01)
-for(t in ts) {
-  for(sigma in sigmas) {
-    theta = c(t,sigma)
-    nlp(theta);
-  }
-}
-```
+
 
 ```{Rcpp}
 //[[Rcpp::depends(RcppEigen)]]

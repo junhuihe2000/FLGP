@@ -1,4 +1,4 @@
 #' @useDynLib FLAG, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
-#' @importFrom BayesLogit rpg
+#' @importFrom pgdraw pgdraw
 NULL

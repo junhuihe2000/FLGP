@@ -2,10 +2,10 @@
 #include <RcppEigen.h>
 #include "PGLogitModel.h"
 
+// [[Rcpp::interfaces(r, cpp)]]
+
 using namespace Rcpp;
 using namespace Eigen;
-
-//' @importFrom Rcpp sourceCpp
 
 
 //' Predict labels on new samples with Polya-Gamma
@@ -44,4 +44,3 @@ Rcpp::List test_pgbinary_cpp(const Eigen::MatrixXd & C,
     return Rcpp::List::create(Named("Y_pred")=Y_pred);
   }
 }
-

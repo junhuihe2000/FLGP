@@ -6,10 +6,6 @@
 using namespace Rcpp;
 using namespace Eigen;
 
-//' @importFrom Rcpp sourceCpp
-//' @importFrom BayesLogit rpg
-//' @useDynLib FLAG, .registration=TRUE
-
 
 class PGLogitModel;
 
@@ -43,6 +39,10 @@ private:
   Eigen::MatrixXd C;
   Eigen::VectorXi Y, N;
   Eigen::VectorXd kappa, omega, f;
+
+  // polya-gamma sampler
+  Rcpp::Environment pg = Rcpp::Environment::namespace_env("pgdraw");
+  Rcpp::Function pgdraw = pg["pgdraw"];
 
 
   void _resample_f();
@@ -99,13 +99,8 @@ void PGLogitModel::_resample_f() {
 
 
 void PGLogitModel::_resample_omega() {
-  Environment BayesLogit = Environment::namespace_env("BayesLogit");
-  Function rpg = BayesLogit["rpg"];
-
   // Update auxiliary variables according to their conditional Poyla-Gamma distributions
-  for(int i=0;i<m;i++) {
-    omega(i) = Rcpp::as<double>(rpg(Named("num")=1, Named("h")=N(i), Named("z")=f(i)));
-  }
+  omega = Rcpp::as<Eigen::VectorXd>(pgdraw(Named("b")=N, Named("c")=f));
 }
 
 
@@ -123,6 +118,5 @@ Eigen::VectorXd PGLogitModel::_collapsed_predict(const Eigen::MatrixXd & Cnv) {
   Eigen::VectorXd pi_new(f_to_pi(mu_f_new));
   return pi_new;
 }
-
 
 

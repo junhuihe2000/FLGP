@@ -22,6 +22,7 @@ Imports:
     Matrix,
     methods,
     parallel,
+    pgdraw,
     Rcpp,
     RcppEigen,
     RSpectra,

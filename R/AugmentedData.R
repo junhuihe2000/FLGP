@@ -16,7 +16,7 @@
 #' AugmentedData(C,Y)
 AugmentedData <- function(C, Y, inverse=FALSE) {
   stopifnot(methods::is(C, "matrix")||methods::is(C, "Matrix"),
-            methods::is(Y,  "matrix")||methods::is(C, "Matrix"))
+            methods::is(Y,  "matrix")||methods::is(Y, "Matrix"))
   stopifnot(nrow(C)==ncol(C), nrow(C)==nrow(Y))
   J = ncol(Y); m = nrow(Y)
 

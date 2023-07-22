@@ -78,6 +78,7 @@ fit_lae_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3,
 
   # predict labels on new samples
   Y_pred = test_pgbinary(as.matrix(Cvv), Y, as.matrix(Cnv), N)
+  # Y_pred = test_pgbinary_cpp(as.matrix(Cvv), Y, as.matrix(Cnv))$Y_pred
 
   if(output_cov) {
     return(list(Y_pred=Y_pred, C=C))
