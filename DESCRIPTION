@@ -1,4 +1,5 @@
 Package: FLAG
+Type: Package
 Title: Fast Laplacian adaptive Gaussian process with subsampling
 Version: 0.0.0.9000
 Authors@R: 
@@ -25,8 +26,11 @@ Imports:
     pgdraw,
     Rcpp,
     RcppEigen,
+    RcppParallel,
     RSpectra,
     stats
 LinkingTo: 
     Rcpp,
-    RcppEigen
+    RcppEigen,
+    RcppParallel
+SystemRequirements: GNU make

@@ -2,7 +2,6 @@
 #include <RcppEigen.h>
 #include "PGLogitModel.h"
 
-// [[Rcpp::interfaces(r, cpp)]]
 
 using namespace Rcpp;
 using namespace Eigen;
@@ -18,7 +17,7 @@ using namespace Eigen;
 //' @param N_sample An integer, the length of the Gibbs sampler chain.
 //' @param output_pi Bool, whether or not to output pi_new, defaulting value is `FALSE`.
 //'
-//' @return `list(Y_pred)` if `output_pi=FALSE`, otherwise `list(pi_pred,Y_pred)`.
+//' @return `list(Y_pred)` if `output_pi=FALSE`, otherwise `list(Y_pred,pi_pred)`.
 //' @export
 //'
 //' @examples
@@ -29,18 +28,19 @@ using namespace Eigen;
 //' test_pgbinary_cpp(C, Y, Cnv)
 //[[Rcpp::export(test_pgbinary_cpp)]]
 Rcpp::List test_pgbinary_cpp(const Eigen::MatrixXd & C,
-                             const Eigen::VectorXi & Y,
+                             const Eigen::VectorXd & Y,
                              const Eigen::MatrixXd & Cnv,
                              int N_sample = 100,
                              bool output_pi = false) {
   PGLogitModel pglogit(C, Y);
   pglogit.resample_model(N_sample);
   Eigen::VectorXd pi_pred = pglogit.predict(Cnv);
-  Eigen::VectorXi Y_pred = pi_to_Y(pi_pred);
+  Eigen::VectorXd Y_pred = pi_to_Y(pi_pred);
   if(output_pi) {
-    return Rcpp::List::create(Named("pi_pred")=pi_pred, Named("Y_pred")=Y_pred);
+    return Rcpp::List::create(Named("Y_pred")=Y_pred, Named("pi_pred")=pi_pred);
   }
   else {
     return Rcpp::List::create(Named("Y_pred")=Y_pred);
   }
 }
+

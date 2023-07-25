@@ -18,6 +18,7 @@ library(RSpectra)
 library(ggplot2)
 library(Rcpp)
 library(RcppEigen)
+library(RcppParallel)
 ```
 
 ```{r}
@@ -161,126 +162,129 @@ ggplot() + geom_line(aes(X_new, Y_new), col="red") +
   geom_point(aes(X, Y), col="black")
 ```
 
-
-
-
-```{Rcpp}
-//[[Rcpp::depends(RcppEigen)]]
-#include <RcppEigen.h>
-#include <iostream>
-using namespace Rcpp;
-
-//[[Rcpp::export]]
-void testeigen() {
-  Eigen::MatrixXd A(2,2);
-  A << 1,2,
-       3,4;
-  std::cout << "A:\n" << A << std::endl;
-  Eigen::VectorXd v(2);
-  v << 1,2;
-  std::cout << "A.array().colwise()*v.array():\n" << A.array().colwise()*v.array() << std::endl;
-  A.diagonal().array() += 1;
-  std::cout << "A:\n" << A << std::endl;
-}
-
-//[[Rcpp::export]]
-void testdiagonal() {
-  Eigen::MatrixXd A = Eigen::MatrixXd::Random(1000,1000);
-  Eigen::MatrixXd B = A.diagonal().asDiagonal();
-  Eigen::DiagonalMatrix<double,1000> C = A.diagonal().asDiagonal();
-  A*C;
-}
-
-//[[Rcpp::export]]
-void testdiag() {
-  Eigen::MatrixXd A = Eigen::MatrixXd::Random(1000,1000);
-  Eigen::MatrixXd B = A.diagonal().asDiagonal();
-  Eigen::DiagonalMatrix<double,1000> C = A.diagonal().asDiagonal();
-  A*A;
-}
-
-```
-
 ```{Rcpp}
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 #include <iostream>
+#include <algorithm>
+#include <numeric>
+
 using namespace Rcpp;
-
-//[[Rcpp::export]]
-void testdiagvec() {
-  Eigen::MatrixXd A = Eigen::MatrixXd::Random(1000,1000);
-  Eigen::MatrixXd B = A.diagonal().asDiagonal();
-  Eigen::DiagonalMatrix<double,1000> C = A.diagonal().asDiagonal();
-  Eigen::ArrayXd v = A.diagonal();
-  A.array().rowwise() *= v.transpose();
-}
-```
-
-```{Rcpp}
-#include <iostream>
-//[[Rcpp::depends(RcppEigen)]]
-#include <RcppEigen.h>
- 
+using namespace Eigen;
 using namespace std;
-//[[Rcpp::export]]
-void testbc()
-{
-  Eigen::MatrixXd A = Eigen::MatrixXd::Random(1000,1000);
-  Eigen::MatrixXd B = A.diagonal().asDiagonal();
-  Eigen::DiagonalMatrix<double,1000> C = A.diagonal().asDiagonal();
-  Eigen::ArrayXd v = A.diagonal();
-  for(int i=0;i<1000;i++) {
-    for(int j=0;j<1000;j++) {
-      A(i,j)*v(j);
-}
-}
+
+// [[Rcpp::export(testcpp)]]
+void testcpp(const Eigen::RowVectorXd & v) {
+  int r = v.size();
+  Eigen::RowVectorXd v_desc = v;
+  std::sort(v_desc.data(), v_desc.data()+r, std::greater<double>());
+  Eigen::RowVectorXd v_cumsum(r);
+  std::partial_sum(v_desc.data(), v_desc.data()+r, v_cumsum.data());
+  Eigen::RowVectorXd v_star = v_desc.array() - (v_cumsum.array()-1)/Eigen::ArrayXd::LinSpaced(r, 1, r).transpose();
+  int rho;
+  for(rho=r;rho>0;rho--) {
+    if(v_star(rho-1)>0) {break;}
+  }
+
+  double theta = (v_desc.head(rho).sum() - 1.0)/rho;
+  Eigen::RowVectorXd z = v.array() - theta;
+  std::transform(z.data(), z.data()+r, z.data(), [](double a) {return std::max(a, 0.0);});
+  cout << "z is \n" << z << endl;
 }
 ```
 
+```{r}
+A <- matrix(rnorm(3*3),3,3)
+C <- A%*%t(A)
+Y <- sample(c(0,1), 3,replace=TRUE)
+N <- rep(1,3)
+print(marginal_log_likelihood_logit_la(C, Y, N)$amll)
+print(marginal_log_likelihood_logit_la_cpp(C, Y, N))
+```
 
 
 ```{r}
-microbenchmark({testdiagonal()},
-               {testdiag()},
-               {testdiagvec()},
-               {testbc()},
-               {
-                 A = matrix(rnorm(1000*1000),1000,1000)
-                 A*diag(A)
-               },
-               times=10)
+x = rnorm(5)
+U = matrix(rnorm(5*3),3,5)
+unit = list(x=x,U=U)
+print(local_anchor_embedding(unit))
+print(as.vector(local_anchor_embedding_cpp(x,U)))
 ```
 
-```{Rcpp}
-#include <iostream>
-//[[Rcpp::depends(RcppEigen)]]
-#include <RcppEigen.h>
- 
-using namespace std;
-//[[Rcpp::export]]
-void testexp() {
-  Eigen::VectorXd v(4);
-  v << 1,2,3,4;
-  cout << "v is\n" << v << endl;
-  Eigen::VectorXd expv = 1/Eigen::exp(v.array());
-  cout << "1/exp(v) is\n" << expv << endl;
-}
-```
 
 ```{Rcpp}
-#include <iostream>
-//[[Rcpp::depends(RcppEigen)]]
+// [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
- 
-using namespace std;
+// [[Rcpp::depends(RcppParallel)]]
+#include <RcppParallel.h>
+#include <iostream>
+#include <algorithm>
+#include <numeric>
+
+using namespace Rcpp;
 using namespace Eigen;
-//[[Rcpp::export]]
-void testgreater() {
-  Map<VectorXd> vmap = Rcpp::as<Map<VectorXd>>(Rcpp::NumericVector::create(1,2,3,4));
-  cout << "vmap is \n" << vmap << endl;
-  cout << (vmap.array() + 1e-16) << endl;
+using namespace std;
+
+
+template<class ArgType, class RowIndexType, class ColIndexType>
+class indexing_functor {
+  const ArgType &m_arg;
+  const RowIndexType &m_rowIndices;
+  const ColIndexType &m_colIndices;
+public:
+  typedef Eigen::Matrix<typename ArgType::Scalar,
+                 RowIndexType::SizeAtCompileTime,
+                 ColIndexType::SizeAtCompileTime,
+                 ArgType::Flags&Eigen::RowMajorBit?Eigen::RowMajor:Eigen::ColMajor,
+                 RowIndexType::MaxSizeAtCompileTime,
+                 ColIndexType::MaxSizeAtCompileTime> MatrixType;
+ 
+  indexing_functor(const ArgType& arg, const RowIndexType& row_indices, const ColIndexType& col_indices)
+    : m_arg(arg), m_rowIndices(row_indices), m_colIndices(col_indices)
+  {}
+ 
+  const typename ArgType::Scalar& operator() (Eigen::Index row, Eigen::Index col) const {
+    return m_arg(m_rowIndices[row], m_colIndices[col]);
+  }
+};
+
+
+template <class ArgType, class RowIndexType, class ColIndexType>
+Eigen::CwiseNullaryOp<indexing_functor<ArgType,RowIndexType,ColIndexType>, typename indexing_functor<ArgType,RowIndexType,ColIndexType>::MatrixType>
+mat_indexing(const Eigen::MatrixBase<ArgType>& arg, const RowIndexType& row_indices, const ColIndexType& col_indices)
+{
+  typedef indexing_functor<ArgType,RowIndexType,ColIndexType> Func;
+  typedef typename Func::MatrixType MatrixType;
+  return MatrixType::NullaryExpr(row_indices.size(), col_indices.size(), Func(arg.derived(), row_indices, col_indices));
+}
+
+// [[Rcpp::export(testindex)]]
+void testindex() {
+  Eigen::MatrixXd A = Eigen::MatrixXd::Random(3,3);
+  cout << "A is\n" << A << endl;
+  Eigen::Array2i rows(1,0);
+  Eigen::Array2i cols(1,0);
+  Eigen::MatrixXd B = mat_indexing(A, rows.transpose(), cols);
+  cout << "B is\n" << B << endl;
 }
 ```
 
+```{r}
+X <- matrix(rnorm(30), nrow=10, ncol=3)
+U <- matrix(rnorm(15), nrow=5, ncol=3)
+r <- 3
+print(KNN_cpp(X,U,r)[[1]]+1-matrix(unlist(KNN(X,U,r)), 10, 3, byrow=TRUE))
+print(KNN_cpp(X,U,r,output = TRUE)[[2]]-KNN(X,U,r,output=TRUE)$distances_sp)
+```
+
+
+```{r}
+X <- matrix(rnorm(10*3),10,3)
+r <- 3
+U <- matrix(rnorm(5*3),5,3)
+print(LAE(X, U, r)-LAE_cpp(X,U,r))
+microbenchmark(LAE={LAE(X, U, r)},
+               LAECPP={LAE_cpp(X, U, r)},
+               times = 10)
+```
 

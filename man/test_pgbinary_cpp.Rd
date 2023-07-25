@@ -20,7 +20,7 @@ between new sample and training sample.}
 \item{output_pi}{Bool, whether or not to output pi_new, defaulting value is \code{FALSE}.}
 }
 \value{
-\code{list(Y_pred)} if \code{output_pi=FALSE}, otherwise \code{list(pi_pred,Y_pred)}.
+\code{list(Y_pred)} if \code{output_pi=FALSE}, otherwise \code{list(Y_pred,pi_pred)}.
 }
 \description{
 Predict labels on new samples with Polya-Gamma

@@ -1,4 +1,6 @@
 #' @useDynLib FLAG, .registration = TRUE
-#' @importFrom Rcpp sourceCpp
+#' @importFrom Rcpp evalCpp
 #' @importFrom pgdraw pgdraw
+#' @import RcppEigen
+#' @importFrom RcppParallel RcppParallelLibs
 NULL
