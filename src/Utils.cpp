@@ -78,3 +78,22 @@ Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r,
 }
 
 
+void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
+                        Rcpp::String gl,
+                        const Eigen::VectorXd & num_class) {
+  if(gl=="rw") {}
+  else if(gl=="normalized") {
+    Eigen::VectorXd Z_colsum = Eigen::RowVectorXd::Ones(Z.rows()) * Z;
+    Z = Z * (1.0/Z_colsum.array()).matrix().asDiagonal();
+  } else if(gl=="cluster-normalized") {
+    Eigen::VectorXd Z_colsum = Eigen::RowVectorXd::Ones(Z.rows()) * Z;
+    Z = Z * (1.0/Z_colsum.array()).matrix().asDiagonal();
+    Z = Z * num_class.asDiagonal();
+  } else {
+    Rcpp::stop("Error: the type of graph Laplacian is not supported!");
+  }
+
+  Eigen::VectorXd Z_rowsum = Z * Eigen::VectorXd::Ones(Z.cols());
+  Z = (1.0/Z_rowsum.array()).matrix().asDiagonal() * Z;
+}
+

@@ -28,6 +28,6 @@ Truncated SVD, compute the non-trivial spectrums of A\%\\emph{\%t(A) by calculat
 of t(A)\%}\%A firstly.
 }
 \examples{
-A <- matrix(rnorm(100*10), 100, 10)
+A <- matrix(rnorm(5*2), 5, 2)
 truncated_SVD(A, 3)
 }

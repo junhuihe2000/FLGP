@@ -8,6 +8,13 @@ using namespace Rcpp;
 using namespace Eigen;
 
 
+
+// Graph Laplacian type
+void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
+                        Rcpp::String gl = "rw",
+                        const Eigen::VectorXd & num_class = Eigen::VectorXd());
+
+
 //' k-nearest neighbor reference points
 //'
 //' @param X Original points, a (n,d) matrix, each row indicates one original point.

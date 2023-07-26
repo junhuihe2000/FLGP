@@ -16,7 +16,7 @@
 #' @export
 #'
 #' @examples
-#' A <- matrix(rnorm(100*10), 100, 10)
+#' A <- matrix(rnorm(5*2), 5, 2)
 #' truncated_SVD(A, 3)
 truncated_SVD <- function(A, K=NULL) {
   stopifnot(methods::is(A, "Matrix")||methods::is(A, "matrix"))
@@ -29,7 +29,7 @@ truncated_SVD <- function(A, K=NULL) {
   } else {
     pairs = RSpectra::eigs_sym(Matrix::t(A)%*%A, k=K)
   }
-  pairs$vectors = Matrix::colScale(A%*%pairs$vectors, sqrt(pairs$values+1e-5)^{-1})
+  pairs$vectors = as.matrix(Matrix::colScale(A%*%pairs$vectors, sqrt(pairs$values+1e-5)^{-1}))
 
   return(pairs)
 }

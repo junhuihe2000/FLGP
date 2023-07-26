@@ -26,6 +26,33 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cross_similarity_lae_cpp
+Eigen::SparseMatrix<double,Eigen::RowMajor> cross_similarity_lae_cpp(const Eigen::MatrixXd& X, const Eigen::MatrixXd& U, int r, Rcpp::String gl);
+RcppExport SEXP _FLAG_cross_similarity_lae_cpp(SEXP XSEXP, SEXP USEXP, SEXP rSEXP, SEXP glSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type U(USEXP);
+    Rcpp::traits::input_parameter< int >::type r(rSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type gl(glSEXP);
+    rcpp_result_gen = Rcpp::wrap(cross_similarity_lae_cpp(X, U, r, gl));
+    return rcpp_result_gen;
+END_RCPP
+}
+// spectrum_from_Z_cpp
+Rcpp::List spectrum_from_Z_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor>& Z, int K, bool root);
+RcppExport SEXP _FLAG_spectrum_from_Z_cpp(SEXP ZSEXP, SEXP KSEXP, SEXP rootSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double,Eigen::RowMajor>& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< bool >::type root(rootSEXP);
+    rcpp_result_gen = Rcpp::wrap(spectrum_from_Z_cpp(Z, K, root));
+    return rcpp_result_gen;
+END_RCPP
+}
 // KNN_cpp
 Rcpp::List KNN_cpp(const Eigen::MatrixXd& X, const Eigen::MatrixXd& U, int r, Rcpp::String distance, bool output);
 RcppExport SEXP _FLAG_KNN_cpp(SEXP XSEXP, SEXP USEXP, SEXP rSEXP, SEXP distanceSEXP, SEXP outputSEXP) {
@@ -107,6 +134,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_FLAG_test_pgbinary_cpp", (DL_FUNC) &_FLAG_test_pgbinary_cpp, 5},
+    {"_FLAG_cross_similarity_lae_cpp", (DL_FUNC) &_FLAG_cross_similarity_lae_cpp, 4},
+    {"_FLAG_spectrum_from_Z_cpp", (DL_FUNC) &_FLAG_spectrum_from_Z_cpp, 3},
     {"_FLAG_KNN_cpp", (DL_FUNC) &_FLAG_KNN_cpp, 5},
     {"_FLAG_LAE_cpp", (DL_FUNC) &_FLAG_LAE_cpp, 3},
     {"_FLAG_local_anchor_embedding_cpp", (DL_FUNC) &_FLAG_local_anchor_embedding_cpp, 2},

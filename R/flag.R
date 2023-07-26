@@ -2,5 +2,5 @@
 #' @importFrom Rcpp evalCpp
 #' @importFrom pgdraw pgdraw
 #' @import RcppEigen
-#' @importFrom RcppParallel RcppParallelLibs
+#' @importFrom RSpectra eigs_sym
 NULL

@@ -6,10 +6,23 @@
 ## enable compilation with C++11 (or even C++14) where available
 #CXX_STD = CXX11
 
+
+PKG_CPPFLAGS += -I../inst/include/
+
 PKG_LIBS += $(shell ${R_HOME}/bin/Rscript -e "RcppParallel::RcppParallelLibs()")
 
 
+VER=
+CCACHE=ccache
+CC=$(CCACHE) gcc$(VER)
+CXX=$(CCACHE) g++$(VER)
+CXX11=$(CCACHE) g++$(VER)
+CXX14=$(CCACHE) g++$(VER)
+FC=$(CCACHE) gfortran$(VER)
+F77=$(CCACHE) gfortran$(VER)
+
 ## delete before submitting to CRAN
-PKG_CXXFLAGS+=-Wno-ignored-attributes
-PKG_CXX11FLAGS+=-Wno-ignored-attributes
-PKG_CXX14FLAGS+=-Wno-ignored-attributes
+PKG_CXXFLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
+PKG_CXX11FLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
+PKG_CXX14FLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
+

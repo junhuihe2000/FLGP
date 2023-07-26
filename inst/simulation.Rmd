@@ -288,3 +288,170 @@ microbenchmark(LAE={LAE(X, U, r)},
                times = 10)
 ```
 
+
+```{Rcpp}
+// [[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+// [[Rcpp::depends(RcppParallel)]]
+#include <RcppParallel.h>
+// [[Rcpp::depends(RSpectra)]]
+#include <Spectra/SymEigsSolver.h>
+#include <Spectra/MatOp/SparseSymMatProd.h>
+#include <iostream>
+#include <algorithm>
+#include <numeric>
+
+using namespace Rcpp;
+using namespace Eigen;
+using namespace std;
+
+// [[Rcpp::export(testtruncated_SVD_cpp)]]
+Rcpp::List testtruncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & Z,
+                             int K) {
+  if(K<0) {
+    K = Z.cols();
+  }
+
+  Eigen::MatrixXd vectors;
+  Eigen::VectorXd values;
+  
+  // Construct matrix operation object using the wrapper class SparseSymMatProd
+  Spectra::SparseSymMatProd<double> W_op((Z.transpose()*Z).pruned());
+  
+  // Construct eigen solver object, requesting the largest three eigenvalues
+  Spectra::SymEigsSolver<Spectra::SparseSymMatProd<double>> eigs(W_op, 3, 6);
+  /*
+  eigs.init();
+  eigs.compute(Spectra::SortRule::LargestAlge);
+  if(eigs.info() == Spectra::CompInfo::Successful) {
+    values = eigs.eigenvalues();
+    vectors = Z * (eigs.eigenvectors() * (1.0/values.array().sqrt()).matrix().asDiagonal());
+  } else {
+    Rcpp::stop("Truncated SVD fails!")
+  }
+  */
+  
+  if(K==Z.cols()) {
+    Eigen::BDCSVD<Eigen::MatrixXd> svd(Eigen::MatrixXd(Z), Eigen::ComputeThinU|Eigen::ComputeThinV);
+    vectors = svd.matrixU();
+    values = svd.singularValues().array().square();
+  } else {
+    // Construct matrix operation object using the wrapper class SparseSymMatProd
+    Spectra::SparseSymMatProd<double> W_op((Z.transpose()*Z).pruned());
+    // Construct eigen solver object, requesting the largest three eigenvalues
+    Spectra::SymEigsSolver<Spectra::SparseSymMatProd<double>> eigs(W_op, K, 2*K);
+    eigs.init();
+    eigs.compute(Spectra::SortRule::LargestAlge);
+    if(eigs.info() == Spectra::CompInfo::Successful) {
+      values = eigs.eigenvalues();
+      vectors = Z * (eigs.eigenvectors() * (1.0/values.array().sqrt()).matrix().asDiagonal());
+    } else {
+      Rcpp::stop("Truncated SVD fails!");
+    }
+  }
+  
+  return Rcpp::List::create(Rcpp::Named("values")=values,
+                            Rcpp::Named("vectors")=vectors);
+}
+```
+
+```{Rcpp}
+// [[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+#include <iostream>
+#include <algorithm>
+#include <numeric>
+
+using namespace Rcpp;
+using namespace Eigen;
+using namespace std;
+
+/*
+struct EigenPair {
+  Eigen::VectorXd values;
+  Eigen::MatrixXd vectors;
+
+  EigenPair(const Eigen::VectorXd & values, const Eigen::MatrixXd & vectors)
+    : values(values), vectors(vectors) {}
+};
+
+EigenPair truncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & Z,
+                             int K) {
+  if(K<0) {
+    K = Z.cols();
+  }
+
+  Eigen::MatrixXd vectors;
+  Eigen::VectorXd values;
+  if(K==Z.cols()) {
+    Eigen::BDCSVD<Eigen::MatrixXd> svd(Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>(Z), Eigen::ComputeThinU|Eigen::ComputeThinV);
+    vectors = svd.matrixU();
+    values = svd.singularValues().array().square();
+  } else {
+    Rcpp::Environment RSpectra = Rcpp::Environment::namespace_env("RSpectra");
+    Rcpp::Function eigs_sym = RSpectra["eigs_sym"];
+    Rcpp::List pairs = eigs_sym(Rcpp::Named("A")=Rcpp::wrap(Z.transpose()*Z),
+                                Rcpp::Named("k")=K);
+    values = Rcpp::as<Eigen::VectorXd>(pairs["values"]);
+    vectors = Rcpp::as<Eigen::MatrixXd>(pairs["vectors"]);
+    vectors = Z * (vectors * (1.0/values.array().sqrt()).matrix().asDiagonal());
+  }
+
+  return EigenPair(values, vectors);
+}
+
+*/
+
+// [[Rcpp::export(testspectrum_cpp)]]
+void spectrum_from_Z_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & Z,
+                         int K,
+                        bool root = false) {
+  Eigen::VectorXd values;
+  Eigen::MatrixXd vectors;
+  //EigenPair pairs(values,vectors);
+  /*
+  Eigen::VectorXd Z_colsum = Eigen::RowVectorXd::Ones(Z.rows()) * Z;
+  Eigen::SparseMatrix<double,Eigen::RowMajor> A = Z*(1.0/Z_colsum.array().sqrt()).matrix().asDiagonal();
+  EigenPair pairs = truncated_SVD_cpp(A, K);
+  
+  if(root) {
+    pairs.values = pairs.values.array().sqrt().matrix();
+  }
+  */
+  //return Rcpp::List::create(Named("values")=pairs.values, Named("vectors")=pairs.vectors);
+}
+```
+
+
+
+```{r}
+X <- matrix(rnorm(5*2), 5, 2)
+U <- subsample(X, 2, "random")
+r <- 2
+as.matrix(cross_similarity_lae_cpp(X,U,2))-as.matrix(cross_similarity(X, U, 2))
+```
+
+```{r}
+A <- sparseMatrix(i=c(1:10),j=sample.int(10),x=rnorm(10),repr = "R")
+K <- 3
+print(truncated_SVD(A,K)$value-truncated_SVD_cpp(A,K)$values)
+print(as.matrix(truncated_SVD(A,K)$vectors)-truncated_SVD_cpp(A,K)$vectors)
+```
+
+```{r}
+n = 100
+Z <- Matrix::sparseMatrix(i=c(1:n),j=sample.int(n),x=abs(rnorm(n)),repr = "R")
+K <- 2
+print(spectrum_from_Z(Z,K)$values - spectrum_from_Z_cpp(Z,K)$values)
+print(spectrum_from_Z(Z,K)$vectors - spectrum_from_Z_cpp(Z,K)$vectors)
+```
+
+
+```{r}
+microbenchmark(spectrum={spectrum_from_Z(Z,K)},
+               spectrumcpp={spectrum_from_Z_cpp(Z,K)},
+               times = 10)
+```
+
+
+

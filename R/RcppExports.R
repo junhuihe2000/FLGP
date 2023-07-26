@@ -24,6 +24,60 @@ test_pgbinary_cpp <- function(C, Y, Cnv, N_sample = 100L, output_pi = FALSE) {
     .Call(`_FLAG_test_pgbinary_cpp`, C, Y, Cnv, N_sample, output_pi)
 }
 
+#' Compute cross similarity matrix Z between X and U
+#'
+#' @param X A numeric matrix with dim (n,d), original sample,
+#' each row indicates one original point in R^d.
+#' @param U A numeric matrix with dim (s,d) or (s,d+1), sub-sample,
+#' each row indicates one representative point in R^d,
+#' where the d+1 column indicates the number of points in each cluster if it exists.
+#' @param r An integer, the number of the nearest neighbor points.
+#' @param gl A character vector in c("rw", "normalized", "cluster-normalized"),
+#' indicates how to construct the stochastic transition matrix. "rw" means random walk,
+#' "normalized" means normalized random walk, "cluster-normalized" means
+#' normalized random walk with cluster membership re-balance. The defaulting gl
+#' is "rw".
+#'
+#' @return `Z` A numeric sparse dgr matrix with dim (n,s),
+#' the stochastic transition matrix from X to U.
+#' @export
+#'
+#' @examples
+#' X <- matrix(rnorm(5*2), 5, 2)
+#' U <- subsample(X, 2, "random")
+#' r <- 2
+#' cross_similarity_lae_cpp(X, U, r)
+cross_similarity_lae_cpp <- function(X, U, r = 3L, gl = "rw") {
+    .Call(`_FLAG_cross_similarity_lae_cpp`, X, U, r, gl)
+}
+
+#' The spectrum of the similarity matrix W from Z
+#' @description The transition matrix W is the two step composition of
+#' the cross similarity matrix Z by $W=ZLambda^{-1}Z^T$.
+#'
+#' @param Z A numeric matrix with dim (n,s), the cross similarity matrix
+#' between the original sample and the sub-sample.
+#' @param K An integer, the number of eigenpairs requested, the defaulting value
+#' is NULL, indicating all non-trivial eigenpairs, that is, K=min(n,s).
+#' @param root A logical value, indicating whether to square root eigenvalues of W,
+#' the defaulting value is FALSE.
+#'
+#' @return A list of converged eigenvalues and eigenvectors of W.
+#' \describe{
+#' \item{values}{eigenvalues, descending order.}
+#' \item{vectors}{eigenvectors, the vectors are normalized to sqrt(n) length.}
+#' }
+#' @export
+#'
+#' @examples
+#' Z <- Matrix::sparseMatrix(i=c(1:5),j=sample.int(5),x=abs(rnorm(5)),repr = "R")
+#' # Z <- diag(1/Matrix::rowSums(Z))%*%Z
+#' K <- 2
+#' spectrum_from_Z_cpp(Z, K)
+spectrum_from_Z_cpp <- function(Z, K = -1L, root = FALSE) {
+    .Call(`_FLAG_spectrum_from_Z_cpp`, Z, K, root)
+}
+
 #' k-nearest neighbor reference points
 #'
 #' @param X Original points, a (n,d) matrix, each row indicates one original point.

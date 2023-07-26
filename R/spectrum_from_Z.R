@@ -22,7 +22,7 @@
 #' spectrum_from_Z(Z)
 spectrum_from_Z <- function(Z, K=NULL, root=FALSE) {
   stopifnot(methods::is(Z, "matrix")||methods::is(Z, "Matrix"))
-  A = Matrix::colScale(Z, sqrt(Matrix::colSums(Z)+1e-5)^{-1})
+  A = Matrix::colScale(Z, sqrt(abs(Matrix::colSums(Z))+1e-5)^{-1})
   eigenpairs = truncated_SVD(A, K)
   if(root) {
     eigenpairs$values = sqrt(eigenpairs$values)
