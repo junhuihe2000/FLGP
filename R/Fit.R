@@ -1,3 +1,6 @@
+# R interfaces
+
+
 #' Fit Gaussian process logistic regression with local anchor embedding kernels
 #'
 #' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
@@ -41,50 +44,14 @@
 #' Y_new <- c(rep(1,10),rep(0,10))
 #' s <- 6; r <- 3
 #' K <- 5
-#' Y_pred <- fit_lae_logit_gp(X, Y, X_new, s, r, K)
-fit_lae_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3,
-                             approach ="posterior", cl=NULL,
-                             models=list(subsample="kmeans",
-                                         kernel="lae",
-                                         gl="rw",
-                                         root=FALSE),
-                             output_cov=FALSE) {
-  cat("Local anchor embedding:\n")
+#' Y_pred <- fit_lae_logit_gp_r(X, Y, X_new, s, r, K)
+fit_lae_logit_gp_r <- function(X, Y, X_new, s, r, K=-1, N=c(), sigma=1e-3,
+                               approach="posterior",
+                               models=list(subsample="kmeans",
+                                           kernel="lae",
+                                           gl="rw",
+                                           root=FALSE),
+                               output_cov=FALSE) {
 
-  m = nrow(X)
-  n = m + nrow(X_new)
-
-  if(is.null(K)) {
-    K = s
-  }
-
-
-  eigenpair = heat_kernel_spectrum(X, X_new, s, r, K, cl, models)
-
-  # train model
-  cat("Training...\n")
-  # empirical Bayes to optimize t
-  opt = train_lae_logit_gp(eigenpair, Y, c(1:m), K, sigma, N, approach)
-  t = opt$t
-
-  # test model
-  cat("Testing...\n")
-  # construct covariance matrix
-  # C = heat_kernel_covariance(X, X_new, s, r, t, K, sigma, cl, models)
-  C = HK_from_spectrum(eigenpair, K, t, NULL, c(1:m))
-  C[cbind(rep(1:m),rep(1:m))] = C[cbind(rep(1:m),rep(1:m))] + sigma
-  Cvv = C[1:m,]
-  Cnv = C[(m+1):n,]
-
-  # predict labels on new samples
-  Y_pred = test_pgbinary(as.matrix(Cvv), Y, as.matrix(Cnv), N)
-  # Y_pred = test_pgbinary_cpp(as.matrix(Cvv), Y, as.matrix(Cnv))$Y_pred
-
-  cat("Testing over\n")
-
-  if(output_cov) {
-    return(list(Y_pred=Y_pred, C=C))
-  }
-
-  return(Y_pred)
+  return(fit_lae_logit_gp_cpp(X,Y,X_new,s,r,K,N,sigma,approach,models,output_cov))
 }

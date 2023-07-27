@@ -28,9 +28,12 @@ Imports:
     RcppEigen,
     RcppParallel,
     RSpectra,
-    stats
+    stats,
+    nloptr
 LinkingTo: 
     Rcpp,
     RcppEigen,
-    RcppParallel
+    RcppParallel,
+    ClusterR,
+    nloptr
 SystemRequirements: GNU make

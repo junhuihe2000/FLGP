@@ -17,7 +17,7 @@
 #'
 #' @examples
 #' A <- matrix(rnorm(5*2), 5, 2)
-#' truncated_SVD(A, 3)
+#' truncated_SVD(A, 2)
 truncated_SVD <- function(A, K=NULL) {
   stopifnot(methods::is(A, "Matrix")||methods::is(A, "matrix"))
   if(ncol(A)>nrow(A)) {

@@ -12,6 +12,48 @@ using namespace Rcpp;
 using namespace Eigen;
 
 
+/*-----------------------------------------------------------------*/
+/*-----------------------------------------------------------------*/
+/*-----------------------------------------------------------------*/
+
+
+EigenPair heat_kernel_spectrum_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
+                                   int s, int r, int K, const Rcpp::List & models) {
+  int m = X.rows(); int m_new = X_new.rows();
+  Eigen::MatrixXd X_all(m+m_new, X.cols());
+  X_all.topRows(m) = X;
+  X_all.bottomRows(m_new) = X_new;
+
+  Eigen::MatrixXd U = subsample_cpp(X_all, s, models["subsample"]);
+  Eigen::SparseMatrix<double, Eigen::RowMajor> Z = cross_similarity_lae_cpp(X_all, U, r, models["gl"]);
+
+  if(K<0) {
+    K = s;
+  }
+
+  EigenPair eigenpair = spectrum_from_Z_cpp(Z, K, models["root"]);
+
+  return eigenpair;
+}
+
+
+Eigen::MatrixXd HK_from_spectrum_cpp(const EigenPair & eigenpair, int K, double t,
+                                     const Eigen::VectorXi & idx0,
+                                     const Eigen::VectorXi & idx1) {
+  Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(K).array();
+  const Eigen::MatrixXd & eigenvectors = eigenpair.vectors;
+  Eigen::VectorXi cols = Eigen::VectorXi::LinSpaced(K,0,K-1);
+
+  Eigen::MatrixXd H = mat_indexing(eigenvectors, idx0, cols)*Eigen::exp(-t*eigenvalues.array()).matrix().asDiagonal()\
+    *mat_indexing(eigenvectors, idx1, cols).transpose();
+
+  return H;
+}
+
+
+
+
+
 
 Eigen::SparseMatrix<double,Eigen::RowMajor> cross_similarity_lae_cpp(
     const Eigen::MatrixXd & X,

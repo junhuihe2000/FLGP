@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <numeric>
 
-#include "PGLogitModel.h"
 #include "Utils.h"
 #include "lae.h"
 

@@ -1,36 +1,85 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
-#include "PGLogitModel.h"
+// [[Rcpp::depends(nloptr)]]
+#include <nloptrAPI.h>
+// #include <nlopt.h>
+
+#include <iostream>
+
+#include "train.h"
+#include "Utils.h"
+#include "Spectrum.h"
 
 using namespace Rcpp;
 using namespace Eigen;
 
 
+double negative_log_posterior_logit_cpp(unsigned n, const double *x, double *grad, void *data) {
+  PostOFData * _data = (PostOFData *) data;
+  // marginal likelihood
+  Eigen::MatrixXd C = HK_from_spectrum_cpp(_data->eigenpair, _data->K, x[0], _data->idx, _data->idx);
+  C.diagonal().array() += _data->sigma;
+  double mll = marginal_log_likelihood_logit_la_cpp(C, _data->Y, _data->N);
 
-//' Mode-finding for binary Laplace GPC with logit link function
-//'
-//' @param C A numeric matrix with dim(m,m), covariance matrix.
-//' @param Y A numeric vector with length(m), count of the positive class.
-//' @param N A numeric vector with length(m), total count.
-//' @param tol A double, convergence criterion, the defaulting value is `1e-5`.
-//' @param max_iter An integer, the maximum iteration number, defaulting value `100`.
-//'
-//' @return `amll` A double, the Laplace approximation of the marginal log likelihood.
-//' @export
-//'
-//' @examples
-//' A <- matrix(rnorm(3*3),3,3)
-//' C <- A%*%t(A)
-//' Y <- sample(c(0,1), 3,replace=TRUE)
-//' N <- rep(1,3)
-//' marginal_log_likelihood_logit_la_cpp(C, Y, N)
-//[[Rcpp::export(marginal_log_likelihood_logit_la_cpp)]]
+  // prior
+  double pr = _data->p*std::log(x[0]+1e-5) + std::pow(x[0]/_data->tau,-_data->q);
+
+  return (-mll+pr);
+}
+
+
+double negative_marginal_likelihood_logit_cpp(unsigned n, const double *x, double *grad, void * data) {
+  MargOFData * _data = (MargOFData *) data;
+  Eigen::MatrixXd C = HK_from_spectrum_cpp(_data->eigenpair, _data->K, x[0], _data->idx, _data->idx);
+  C.diagonal().array() += _data->sigma;
+  double mll = marginal_log_likelihood_logit_la_cpp(C, _data->Y, _data->N);
+  return -mll;
+}
+
+
+
+ReturnValue train_lae_logit_gp_cpp(void *data, std::string approach,
+                                   double t0, double lb, double ub) {
+  // initialize t
+  if(t0<0) {
+    t0 = 10;
+  }
+
+  nlopt_opt opt;
+  opt = nlopt_create(NLOPT_LN_COBYLA, 1);
+  nlopt_set_lower_bounds(opt, &lb);
+  nlopt_set_upper_bounds(opt, &ub);
+
+  // empirical Bayes
+  if(approach=="marginal") {
+    nlopt_set_min_objective(opt, negative_marginal_likelihood_logit_cpp, data);
+  } else if(approach=="posterior") {
+    nlopt_set_min_objective(opt, negative_log_posterior_logit_cpp, data);
+  } else {
+    Rcpp::stop("This model selection approach is not supported!");
+  }
+
+  nlopt_set_xtol_rel(opt, 1e-4);
+
+  double t = t0;
+  double obj;
+  if(nlopt_optimize(opt, &t, &obj)<0) {
+    std::cout << "nlopt failed!" << std::endl;
+  }
+
+  nlopt_destroy(opt);
+
+  return ReturnValue(t, obj);
+}
+
+
 double marginal_log_likelihood_logit_la_cpp(const Eigen::MatrixXd & C,
-                                                const Eigen::VectorXd & Y,
-                                                const Eigen::VectorXd & N,
-                                                double tol = 1e-5,
-                                                unsigned int max_iter = 100) {
-  unsigned int m = Y.rows();
+                                            const Eigen::VectorXd & Y,
+                                            const Eigen::VectorXd & N,
+                                            double tol,
+                                            int max_iter) {
+  int m = Y.rows();
+
   // initialize f
   Eigen::VectorXd f = Eigen::VectorXd::Constant(m, 0);
 

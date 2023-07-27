@@ -29,5 +29,5 @@ of t(A)\%}\%A firstly.
 }
 \examples{
 A <- matrix(rnorm(5*2), 5, 2)
-truncated_SVD(A, 3)
+truncated_SVD(A, 2)
 }

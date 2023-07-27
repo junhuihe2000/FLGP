@@ -11,13 +11,13 @@
 #' @export
 #'
 #' @examples
-#' X <- matrix(rnorm(100*3), nrow=100, ncol=3)
-#' s <- 10
+#' X <- matrix(rnorm(10*3), nrow=10, ncol=3)
+#' s <- 3
 #' U = subsample(X, s, method = "kmeans")
 subsample <- function(X, s, method = "kmeans") {
   stopifnot(is.matrix(X), abs(s-round(s))<.Machine$double.eps^0.5)
   if(method == "kmeans") {
-    cluster_kmeans = stats::kmeans(X, s, iter.max = 20, nstart = 10)
+    cluster_kmeans = stats::kmeans(X, s, iter.max = 100, nstart = 10)
     U = cbind(cluster_kmeans$centers, size=cluster_kmeans$size)
   } else if(method == "random") {
     U = X[sample.int(nrow(X), s), ,drop = FALSE]

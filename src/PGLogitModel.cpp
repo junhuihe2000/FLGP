@@ -1,26 +1,12 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
+
+#include "Utils.h"
 #include "PGLogitModel.h"
 
 using namespace Rcpp;
 using namespace Eigen;
 
-
-// inverse logit link function
-double ilogit(double x) {
-  return 1/(1+exp(-x));
-}
-
-// Stick breaking transform from f to pi
-Eigen::VectorXd f_to_pi(const Eigen::VectorXd & f) {
-  Eigen::VectorXd pi = 1/(1+Eigen::exp(-f.array()));
-  return pi;
-}
-
-// Predict Y based on pi
-Eigen::VectorXd pi_to_Y(const Eigen::VectorXd & pi) {
-  return (pi.array()>0.5).cast<double>();
-}
 
 
 

@@ -7,8 +7,52 @@
 
 #include "Utils.h"
 
+
 using namespace Rcpp;
 using namespace Eigen;
+
+
+// inverse logit link function
+double ilogit(double x) {
+  return 1/(1+exp(-x));
+}
+
+// Stick breaking transform from f to pi
+Eigen::VectorXd f_to_pi(const Eigen::VectorXd & f) {
+  Eigen::VectorXd pi = 1/(1+Eigen::exp(-f.array()));
+  return pi;
+}
+
+// Predict Y based on pi
+Eigen::VectorXd pi_to_Y(const Eigen::VectorXd & pi) {
+  return (pi.array()>0.5).cast<double>();
+}
+
+
+Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd & X, int s, Rcpp::String method) {
+  int n = X.rows(); int d = X.cols();
+  Eigen::MatrixXd U;
+
+  if(method=="kmeans") {
+    Rcpp::Environment stats = Rcpp::Environment::namespace_env("stats");
+    Rcpp::Function kmeans = stats["kmeans"];
+    Rcpp::List cluster_kmeans = kmeans(Rcpp::Named("x")=Rcpp::wrap(X),
+                                       Rcpp::Named("centers")=s,
+                                       Rcpp::Named("iter.max")=100,
+                                       Rcpp::Named("nstart")=10);
+    U.resize(s, d+1);
+    U.leftCols(d) = Rcpp::as<Eigen::MatrixXd>(cluster_kmeans["centers"]);
+    U.col(d) =  Rcpp::as<Eigen::VectorXd>(cluster_kmeans["size"]);
+  } else if(method=="random") {
+    Eigen::VectorXi rows = Rcpp::as<Eigen::VectorXi>(Rcpp::sample(n, s)).array()-1;
+    U = mat_indexing(X, rows, Eigen::VectorXi::LinSpaced(d,0,d-1));
+  } else {
+    Rcpp::stop("The subsample method is not supported!");
+  }
+
+  return U;
+}
+
 
 
 struct KNN_Index : public RcppParallel::Worker {
@@ -96,4 +140,39 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
   Eigen::VectorXd Z_rowsum = Z * Eigen::VectorXd::Ones(Z.cols());
   Z = (1.0/Z_rowsum.array()).matrix().asDiagonal() * Z;
 }
+
+
+
+Eigen::MatrixXd mini_batch_kmeans(Eigen::MatrixXd& data, int clusters, int batch_size, int max_iters, int num_init,
+                                  double init_fraction, std::string initializer,
+                                  int early_stop_iter, bool verbose,
+                                  Rcpp::Nullable<Rcpp::NumericMatrix> CENTROIDS,
+                                  double tol, double tol_optimal_init, int seed) {
+  Rcpp::Environment ClusterR = Rcpp::Environment::namespace_env("ClusterR");
+  Rcpp::Function MiniBatchKmeans = ClusterR["MiniBatchKmeans"];
+  Rcpp::List res = MiniBatchKmeans(Rcpp::Named("data")=Rcpp::wrap(data),
+                                   Rcpp::Named("clusters")=clusters, Rcpp::Named("batch_size")=batch_size,
+                                   Rcpp::Named("num_init")=num_init, Rcpp::Named("max_iters")=max_iters,
+                                   Rcpp::Named("init_fraction")=init_fraction, Rcpp::Named("initializer")=initializer,
+                                   Rcpp::Named("early_stop_iter")=early_stop_iter, Rcpp::Named("verbose")=verbose,
+                                   Rcpp::Named("CENTROIDS")=CENTROIDS, Rcpp::Named("tol")=tol,
+                                   Rcpp::Named("tol_optimal_init")=tol_optimal_init, Rcpp::Named("seed")=seed);
+  Eigen::MatrixXd centroids = Rcpp::as<Eigen::MatrixXd>(res["centroids"]);
+  return centroids;
+}
+
+
+
+Eigen::VectorXd Predict_mini_batch_kmeans(Eigen::MatrixXd& data, Eigen::MatrixXd& CENTROIDS,
+                                       bool fuzzy, bool updated_output) {
+  Rcpp::Environment ClusterR = Rcpp::Environment::namespace_env("ClusterR");
+  Rcpp::Function predict_MBatchKMeans = ClusterR["predict_MBatchKMeans"];
+  Rcpp::NumericVector res = predict_MBatchKMeans(Rcpp::Named("data")=Rcpp::wrap(data), Rcpp::Named("CENTROIDS")=Rcpp::wrap(CENTROIDS),
+                                        Rcpp::Named("fuzzy")=fuzzy, Rcpp::Named("updated_output")=updated_output);
+  Eigen::VectorXd clusters = Rcpp::as<Eigen::VectorXd>(res);
+
+  return clusters;
+}
+
+
 

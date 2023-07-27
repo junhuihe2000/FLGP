@@ -27,3 +27,6 @@ negative_marginal_likelihood_logit <- function(eigenpair, Y, idx, K, N=NULL, sig
   }
   return(nll)
 }
+
+
+

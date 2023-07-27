@@ -19,6 +19,7 @@ library(ggplot2)
 library(Rcpp)
 library(RcppEigen)
 library(RcppParallel)
+library(ClusterR)
 ```
 
 ```{r}
@@ -217,6 +218,8 @@ print(as.vector(local_anchor_embedding_cpp(x,U)))
 #include <RcppEigen.h>
 // [[Rcpp::depends(RcppParallel)]]
 #include <RcppParallel.h>
+// [[Rcpp::depends(nloptr)]]
+#include <nloptrAPI.h>
 #include <iostream>
 #include <algorithm>
 #include <numeric>
@@ -226,232 +229,36 @@ using namespace Eigen;
 using namespace std;
 
 
-template<class ArgType, class RowIndexType, class ColIndexType>
-class indexing_functor {
-  const ArgType &m_arg;
-  const RowIndexType &m_rowIndices;
-  const ColIndexType &m_colIndices;
-public:
-  typedef Eigen::Matrix<typename ArgType::Scalar,
-                 RowIndexType::SizeAtCompileTime,
-                 ColIndexType::SizeAtCompileTime,
-                 ArgType::Flags&Eigen::RowMajorBit?Eigen::RowMajor:Eigen::ColMajor,
-                 RowIndexType::MaxSizeAtCompileTime,
-                 ColIndexType::MaxSizeAtCompileTime> MatrixType;
- 
-  indexing_functor(const ArgType& arg, const RowIndexType& row_indices, const ColIndexType& col_indices)
-    : m_arg(arg), m_rowIndices(row_indices), m_colIndices(col_indices)
-  {}
- 
-  const typename ArgType::Scalar& operator() (Eigen::Index row, Eigen::Index col) const {
-    return m_arg(m_rowIndices[row], m_colIndices[col]);
-  }
-};
-
-
-template <class ArgType, class RowIndexType, class ColIndexType>
-Eigen::CwiseNullaryOp<indexing_functor<ArgType,RowIndexType,ColIndexType>, typename indexing_functor<ArgType,RowIndexType,ColIndexType>::MatrixType>
-mat_indexing(const Eigen::MatrixBase<ArgType>& arg, const RowIndexType& row_indices, const ColIndexType& col_indices)
-{
-  typedef indexing_functor<ArgType,RowIndexType,ColIndexType> Func;
-  typedef typename Func::MatrixType MatrixType;
-  return MatrixType::NullaryExpr(row_indices.size(), col_indices.size(), Func(arg.derived(), row_indices, col_indices));
+//[[Rcpp::export(testcout)]]
+void testcout() {
+  std::string approach = "posterior";
+  std::cout << (approach=="posterior") << std::endl;
+  std::cout << approach << std::endl;
+  Rcpp::NumericVector v;
+  Eigen::VectorXd v_eig = Rcpp::as<Eigen::VectorXd>(v);
+  std::cout << v_eig.size() << std::endl;
 }
 
-// [[Rcpp::export(testindex)]]
-void testindex() {
-  Eigen::MatrixXd A = Eigen::MatrixXd::Random(3,3);
-  cout << "A is\n" << A << endl;
-  Eigen::Array2i rows(1,0);
-  Eigen::Array2i cols(1,0);
-  Eigen::MatrixXd B = mat_indexing(A, rows.transpose(), cols);
-  cout << "B is\n" << B << endl;
-}
+
 ```
 
 ```{r}
-X <- matrix(rnorm(30), nrow=10, ncol=3)
-U <- matrix(rnorm(15), nrow=5, ncol=3)
-r <- 3
-print(KNN_cpp(X,U,r)[[1]]+1-matrix(unlist(KNN(X,U,r)), 10, 3, byrow=TRUE))
-print(KNN_cpp(X,U,r,output = TRUE)[[2]]-KNN(X,U,r,output=TRUE)$distances_sp)
+X0 <- matrix(rnorm(3*3), 3, 3)
+X1 <- matrix(rnorm(3*3, 5), 3, 3)
+Y <- c(1,1,1,0,0,0)
+X <- rbind(X0,X1)
+X0_new <- matrix(rnorm(10*3),10,3)
+X1_new <- matrix(rnorm(10*3, 5),10,3)
+X_new <- rbind(X0_new, X1_new)
+Y_new <- c(rep(1,10),rep(0,10))
+s <- 6; r <- 3
+K <- 5
+fit_lae_logit_gp(X,Y,X_new,s,r,K)
 ```
 
-
 ```{r}
-X <- matrix(rnorm(10*3),10,3)
-r <- 3
-U <- matrix(rnorm(5*3),5,3)
-print(LAE(X, U, r)-LAE_cpp(X,U,r))
-microbenchmark(LAE={LAE(X, U, r)},
-               LAECPP={LAE_cpp(X, U, r)},
+microbenchmark(HK={HK_from_spectrum(eigens, K, t, idx0, idx1)},
+               HK_cpp={testhk(eigens, K, t, idx0-1, idx1-1)},
                times = 10)
 ```
-
-
-```{Rcpp}
-// [[Rcpp::depends(RcppEigen)]]
-#include <RcppEigen.h>
-// [[Rcpp::depends(RcppParallel)]]
-#include <RcppParallel.h>
-// [[Rcpp::depends(RSpectra)]]
-#include <Spectra/SymEigsSolver.h>
-#include <Spectra/MatOp/SparseSymMatProd.h>
-#include <iostream>
-#include <algorithm>
-#include <numeric>
-
-using namespace Rcpp;
-using namespace Eigen;
-using namespace std;
-
-// [[Rcpp::export(testtruncated_SVD_cpp)]]
-Rcpp::List testtruncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & Z,
-                             int K) {
-  if(K<0) {
-    K = Z.cols();
-  }
-
-  Eigen::MatrixXd vectors;
-  Eigen::VectorXd values;
-  
-  // Construct matrix operation object using the wrapper class SparseSymMatProd
-  Spectra::SparseSymMatProd<double> W_op((Z.transpose()*Z).pruned());
-  
-  // Construct eigen solver object, requesting the largest three eigenvalues
-  Spectra::SymEigsSolver<Spectra::SparseSymMatProd<double>> eigs(W_op, 3, 6);
-  /*
-  eigs.init();
-  eigs.compute(Spectra::SortRule::LargestAlge);
-  if(eigs.info() == Spectra::CompInfo::Successful) {
-    values = eigs.eigenvalues();
-    vectors = Z * (eigs.eigenvectors() * (1.0/values.array().sqrt()).matrix().asDiagonal());
-  } else {
-    Rcpp::stop("Truncated SVD fails!")
-  }
-  */
-  
-  if(K==Z.cols()) {
-    Eigen::BDCSVD<Eigen::MatrixXd> svd(Eigen::MatrixXd(Z), Eigen::ComputeThinU|Eigen::ComputeThinV);
-    vectors = svd.matrixU();
-    values = svd.singularValues().array().square();
-  } else {
-    // Construct matrix operation object using the wrapper class SparseSymMatProd
-    Spectra::SparseSymMatProd<double> W_op((Z.transpose()*Z).pruned());
-    // Construct eigen solver object, requesting the largest three eigenvalues
-    Spectra::SymEigsSolver<Spectra::SparseSymMatProd<double>> eigs(W_op, K, 2*K);
-    eigs.init();
-    eigs.compute(Spectra::SortRule::LargestAlge);
-    if(eigs.info() == Spectra::CompInfo::Successful) {
-      values = eigs.eigenvalues();
-      vectors = Z * (eigs.eigenvectors() * (1.0/values.array().sqrt()).matrix().asDiagonal());
-    } else {
-      Rcpp::stop("Truncated SVD fails!");
-    }
-  }
-  
-  return Rcpp::List::create(Rcpp::Named("values")=values,
-                            Rcpp::Named("vectors")=vectors);
-}
-```
-
-```{Rcpp}
-// [[Rcpp::depends(RcppEigen)]]
-#include <RcppEigen.h>
-#include <iostream>
-#include <algorithm>
-#include <numeric>
-
-using namespace Rcpp;
-using namespace Eigen;
-using namespace std;
-
-/*
-struct EigenPair {
-  Eigen::VectorXd values;
-  Eigen::MatrixXd vectors;
-
-  EigenPair(const Eigen::VectorXd & values, const Eigen::MatrixXd & vectors)
-    : values(values), vectors(vectors) {}
-};
-
-EigenPair truncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & Z,
-                             int K) {
-  if(K<0) {
-    K = Z.cols();
-  }
-
-  Eigen::MatrixXd vectors;
-  Eigen::VectorXd values;
-  if(K==Z.cols()) {
-    Eigen::BDCSVD<Eigen::MatrixXd> svd(Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>(Z), Eigen::ComputeThinU|Eigen::ComputeThinV);
-    vectors = svd.matrixU();
-    values = svd.singularValues().array().square();
-  } else {
-    Rcpp::Environment RSpectra = Rcpp::Environment::namespace_env("RSpectra");
-    Rcpp::Function eigs_sym = RSpectra["eigs_sym"];
-    Rcpp::List pairs = eigs_sym(Rcpp::Named("A")=Rcpp::wrap(Z.transpose()*Z),
-                                Rcpp::Named("k")=K);
-    values = Rcpp::as<Eigen::VectorXd>(pairs["values"]);
-    vectors = Rcpp::as<Eigen::MatrixXd>(pairs["vectors"]);
-    vectors = Z * (vectors * (1.0/values.array().sqrt()).matrix().asDiagonal());
-  }
-
-  return EigenPair(values, vectors);
-}
-
-*/
-
-// [[Rcpp::export(testspectrum_cpp)]]
-void spectrum_from_Z_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & Z,
-                         int K,
-                        bool root = false) {
-  Eigen::VectorXd values;
-  Eigen::MatrixXd vectors;
-  //EigenPair pairs(values,vectors);
-  /*
-  Eigen::VectorXd Z_colsum = Eigen::RowVectorXd::Ones(Z.rows()) * Z;
-  Eigen::SparseMatrix<double,Eigen::RowMajor> A = Z*(1.0/Z_colsum.array().sqrt()).matrix().asDiagonal();
-  EigenPair pairs = truncated_SVD_cpp(A, K);
-  
-  if(root) {
-    pairs.values = pairs.values.array().sqrt().matrix();
-  }
-  */
-  //return Rcpp::List::create(Named("values")=pairs.values, Named("vectors")=pairs.vectors);
-}
-```
-
-
-
-```{r}
-X <- matrix(rnorm(5*2), 5, 2)
-U <- subsample(X, 2, "random")
-r <- 2
-as.matrix(cross_similarity_lae_cpp(X,U,2))-as.matrix(cross_similarity(X, U, 2))
-```
-
-```{r}
-A <- sparseMatrix(i=c(1:10),j=sample.int(10),x=rnorm(10),repr = "R")
-K <- 3
-print(truncated_SVD(A,K)$value-truncated_SVD_cpp(A,K)$values)
-print(as.matrix(truncated_SVD(A,K)$vectors)-truncated_SVD_cpp(A,K)$vectors)
-```
-
-```{r}
-n = 100
-Z <- Matrix::sparseMatrix(i=c(1:n),j=sample.int(n),x=abs(rnorm(n)),repr = "R")
-K <- 2
-print(spectrum_from_Z(Z,K)$values - spectrum_from_Z_cpp(Z,K)$values)
-print(spectrum_from_Z(Z,K)$vectors - spectrum_from_Z_cpp(Z,K)$vectors)
-```
-
-
-```{r}
-microbenchmark(spectrum={spectrum_from_Z(Z,K)},
-               spectrumcpp={spectrum_from_Z_cpp(Z,K)},
-               times = 10)
-```
-
-
 

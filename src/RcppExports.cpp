@@ -11,6 +11,27 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// fit_lae_logit_gp_cpp
+Rcpp::List fit_lae_logit_gp_cpp(Eigen::MatrixXd X, Eigen::VectorXd Y, Eigen::MatrixXd X_new, int s, int r, int K, Eigen::VectorXd N, double sigma, std::string approach, Rcpp::List models, bool output_cov);
+RcppExport SEXP _FLAG_fit_lae_logit_gp_cpp(SEXP XSEXP, SEXP YSEXP, SEXP X_newSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP NSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X(XSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_new(X_newSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< int >::type r(rSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type N(NSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_lae_logit_gp_cpp(X, Y, X_new, s, r, K, N, sigma, approach, models, output_cov));
+    return rcpp_result_gen;
+END_RCPP
+}
 // test_pgbinary_cpp
 Rcpp::List test_pgbinary_cpp(const Eigen::MatrixXd& C, const Eigen::VectorXd& Y, const Eigen::MatrixXd& Cnv, int N_sample, bool output_pi);
 RcppExport SEXP _FLAG_test_pgbinary_cpp(SEXP CSEXP, SEXP YSEXP, SEXP CnvSEXP, SEXP N_sampleSEXP, SEXP output_piSEXP) {
@@ -40,16 +61,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// spectrum_from_Z_cpp
-Rcpp::List spectrum_from_Z_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor>& Z, int K, bool root);
-RcppExport SEXP _FLAG_spectrum_from_Z_cpp(SEXP ZSEXP, SEXP KSEXP, SEXP rootSEXP) {
+// subsample_cpp
+Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd& X, int s, Rcpp::String method);
+RcppExport SEXP _FLAG_subsample_cpp(SEXP XSEXP, SEXP sSEXP, SEXP methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double,Eigen::RowMajor>& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< int >::type K(KSEXP);
-    Rcpp::traits::input_parameter< bool >::type root(rootSEXP);
-    rcpp_result_gen = Rcpp::wrap(spectrum_from_Z_cpp(Z, K, root));
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type method(methodSEXP);
+    rcpp_result_gen = Rcpp::wrap(subsample_cpp(X, s, method));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -65,6 +86,43 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::String >::type distance(distanceSEXP);
     Rcpp::traits::input_parameter< bool >::type output(outputSEXP);
     rcpp_result_gen = Rcpp::wrap(KNN_cpp(X, U, r, distance, output));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mini_batch_kmeans
+Eigen::MatrixXd mini_batch_kmeans(Eigen::MatrixXd& data, int clusters, int batch_size, int max_iters, int num_init, double init_fraction, std::string initializer, int early_stop_iter, bool verbose, Rcpp::Nullable<Rcpp::NumericMatrix> CENTROIDS, double tol, double tol_optimal_init, int seed);
+RcppExport SEXP _FLAG_mini_batch_kmeans(SEXP dataSEXP, SEXP clustersSEXP, SEXP batch_sizeSEXP, SEXP max_itersSEXP, SEXP num_initSEXP, SEXP init_fractionSEXP, SEXP initializerSEXP, SEXP early_stop_iterSEXP, SEXP verboseSEXP, SEXP CENTROIDSSEXP, SEXP tolSEXP, SEXP tol_optimal_initSEXP, SEXP seedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< int >::type clusters(clustersSEXP);
+    Rcpp::traits::input_parameter< int >::type batch_size(batch_sizeSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iters(max_itersSEXP);
+    Rcpp::traits::input_parameter< int >::type num_init(num_initSEXP);
+    Rcpp::traits::input_parameter< double >::type init_fraction(init_fractionSEXP);
+    Rcpp::traits::input_parameter< std::string >::type initializer(initializerSEXP);
+    Rcpp::traits::input_parameter< int >::type early_stop_iter(early_stop_iterSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type CENTROIDS(CENTROIDSSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< double >::type tol_optimal_init(tol_optimal_initSEXP);
+    Rcpp::traits::input_parameter< int >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(mini_batch_kmeans(data, clusters, batch_size, max_iters, num_init, init_fraction, initializer, early_stop_iter, verbose, CENTROIDS, tol, tol_optimal_init, seed));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Predict_mini_batch_kmeans
+Eigen::VectorXd Predict_mini_batch_kmeans(Eigen::MatrixXd& data, Eigen::MatrixXd& CENTROIDS, bool fuzzy, bool updated_output);
+RcppExport SEXP _FLAG_Predict_mini_batch_kmeans(SEXP dataSEXP, SEXP CENTROIDSSEXP, SEXP fuzzySEXP, SEXP updated_outputSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type CENTROIDS(CENTROIDSSEXP);
+    Rcpp::traits::input_parameter< bool >::type fuzzy(fuzzySEXP);
+    Rcpp::traits::input_parameter< bool >::type updated_output(updated_outputSEXP);
+    rcpp_result_gen = Rcpp::wrap(Predict_mini_batch_kmeans(data, CENTROIDS, fuzzy, updated_output));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -105,7 +163,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // marginal_log_likelihood_logit_la_cpp
-double marginal_log_likelihood_logit_la_cpp(const Eigen::MatrixXd& C, const Eigen::VectorXd& Y, const Eigen::VectorXd& N, double tol, unsigned int max_iter);
+double marginal_log_likelihood_logit_la_cpp(const Eigen::MatrixXd& C, const Eigen::VectorXd& Y, const Eigen::VectorXd& N, double tol, int max_iter);
 RcppExport SEXP _FLAG_marginal_log_likelihood_logit_la_cpp(SEXP CSEXP, SEXP YSEXP, SEXP NSEXP, SEXP tolSEXP, SEXP max_iterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -114,34 +172,24 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type Y(YSEXP);
     Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type N(NSEXP);
     Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
     rcpp_result_gen = Rcpp::wrap(marginal_log_likelihood_logit_la_cpp(C, Y, N, tol, max_iter));
-    return rcpp_result_gen;
-END_RCPP
-}
-// which_minn_rcpp
-Rcpp::IntegerVector which_minn_rcpp(const Rcpp::NumericVector& z, int r);
-RcppExport SEXP _FLAG_which_minn_rcpp(SEXP zSEXP, SEXP rSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type z(zSEXP);
-    Rcpp::traits::input_parameter< int >::type r(rSEXP);
-    rcpp_result_gen = Rcpp::wrap(which_minn_rcpp(z, r));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_FLAG_fit_lae_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_lae_logit_gp_cpp, 11},
     {"_FLAG_test_pgbinary_cpp", (DL_FUNC) &_FLAG_test_pgbinary_cpp, 5},
     {"_FLAG_cross_similarity_lae_cpp", (DL_FUNC) &_FLAG_cross_similarity_lae_cpp, 4},
-    {"_FLAG_spectrum_from_Z_cpp", (DL_FUNC) &_FLAG_spectrum_from_Z_cpp, 3},
+    {"_FLAG_subsample_cpp", (DL_FUNC) &_FLAG_subsample_cpp, 3},
     {"_FLAG_KNN_cpp", (DL_FUNC) &_FLAG_KNN_cpp, 5},
+    {"_FLAG_mini_batch_kmeans", (DL_FUNC) &_FLAG_mini_batch_kmeans, 13},
+    {"_FLAG_Predict_mini_batch_kmeans", (DL_FUNC) &_FLAG_Predict_mini_batch_kmeans, 4},
     {"_FLAG_LAE_cpp", (DL_FUNC) &_FLAG_LAE_cpp, 3},
     {"_FLAG_local_anchor_embedding_cpp", (DL_FUNC) &_FLAG_local_anchor_embedding_cpp, 2},
     {"_FLAG_v_to_z_cpp", (DL_FUNC) &_FLAG_v_to_z_cpp, 1},
     {"_FLAG_marginal_log_likelihood_logit_la_cpp", (DL_FUNC) &_FLAG_marginal_log_likelihood_logit_la_cpp, 5},
-    {"_FLAG_which_minn_rcpp", (DL_FUNC) &_FLAG_which_minn_rcpp, 2},
     {NULL, NULL, 0}
 };
 
