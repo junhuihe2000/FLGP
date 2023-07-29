@@ -75,6 +75,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fit_gl_logit_gp_cpp
+Rcpp::List fit_gl_logit_gp_cpp(Eigen::MatrixXd X, Eigen::VectorXd Y, Eigen::MatrixXd X_new, int K, Eigen::VectorXd N, double sigma, std::vector<double> a2s, double threshold, bool sparse, std::string approach, Rcpp::List models, bool output_cov);
+RcppExport SEXP _FLAG_fit_gl_logit_gp_cpp(SEXP XSEXP, SEXP YSEXP, SEXP X_newSEXP, SEXP KSEXP, SEXP NSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP thresholdSEXP, SEXP sparseSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X(XSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_new(X_newSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type N(NSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type a2s(a2sSEXP);
+    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
+    Rcpp::traits::input_parameter< bool >::type sparse(sparseSEXP);
+    Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_gl_logit_gp_cpp(X, Y, X_new, K, N, sigma, a2s, threshold, sparse, approach, models, output_cov));
+    return rcpp_result_gen;
+END_RCPP
+}
 // test_pgbinary_cpp
 Rcpp::List test_pgbinary_cpp(const Eigen::MatrixXd& C, const Eigen::VectorXd& Y, const Eigen::MatrixXd& Cnv, int N_sample, bool output_pi);
 RcppExport SEXP _FLAG_test_pgbinary_cpp(SEXP CSEXP, SEXP YSEXP, SEXP CnvSEXP, SEXP N_sampleSEXP, SEXP output_piSEXP) {
@@ -188,6 +210,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLAG_fit_lae_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_lae_logit_gp_cpp, 11},
     {"_FLAG_fit_se_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_se_logit_gp_cpp, 12},
     {"_FLAG_fit_nystrom_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_nystrom_logit_gp_cpp, 11},
+    {"_FLAG_fit_gl_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_gl_logit_gp_cpp, 12},
     {"_FLAG_test_pgbinary_cpp", (DL_FUNC) &_FLAG_test_pgbinary_cpp, 5},
     {"_FLAG_cross_similarity_lae_cpp", (DL_FUNC) &_FLAG_cross_similarity_lae_cpp, 4},
     {"_FLAG_subsample_cpp", (DL_FUNC) &_FLAG_subsample_cpp, 3},

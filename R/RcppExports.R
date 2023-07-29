@@ -13,6 +13,10 @@ fit_nystrom_logit_gp_cpp <- function(X, Y, X_new, s, K, N, sigma, a2s, approach,
     .Call(`_FLAG_fit_nystrom_logit_gp_cpp`, X, Y, X_new, s, K, N, sigma, a2s, approach, models, output_cov)
 }
 
+fit_gl_logit_gp_cpp <- function(X, Y, X_new, K, N, sigma, a2s, threshold, sparse, approach, models, output_cov) {
+    .Call(`_FLAG_fit_gl_logit_gp_cpp`, X, Y, X_new, K, N, sigma, a2s, threshold, sparse, approach, models, output_cov)
+}
+
 #' Predict labels on new samples with Polya-Gamma
 #'
 #' @param C A numeric matrix with dim(m,m), the self covariance matrix

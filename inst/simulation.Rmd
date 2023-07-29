@@ -263,8 +263,10 @@ fit_lae_logit_gp(X,Y,X_new,s,r,K)
 fit_lae_logit_gp_rcpp(X,Y,X_new,s,r,K)
 fit_se_logit_gp(X,Y,X_new,s,r,K)
 fit_se_logit_gp_rcpp(X,Y,X_new,s,r,K)
-fit_gl_logit_gp(X,Y,X_new,K, sparse = FALSE)
-fit_gl_logit_gp(X,Y,X_new,K, sparse = TRUE)
+fit_gl_logit_gp(X,Y,X_new,K,sparse = FALSE)
+fit_gl_logit_gp_rcpp(X,Y,X_new,K,sparse = FALSE)
+fit_gl_logit_gp(X,Y,X_new,K,sparse = TRUE)
+fit_gl_logit_gp_rcpp(X,Y,X_new,K,sparse = TRUE)
 fit_nystrom_logit_gp(X,Y,X_new,s,K)
 fit_nystrom_logit_gp_rcpp(X,Y,X_new,s,K)
 ```
@@ -275,8 +277,11 @@ microbenchmark(lae={fit_lae_logit_gp(X,Y,X_new,s,r,K)},
                se={fit_se_logit_gp(X,Y,X_new,s,r,K)},
                se_cpp={fit_se_logit_gp_rcpp(X,Y,X_new,s,r,K)},
                gl={fit_gl_logit_gp(X,Y,X_new,K, sparse = FALSE)},
+               gl_cpp={fit_gl_logit_gp_rcpp(X,Y,X_new,K,sparse = FALSE)},
                gl_sp={fit_gl_logit_gp(X,Y,X_new,K, sparse = TRUE)},
+               gl_sp_cpp={fit_gl_logit_gp_rcpp(X,Y,X_new,K,sparse = TRUE)},
                nystrom={fit_nystrom_logit_gp(X,Y,X_new,s,K)},
+               nystrom_cpp={fit_nystrom_logit_gp_rcpp(X,Y,X_new,s,K)},
                times = 1)
 ```
 
