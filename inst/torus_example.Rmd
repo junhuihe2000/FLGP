@@ -105,11 +105,12 @@ f.torus = as.numeric(train.data[,d])-1
 ```{r}
 # hyper parameters
 s = 600; r = 3; K = 100
+models = list(subsample="kmeans", kernel="lae", gl="cluster-normalized", root=TRUE)
 ```
 
 ```{r}
 t1 = Sys.time()
-y_pred_flag.torus = as.factor(fit_lae_logit_gp(X.scale.torus[1:m,], f.torus, X.scale.torus[(m+1):n,], s, r, K))
+y_pred_flag.torus = as.factor(fit_lae_logit_gp_rcpp(X.scale.torus[1:m,], f.torus, X.scale.torus[(m+1):n,], s, r, K, models = models))
 t2 = Sys.time()
 t2 - t1
 ```

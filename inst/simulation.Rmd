@@ -18,8 +18,6 @@ library(RSpectra)
 library(ggplot2)
 library(Rcpp)
 library(RcppEigen)
-library(RcppParallel)
-library(ClusterR)
 ```
 
 ```{r}
@@ -229,36 +227,74 @@ using namespace Eigen;
 using namespace std;
 
 
-//[[Rcpp::export(testcout)]]
-void testcout() {
-  std::string approach = "posterior";
-  std::cout << (approach=="posterior") << std::endl;
-  std::cout << approach << std::endl;
-  Rcpp::NumericVector v;
-  Eigen::VectorXd v_eig = Rcpp::as<Eigen::VectorXd>(v);
-  std::cout << v_eig.size() << std::endl;
+//[[Rcpp::export(testcpp)]]
+void testcpp() {
+  std::vector<int> v(10);
+  cout << "v.size() is " << v.size() << endl;
 }
 
 
 ```
 
 ```{r}
-X0 <- matrix(rnorm(3*3), 3, 3)
-X1 <- matrix(rnorm(3*3, 5), 3, 3)
-Y <- c(1,1,1,0,0,0)
+n <- 5
+X0 <- matrix(rnorm(n*3), n, 3)
+X1 <- matrix(rnorm(n*3, 5), n, 3)
+Y <- c(rep(1,n),rep(0,n))
 X <- rbind(X0,X1)
-X0_new <- matrix(rnorm(10*3),10,3)
-X1_new <- matrix(rnorm(10*3, 5),10,3)
+n_test <- 10
+X0_new <- matrix(rnorm(n_test*3),n_test,3)
+X1_new <- matrix(rnorm(n_test*3, 5),n_test,3)
 X_new <- rbind(X0_new, X1_new)
-Y_new <- c(rep(1,10),rep(0,10))
-s <- 6; r <- 3
-K <- 5
-fit_lae_logit_gp(X,Y,X_new,s,r,K)
+Y_new <- c(rep(1,n_test),rep(0,n_test))
+s <- 10; r <- 3
+K <- 3
+models <- list(subsample="kmeans", kernel="lae", gl="rw", root=FALSE)
 ```
 
 ```{r}
-microbenchmark(HK={HK_from_spectrum(eigens, K, t, idx0, idx1)},
-               HK_cpp={testhk(eigens, K, t, idx0-1, idx1-1)},
+X_all = rbind(X,X_new)
+U = subsample_cpp(X_all, s)
+Z = cross_similarity_lae_cpp(X,U,r)
+```
+
+```{r}
+fit_lae_logit_gp(X,Y,X_new,s,r,K)
+fit_lae_logit_gp_rcpp(X,Y,X_new,s,r,K)
+fit_se_logit_gp(X,Y,X_new,s,r,K)
+fit_se_logit_gp_rcpp(X,Y,X_new,s,r,K)
+fit_gl_logit_gp(X,Y,X_new,K, sparse = FALSE)
+fit_gl_logit_gp(X,Y,X_new,K, sparse = TRUE)
+fit_nystrom_logit_gp(X,Y,X_new,s,K)
+fit_nystrom_logit_gp_rcpp(X,Y,X_new,s,K)
+```
+
+```{r}
+microbenchmark(lae={fit_lae_logit_gp(X,Y,X_new,s,r,K)},
+               lae_cpp={fit_lae_logit_gp_rcpp(X,Y,X_new,s,r,K)},
+               se={fit_se_logit_gp(X,Y,X_new,s,r,K)},
+               se_cpp={fit_se_logit_gp_rcpp(X,Y,X_new,s,r,K)},
+               gl={fit_gl_logit_gp(X,Y,X_new,K, sparse = FALSE)},
+               gl_sp={fit_gl_logit_gp(X,Y,X_new,K, sparse = TRUE)},
+               nystrom={fit_nystrom_logit_gp(X,Y,X_new,s,K)},
+               times = 1)
+```
+
+```{r}
+A = matrix(rnorm(1000*1000),1000,1000)
+B = matrix(rnorm(1000*60),1000,60)
+K = 10
+```
+
+
+```{r}
+microbenchmark(A={irlba(A,K)},
+               B={irlba(B,K)},
+               Spectra={svds(B,K)},
                times = 10)
 ```
+
+
+
+
 

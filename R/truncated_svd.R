@@ -25,11 +25,15 @@ truncated_SVD <- function(A, K=NULL) {
   }
   if(is.null(K)) {K=ncol(A)}
   if(K==ncol(A)) {
-    pairs = eigen(Matrix::t(A)%*%A)
+    # pairs = eigen(Matrix::t(A)%*%A)
+    res = svd(A)
   } else {
-    pairs = RSpectra::eigs_sym(Matrix::t(A)%*%A, k=K)
+    # pairs = RSpectra::eigs_sym(Matrix::t(A)%*%A, k=K)
+    res = irlba::irlba(A, K, work = 2*K)
+
   }
-  pairs$vectors = as.matrix(Matrix::colScale(A%*%pairs$vectors, sqrt(pairs$values+1e-5)^{-1}))
+  pairs = list(values=res$d^2, vectors=res$u)
+  # pairs$vectors = as.matrix(Matrix::colScale(A%*%pairs$vectors, sqrt(pairs$values+1e-5)^{-1}))
 
   return(pairs)
 }

@@ -1,10 +1,9 @@
-#' Fit Gaussian process logistic regression with square exponential kernels
+#' Fit Gaussian process logistic regression with Nystrom extension
 #'
 #' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
 #' @param Y A numeric vector with length(m), count of the positive class.
 #' @param X_new Testing sample, a (n-m, d) matrix, each row indicates one point in R^d.
 #' @param s An integer indicating the number of the subsampling.
-#' @param r An integer, the number of the nearest neighbor points.
 #' @param K An integer, the number of used eigenpairs to construct heat kernel,
 #' the defaulting value is `NULL`, that is, `K=min(n,s)`.
 #' @param N A numeric vector with length(m), total count.
@@ -40,20 +39,20 @@
 #' X1_new <- matrix(rnorm(10*3, 5),10,3)
 #' X_new <- rbind(X0_new, X1_new)
 #' Y_new <- c(rep(1,10),rep(0,10))
-#' s <- 6; r <- 3
+#' s <- 6
 #' K <- 5
-#' Y_pred <- fit_se_logit_gp(X, Y, X_new, s, r, K)
-fit_se_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3, a2s=NULL,
-                             approach ="posterior", cl=NULL,
-                             models=list(subsample="kmeans",
-                                         kernel="se",
-                                         gl="rw",
-                                         root=FALSE),
-                             output_cov=FALSE) {
-  cat("Square exponential kernel:\n")
+#' Y_pred <- fit_nystrom_logit_gp(X, Y, X_new, s, K)
+fit_nystrom_logit_gp <- function(X, Y, X_new, s, K=NULL, N=NULL, sigma=1e-3, a2s=NULL,
+                                 approach ="posterior", cl=NULL,
+                                 models=list(subsample="kmeans",
+                                             kernel="se",
+                                             gl="rw",
+                                             root=FALSE),
+                                 output_cov=FALSE) {
+  cat("Nystrom extension:\n")
 
-  m = nrow(X)
-  n = m + nrow(X_new)
+  m = nrow(X); m_new = nrow(X_new); n = m + m_new;
+  X_all = rbind(X,X_new)
 
   if(is.null(K)) {
     K = s
@@ -63,38 +62,45 @@ fit_se_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3, a2s=N
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-
   d = ncol(X)
-  U = subsample(rbind(X,X_new), s, models$subsample)
-  res_knn = KNN(rbind(X,X_new), U[,1:d,drop=FALSE], r, output=TRUE, cl=cl)
-  ind_knn = res_knn[[1]]
-  distances_sp = res_knn[[2]]
-  distance_mean = sum(distances_sp) / (n*r)
-  i = rep(c(1:n),each=r); j = unlist(ind_knn)
-  Z = distances_sp
+  U = subsample(X_all, s, models$subsample)[,1:d,drop=FALSE]
+  distances_U = rowSums(U^2)-2*U%*%t(U) + matrix(rowSums(U^2), s, nrow(U), byrow = TRUE)
+  distances_XU = rowSums(X^2)-2*X%*%t(U) + matrix(rowSums(U^2), m, nrow(U), byrow = TRUE)
+  distances_allU = rowSums(X_all^2)-2*X_all%*%t(U) + matrix(rowSums(U^2), n, nrow(U), byrow = TRUE)
+  distances_mean = mean(distances_U)
 
   # initialize model
-  best_model = list(a2=NA,t=NA, obj=-Inf, eigenpair=NULL)
+  best_model = list(a2=NA,t=NA, obj=-Inf, eigenpair=NULL, Z=NULL)
 
   # Train model
   cat("Training...\n")
   for(a2 in a2s) {
-    Z[cbind(i,j)] = exp(-distances_sp[cbind(i,j)]/(a2*distance_mean))
-    if(models$gl=="cluster-normalized") {
-      Z = graphLaplacian(Z, models$gl, U[,d+1])
-    } else {
-      Z = graphLaplacian(Z, models$gl)
-    }
-    eigenpair = spectrum_from_Z(Z, K, models$root)
+    Z = exp(-distances_U/(a2*distances_mean))
+
+    A = Matrix::dimScale(Z, 1/(Matrix::rowSums(Z)+1e-5))
+    D = Matrix::rowSums(A)
+    W = Matrix::dimScale(A, 1/sqrt(D+1e-5))
+    eigenpair_U = RSpectra::eigs_sym(W,K)
+    eigenpair_U$vectors = sqrt(s)*Matrix::rowScale(eigenpair_U$vectors, 1/sqrt(D+1e-5))
+
+    # Nystrom extension formula
+    Z_XU = exp(-distances_XU/(a2*distances_mean))
+    A_XU = Matrix::rowScale(Z_XU, 1/(Matrix::rowSums(Z_XU)+1e-5))
+    A_XU = Matrix::colScale(A_XU, 1/(Matrix::colSums(Z)+1e-5))
+    W_XU = Matrix::rowScale(A_XU, 1/Matrix::rowSums(A_XU+1e-5))
+    eigenpair = eigenpair_U
+    eigenpair$vectors = W_XU%*%Matrix::colScale(eigenpair$vectors, 1/eigenpair$values)
+
     # empirical Bayes to optimize t
     cat("When epsilon =", sqrt(a2),": ")
     opt = train_lae_logit_gp(eigenpair, Y, c(1:m), K, sigma, N, approach)
     # update model parameters
     if(opt$obj>best_model$obj) {
       best_model$a2 = a2; best_model$t = opt$t; best_model$obj = opt$obj
-      best_model$eigenpair = eigenpair
+      best_model$eigenpair = eigenpair_U; best_model$Z = Z
     }
   }
+
 
   cat("\nTraining over \n\n")
   cat("The optimal epsilon =",sqrt(best_model$a2),", t =", best_model$t,
@@ -102,6 +108,12 @@ fit_se_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3, a2s=N
 
   # Test model
   cat("Testing...\n")
+  # Nystrom extension
+  Z_allU = exp(-distances_allU/(best_model$a2*distances_mean))
+  A_allU = Matrix::rowScale(Z_allU, 1/Matrix::rowSums(Z_allU))
+  A_allU = Matrix::colScale(A_allU, 1/Matrix::colSums(best_model$Z))
+  W_allU = Matrix::rowScale(A_allU, 1/Matrix::rowSums(A_allU))
+  best_model$eigenpair$vectors = W_allU%*%Matrix::colScale(best_model$eigenpair$vectors, 1/best_model$eigenpair$values)
   # construct covariance matrix
   C = HK_from_spectrum(best_model$eigenpair, K, best_model$t, NULL, c(1:m))
   C[cbind(rep(1:m),rep(1:m))] = C[cbind(rep(1:m),rep(1:m))] + sigma

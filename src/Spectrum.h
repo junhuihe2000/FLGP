@@ -11,10 +11,7 @@
 /*-----------------------------------------------------------------*/
 /*-----------------------------------------------------------------*/
 
-static const Rcpp::List models_init = Rcpp::List::create(Rcpp::Named("subsample")="kmeans",
-                                                   Rcpp::Named("kernel")="lae",
-                                                   Rcpp::Named("gl")="rw",
-                                                   Rcpp::Named("root")=false);
+
 
 struct EigenPair;
 
@@ -53,7 +50,11 @@ struct EigenPair;
 //' heat_kernel_spectrum(X, X_new, s, r)
 */
 EigenPair heat_kernel_spectrum_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
-                                   int s, int r, int K = -1, const Rcpp::List & models = models_init);
+                                   int s, int r, int K = -1, const Rcpp::List & models = \
+                                     Rcpp::List::create(Rcpp::Named("subsample")="kmeans",
+                                                        Rcpp::Named("kernel")="lae",
+                                                        Rcpp::Named("gl")="rw",
+                                                        Rcpp::Named("root")=false));
 
 
 /*

@@ -1,16 +1,16 @@
-#' Fit Gaussian process logistic regression with square exponential kernels
+#' Fit logistic regression with GLGP
 #'
 #' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
 #' @param Y A numeric vector with length(m), count of the positive class.
 #' @param X_new Testing sample, a (n-m, d) matrix, each row indicates one point in R^d.
-#' @param s An integer indicating the number of the subsampling.
-#' @param r An integer, the number of the nearest neighbor points.
 #' @param K An integer, the number of used eigenpairs to construct heat kernel,
 #' the defaulting value is `NULL`, that is, `K=min(n,s)`.
 #' @param N A numeric vector with length(m), total count.
 #' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
 #' the defaulting value is 1e-3.
 #' @param a2s A numeric vector, the searching range for bandwidth.
+#' @param threshold A double, the threshold ratio for sparse GLGP, defaulting value is 0.01.
+#' @param sparse bool, sparse GLGP or not, defaulting value is `TRUE`.
 #' @param approach A character vector, taking value in c("posterior", "marginal"),
 #' decides which objective function to be optimized, defaulting value is `posterior`.
 #' @param cl The cluster to make parallel computing,
@@ -40,38 +40,36 @@
 #' X1_new <- matrix(rnorm(10*3, 5),10,3)
 #' X_new <- rbind(X0_new, X1_new)
 #' Y_new <- c(rep(1,10),rep(0,10))
-#' s <- 6; r <- 3
 #' K <- 5
-#' Y_pred <- fit_se_logit_gp(X, Y, X_new, s, r, K)
-fit_se_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3, a2s=NULL,
-                             approach ="posterior", cl=NULL,
-                             models=list(subsample="kmeans",
-                                         kernel="se",
-                                         gl="rw",
-                                         root=FALSE),
-                             output_cov=FALSE) {
-  cat("Square exponential kernel:\n")
+#' Y_pred <- fit_gl_logit_gp(X, Y, X_new, K)
+fit_gl_logit_gp <- function(X, Y, X_new, K, N=NULL, sigma=1e-3, a2s=NULL,
+                            threshold=0.01, sparse=TRUE,
+                            approach ="posterior", cl=NULL,
+                            models=list(subsample="kmeans",
+                                        kernel="se",
+                                        gl="rw",
+                                        root=FALSE),
+                            output_cov=FALSE) {
+  cat("Graph Laplacian Gaussian process: \n")
 
-  m = nrow(X)
-  n = m + nrow(X_new)
-
-  if(is.null(K)) {
-    K = s
-  }
+  m = nrow(X); m_new = nrow(X_new); n = m + m_new;
+  X_all = rbind(X,X_new)
 
   if(is.null(a2s)) {
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-
-  d = ncol(X)
-  U = subsample(rbind(X,X_new), s, models$subsample)
-  res_knn = KNN(rbind(X,X_new), U[,1:d,drop=FALSE], r, output=TRUE, cl=cl)
+  distances = rowSums(X_all^2)-2*X_all%*%t(X_all) + matrix(rowSums(X_all^2), n, nrow(X_all), byrow = TRUE)
+  distances_mean = mean(distances)
+  r = max(round(n*threshold), 3) # r should be greater than 3.
+  res_knn = KNN(X_all, X_all, r, output=TRUE, cl=cl)
   ind_knn = res_knn[[1]]
   distances_sp = res_knn[[2]]
-  distance_mean = sum(distances_sp) / (n*r)
-  i = rep(c(1:n),each=r); j = unlist(ind_knn)
+  distances_sp_mean = sum(distances_sp)/(n*r)
   Z = distances_sp
+  i = rep(c(1:n),each=r); j = unlist(ind_knn)
+
+
 
   # initialize model
   best_model = list(a2=NA,t=NA, obj=-Inf, eigenpair=NULL)
@@ -79,13 +77,19 @@ fit_se_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3, a2s=N
   # Train model
   cat("Training...\n")
   for(a2 in a2s) {
-    Z[cbind(i,j)] = exp(-distances_sp[cbind(i,j)]/(a2*distance_mean))
-    if(models$gl=="cluster-normalized") {
-      Z = graphLaplacian(Z, models$gl, U[,d+1])
+    if(sparse) {
+      Z[cbind(i,j)] = exp(-distances_sp[cbind(i,j)]/(a2*distances_mean))
+      Z = (Z+Matrix::t(Z))/2
     } else {
-      Z = graphLaplacian(Z, models$gl)
+      Z = exp(-distances/(a2*distances_mean))
     }
-    eigenpair = spectrum_from_Z(Z, K, models$root)
+
+    A = Matrix::dimScale(Z, 1/(Matrix::rowSums(Z)+1e-5))
+    D = Matrix::rowSums(A)
+    W = Matrix::dimScale(A, 1/sqrt(D+1e-5))
+    eigenpair = RSpectra::eigs_sym(W,K)
+    eigenpair$vectors = sqrt(n)*Matrix::rowScale(eigenpair$vectors, 1/sqrt(D+1e-5))
+
     # empirical Bayes to optimize t
     cat("When epsilon =", sqrt(a2),": ")
     opt = train_lae_logit_gp(eigenpair, Y, c(1:m), K, sigma, N, approach)

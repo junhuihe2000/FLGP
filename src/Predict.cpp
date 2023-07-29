@@ -5,9 +5,10 @@
 #include "Utils.h"
 
 
+/*
 using namespace Rcpp;
 using namespace Eigen;
-
+*/
 
 
 Rcpp::List test_pgbinary_cpp(const Eigen::MatrixXd & C,

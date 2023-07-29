@@ -4,17 +4,16 @@
 
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
-// [[Rcpp::depends(RcppParallel)]]
-#include <RcppParallel.h>
 #include <algorithm>
 #include <numeric>
 
 #include "PGLogitModel.h"
 #include "Utils.h"
 
-
+/*
 using namespace Rcpp;
 using namespace Eigen;
+*/
 
 
 //' Local anchor embedding
@@ -39,7 +38,7 @@ using namespace Eigen;
 //' U <- matrix(rnorm(5*3),5,3)
 //' LAE_cpp(X, U, r)
 // [[Rcpp::export(LAE_cpp)]]
- Eigen::SparseMatrix<double, Eigen::RowMajor> LAE_cpp(const Eigen::MatrixXd & X,
+Eigen::SparseMatrix<double, Eigen::RowMajor> LAE_cpp(const Eigen::MatrixXd & X,
                                                       const Eigen::MatrixXd & U,
                                                       int r = 3);
 
@@ -59,7 +58,7 @@ using namespace Eigen;
 //' U <- matrix(rnorm(3*3),3,3)
 //' local_anchor_embedding_cpp(x,U)
 // [[Rcpp::export(local_anchor_embedding_cpp)]]
- Eigen::RowVectorXd local_anchor_embedding_cpp(const Eigen::RowVectorXd & x,
+Eigen::RowVectorXd local_anchor_embedding_cpp(const Eigen::RowVectorXd & x,
                                                const Eigen::MatrixXd & U);
 
 
@@ -76,7 +75,7 @@ using namespace Eigen;
 //' v <- rnorm(3)
 //' v_to_z_cpp(v)
 // [[Rcpp::export(v_to_z_cpp)]]
- Eigen::RowVectorXd v_to_z_cpp(const Eigen::RowVectorXd & v);
+Eigen::RowVectorXd v_to_z_cpp(const Eigen::RowVectorXd & v);
 
 
 #endif

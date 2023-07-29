@@ -26,14 +26,16 @@ Imports:
     pgdraw,
     Rcpp,
     RcppEigen,
-    RcppParallel,
     RSpectra,
     stats,
-    nloptr
+    nloptr,
+    irlba,
+    RcppParallel
 LinkingTo: 
     Rcpp,
     RcppEigen,
-    RcppParallel,
     ClusterR,
-    nloptr
+    nloptr,
+    RSpectra,
+    RcppParallel
 SystemRequirements: GNU make

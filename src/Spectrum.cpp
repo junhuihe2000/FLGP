@@ -1,20 +1,25 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
-
-// #include <Spectra/SymEigsSolver.h>
-// #include <Spectra/MatOp/SparseSymMatProd.h>
+/*
+// [[Rcpp::depends(RSpectra)]]
+#include <Spectra/SymEigsSolver.h>
+#include <Spectra/MatOp/SparseSymMatProd.h>
+*/
 
 #include "Utils.h"
 #include "lae.h"
 #include "Spectrum.h"
 
+/*
 using namespace Rcpp;
 using namespace Eigen;
+*/
+
+/*-----------------------------------------------------------------*/
+/*-----------------------------------------------------------------*/
+/*-----------------------------------------------------------------*/
 
 
-/*-----------------------------------------------------------------*/
-/*-----------------------------------------------------------------*/
-/*-----------------------------------------------------------------*/
 
 
 EigenPair heat_kernel_spectrum_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
@@ -24,8 +29,8 @@ EigenPair heat_kernel_spectrum_cpp(const Eigen::MatrixXd & X, const Eigen::Matri
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
 
-  Eigen::MatrixXd U = subsample_cpp(X_all, s, models["subsample"]);
-  Eigen::SparseMatrix<double, Eigen::RowMajor> Z = cross_similarity_lae_cpp(X_all, U, r, models["gl"]);
+  Eigen::MatrixXd U = subsample_cpp(X_all, s, Rcpp::as<std::string>(models["subsample"]));
+  Eigen::SparseMatrix<double, Eigen::RowMajor> Z = cross_similarity_lae_cpp(X_all, U, r, Rcpp::as<std::string>(models["gl"]));
 
   if(K<0) {
     K = s;
@@ -35,6 +40,10 @@ EigenPair heat_kernel_spectrum_cpp(const Eigen::MatrixXd & X, const Eigen::Matri
 
   return eigenpair;
 }
+
+
+
+
 
 
 Eigen::MatrixXd HK_from_spectrum_cpp(const EigenPair & eigenpair, int K, double t,
@@ -89,19 +98,6 @@ EigenPair truncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & 
     values = svd.singularValues().array().square();
   } else {
     /*
-    // Construct matrix operation object using the wrapper class SparseSymMatProd
-    Spectra::SparseSymMatProd<double> W_op((Z.transpose()*Z).pruned());
-    // Construct eigen solver object, requesting the largest three eigenvalues
-    Spectra::SymEigsSolver<Spectra::SparseSymMatProd<double>> eigs(W_op, K, 2*K);
-    eigs.init();
-    eigs.compute(Spectra::SortRule::LargestAlge);
-    if(eigs.info() == Spectra::CompInfo::Successful) {
-      values = eigs.eigenvalues();
-      vectors = Z * (eigs.eigenvectors() * (1.0/values.array().sqrt()).matrix().asDiagonal());
-    } else {
-      Rcpp::stop("Truncated SVD fails!");
-    }
-    */
     Rcpp::Environment RSpectra = Rcpp::Environment::namespace_env("RSpectra");
     Rcpp::Function eigs_sym = RSpectra["eigs_sym"];
     Rcpp::List pairs = eigs_sym(Rcpp::Named("A")=Rcpp::wrap(Z.transpose()*Z),
@@ -109,6 +105,25 @@ EigenPair truncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & 
     values = Rcpp::as<Eigen::VectorXd>(pairs["values"]);
     vectors = Rcpp::as<Eigen::MatrixXd>(pairs["vectors"]);
     vectors = Z * (vectors * (1.0/values.array().sqrt()).matrix().asDiagonal());
+    */
+
+    Rcpp::Environment irlba_pkg = Rcpp::Environment::namespace_env("irlba");
+    Rcpp::Function irlba = irlba_pkg["irlba"];
+    Rcpp::List pairs = irlba(Rcpp::Named("A")=Rcpp::wrap(Eigen::SparseMatrix<double>(Z)),
+                             Rcpp::Named("nv")=K,
+                             Rcpp::Named("work")=2*K);
+    values = Rcpp::as<Eigen::VectorXd>(pairs["d"]).array().square();
+    vectors = Rcpp::as<Eigen::MatrixXd>(pairs["u"]);
+
+    /*
+    Spectra::SparseSymMatProd<double> op(Z.transpose()*Z);
+    Spectra::SymEigsSolver<double, Spectra::LARGEST_ALGE, Spectra::SparseSymMatProd<double>> eigs_sym(&op, K, 2*K);
+    eigs_sym.init();
+    eigs_sym.compute();
+    values = eigs_sym.eigenvalues();
+    vectors = eigs_sym.eigenvectors();
+    vectors = Z * (vectors * (1.0/(values.array()+1e-5).sqrt()).matrix().asDiagonal());
+    */
   }
 
   return EigenPair(values, vectors);
@@ -121,7 +136,7 @@ EigenPair spectrum_from_Z_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> 
                                int K,
                                bool root) {
   Eigen::VectorXd Z_colsum = Eigen::RowVectorXd::Ones(Z.rows()) * Z;
-  Eigen::SparseMatrix<double,Eigen::RowMajor> A = Z*(1.0/Z_colsum.array().sqrt()).matrix().asDiagonal();
+  Eigen::SparseMatrix<double,Eigen::RowMajor> A = Z*(1.0/(Z_colsum.array().abs()+1e-5).sqrt()).matrix().asDiagonal();
   EigenPair pairs = truncated_SVD_cpp(A, K);
 
   if(root) {
@@ -133,3 +148,5 @@ EigenPair spectrum_from_Z_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> 
 
   return pairs;
 }
+
+

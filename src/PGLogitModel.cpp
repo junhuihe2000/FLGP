@@ -4,9 +4,10 @@
 #include "Utils.h"
 #include "PGLogitModel.h"
 
+/*
 using namespace Rcpp;
 using namespace Eigen;
-
+*/
 
 
 

@@ -10,8 +10,10 @@
 #include "Utils.h"
 #include "Spectrum.h"
 
+/*
 using namespace Rcpp;
 using namespace Eigen;
+*/
 
 
 double negative_log_posterior_logit_cpp(unsigned n, const double *x, double *grad, void *data) {
@@ -69,7 +71,8 @@ ReturnValue train_lae_logit_gp_cpp(void *data, std::string approach,
 
   nlopt_destroy(opt);
 
-  return ReturnValue(t, obj);
+  // negative objective function
+  return ReturnValue(t, -obj);
 }
 
 

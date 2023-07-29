@@ -31,11 +31,11 @@ Eigen::VectorXd pi_to_Y(const Eigen::VectorXd & pi);
 //' s <- 3
 //' U = subsample_cpp(X, s, method = "kmeans")
 // [[Rcpp::export(subsample_cpp)]]
-Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd & X, int s, Rcpp::String method = "kmeans");
+Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd & X, int s, std::string method = "kmeans");
 
 // Graph Laplacian type
 void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
-                        Rcpp::String gl = "rw",
+                        std::string gl = "rw",
                         const Eigen::VectorXd & num_class = Eigen::VectorXd());
 
 
@@ -63,7 +63,7 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
 //' KNN_cpp(X, U, r, distance)
 // [[Rcpp::export(KNN_cpp)]]
 Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r = 3,
-                  Rcpp::String distance = "Euclidean", bool output = false);
+                  std::string distance = "Euclidean", bool output = false);
 
 
 
@@ -104,6 +104,7 @@ mat_indexing(const Eigen::MatrixBase<ArgType>& arg, const RowIndexType& row_indi
 }
 
 
+/*
 // rcpp interface for mini_batch_kmeans
 // [[Rcpp::export(mini_batch_kmeans)]]
 Eigen::MatrixXd mini_batch_kmeans(Eigen::MatrixXd& data, int clusters, int batch_size = 20, int max_iters = 100, int num_init = 1,
@@ -121,6 +122,7 @@ Eigen::MatrixXd mini_batch_kmeans(Eigen::MatrixXd& data, int clusters, int batch
 // [[Rcpp::export(Predict_mini_batch_kmeans)]]
 Eigen::VectorXd Predict_mini_batch_kmeans(Eigen::MatrixXd& data, Eigen::MatrixXd& CENTROIDS,
                                        bool fuzzy = false, bool updated_output = false);
+*/
 
 
 #endif

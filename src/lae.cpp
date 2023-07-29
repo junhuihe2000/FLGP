@@ -9,9 +9,10 @@
 #include "lae.h"
 
 
+/*
 using namespace Rcpp;
 using namespace Eigen;
-
+*/
 
 
 
@@ -49,7 +50,6 @@ struct LAE_Parallel : public RcppParallel::Worker {
 };
 
 
-
 Eigen::SparseMatrix<double, Eigen::RowMajor> LAE_cpp(const Eigen::MatrixXd & X,
                                                      const Eigen::MatrixXd & U,
                                                      int r) {
@@ -57,8 +57,18 @@ Eigen::SparseMatrix<double, Eigen::RowMajor> LAE_cpp(const Eigen::MatrixXd & X,
   int s = U.rows();
   Eigen::MatrixXi ind_knn = KNN_cpp(X, U, r)["ind_knn"];
   Eigen::MatrixXd Z(n,r);
+
   LAE_Parallel lae_parallel(X, U, ind_knn, Z);
   RcppParallel::parallelFor(0, n, lae_parallel);
+
+  /*
+  int d = X.cols();
+  Eigen::ArrayXi cols = Eigen::ArrayXi::LinSpaced(d,0,d-1);
+  for(int i=0;i<n;i++) {
+    Eigen::MatrixXd Ui = mat_indexing(U, ind_knn.row(i), cols);
+    Z.row(i) = local_anchor_embedding_cpp(X.row(i), Ui);
+  }
+  */
 
   Eigen::SparseMatrix<double, Eigen::RowMajor> Z_sp(n,s);
   Z_sp.reserve(Eigen::VectorXi::Constant(n, r));

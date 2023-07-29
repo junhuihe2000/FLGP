@@ -2,14 +2,17 @@
 #include <RcppEigen.h>
 // [[Rcpp::depends(RcppParallel)]]
 #include <RcppParallel.h>
+
 #include <iostream>
 #include <exception>
 
 #include "Utils.h"
 
 
+/*
 using namespace Rcpp;
 using namespace Eigen;
+*/
 
 
 // inverse logit link function
@@ -29,7 +32,7 @@ Eigen::VectorXd pi_to_Y(const Eigen::VectorXd & pi) {
 }
 
 
-Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd & X, int s, Rcpp::String method) {
+Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd & X, int s, std::string method) {
   int n = X.rows(); int d = X.cols();
   Eigen::MatrixXd U;
 
@@ -59,12 +62,11 @@ struct KNN_Index : public RcppParallel::Worker {
   // source matrix
   const Eigen::MatrixXd & input;
 
-  int r;
-
-  int s;
-
   // destination matrix
   Eigen::MatrixXi & output;
+
+  int r;
+  int s;
 
   // initialize from Rcpp input and output matrixces (the RMatrix class
   // can be automatically converted to from the Rcpp matrix type)
@@ -87,7 +89,7 @@ struct KNN_Index : public RcppParallel::Worker {
 
 
 Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r,
-                   Rcpp::String distance, bool output) {
+                   std::string distance, bool output) {
   int n = X.rows();
   int s = U.rows();
   Eigen::MatrixXd distances_mat;
@@ -103,8 +105,18 @@ Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r,
   }
 
   Eigen::MatrixXi distances_ind(n,r);
+
   KNN_Index knn_index(distances_mat, distances_ind, r);
   RcppParallel::parallelFor(0, n, knn_index);
+
+  /*
+  for(int i=0;i<n;i++) {
+    Eigen::ArrayXi ind = Eigen::ArrayXi::LinSpaced(s, 0, s-1);
+    const Eigen::RowVectorXd & row = distances_mat.row(i);
+    std::partial_sort(ind.data(), ind.data()+r, ind.data()+s, [&row](int i1, int i2) {return row(i1)<row(i2);});
+    distances_ind.row(i) = ind.head(r);
+  }
+  */
 
   if(!output) {
     return Rcpp::List::create(Named("ind_knn")=distances_ind);
@@ -123,7 +135,7 @@ Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r,
 
 
 void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
-                        Rcpp::String gl,
+                        std::string gl,
                         const Eigen::VectorXd & num_class) {
   if(gl=="rw") {}
   else if(gl=="normalized") {
@@ -142,7 +154,7 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
 }
 
 
-
+/*
 Eigen::MatrixXd mini_batch_kmeans(Eigen::MatrixXd& data, int clusters, int batch_size, int max_iters, int num_init,
                                   double init_fraction, std::string initializer,
                                   int early_stop_iter, bool verbose,
@@ -173,6 +185,6 @@ Eigen::VectorXd Predict_mini_batch_kmeans(Eigen::MatrixXd& data, Eigen::MatrixXd
 
   return clusters;
 }
-
+*/
 
 
