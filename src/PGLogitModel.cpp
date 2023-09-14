@@ -46,7 +46,7 @@ void PGLogitModel::_resample_f() {
 
 void PGLogitModel::_resample_omega() {
   // Update auxiliary variables according to their conditional Poyla-Gamma distributions
-  omega = Rcpp::as<Eigen::VectorXd>(pgdraw(Named("b")=N, Named("c")=f));
+  omega = Rcpp::as<Eigen::VectorXd>(pgdraw(Rcpp::Named("b")=N, Rcpp::Named("c")=f));
 }
 
 

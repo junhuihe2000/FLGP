@@ -5,16 +5,32 @@ fit_lae_logit_gp_cpp <- function(X, Y, X_new, s, r, K, N, sigma, approach, model
     .Call(`_FLAG_fit_lae_logit_gp_cpp`, X, Y, X_new, s, r, K, N, sigma, approach, models, output_cov)
 }
 
+fit_lae_logit_mult_gp_cpp <- function(X, Y, X_new, s, r, K, sigma, approach, models) {
+    .Call(`_FLAG_fit_lae_logit_mult_gp_cpp`, X, Y, X_new, s, r, K, sigma, approach, models)
+}
+
 fit_se_logit_gp_cpp <- function(X, Y, X_new, s, r, K, N, sigma, a2s, approach, models, output_cov) {
     .Call(`_FLAG_fit_se_logit_gp_cpp`, X, Y, X_new, s, r, K, N, sigma, a2s, approach, models, output_cov)
+}
+
+fit_se_logit_mult_gp_cpp <- function(X, Y, X_new, s, r, K, sigma, a2s, approach, models) {
+    .Call(`_FLAG_fit_se_logit_mult_gp_cpp`, X, Y, X_new, s, r, K, sigma, a2s, approach, models)
 }
 
 fit_nystrom_logit_gp_cpp <- function(X, Y, X_new, s, K, N, sigma, a2s, approach, models, output_cov) {
     .Call(`_FLAG_fit_nystrom_logit_gp_cpp`, X, Y, X_new, s, K, N, sigma, a2s, approach, models, output_cov)
 }
 
+fit_nystrom_logit_mult_gp_cpp <- function(X, Y, X_new, s, K, sigma, a2s, approach, models) {
+    .Call(`_FLAG_fit_nystrom_logit_mult_gp_cpp`, X, Y, X_new, s, K, sigma, a2s, approach, models)
+}
+
 fit_gl_logit_gp_cpp <- function(X, Y, X_new, K, N, sigma, a2s, threshold, sparse, approach, models, output_cov) {
     .Call(`_FLAG_fit_gl_logit_gp_cpp`, X, Y, X_new, K, N, sigma, a2s, threshold, sparse, approach, models, output_cov)
+}
+
+fit_gl_logit_mult_gp_cpp <- function(X, Y, X_new, K, sigma, a2s, threshold, sparse, approach, models) {
+    .Call(`_FLAG_fit_gl_logit_mult_gp_cpp`, X, Y, X_new, K, sigma, a2s, threshold, sparse, approach, models)
 }
 
 #' Predict labels on new samples with Polya-Gamma

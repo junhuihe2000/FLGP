@@ -119,7 +119,7 @@ Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r,
   */
 
   if(!output) {
-    return Rcpp::List::create(Named("ind_knn")=distances_ind);
+    return Rcpp::List::create(Rcpp::Named("ind_knn")=distances_ind);
   } else {
     Eigen::SparseMatrix<double, Eigen::RowMajor> distances_sp(n,s);
     distances_sp.reserve(Eigen::VectorXi::Constant(n,r));
@@ -129,7 +129,7 @@ Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r,
         distances_sp.insert(i,indj) = distances_mat(i, indj);
       }
     }
-    return Rcpp::List::create(Named("ind_knn")=distances_ind, Named("distances_sp")=distances_sp);
+    return Rcpp::List::create(Rcpp::Named("ind_knn")=distances_ind, Rcpp::Named("distances_sp")=distances_sp);
   }
 }
 

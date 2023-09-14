@@ -21,10 +21,10 @@ Rcpp::List test_pgbinary_cpp(const Eigen::MatrixXd & C,
   Eigen::VectorXd pi_pred = pglogit.predict(Cnv);
   Eigen::VectorXd Y_pred = pi_to_Y(pi_pred);
   if(output_pi) {
-    return Rcpp::List::create(Named("Y_pred")=Y_pred, Named("pi_pred")=pi_pred);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("pi_pred")=pi_pred);
   }
   else {
-    return Rcpp::List::create(Named("Y_pred")=Y_pred);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
   }
 }
 

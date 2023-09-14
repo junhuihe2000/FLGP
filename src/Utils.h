@@ -5,8 +5,6 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 
-using namespace Rcpp;
-using namespace Eigen;
 
 
 Eigen::VectorXd f_to_pi(const Eigen::VectorXd & f);

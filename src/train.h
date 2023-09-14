@@ -7,10 +7,6 @@
 #include "Spectrum.h"
 
 
-/*
-using namespace Rcpp;
-using namespace Eigen;
-*/
 
 
 
