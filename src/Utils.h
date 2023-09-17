@@ -46,6 +46,7 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
 //'  including Euclidean distance and geodesic distance, the defaulting distance
 //'  is Euclidean distance.
 //' @param output Bool, whether to output the distance matrix, defaulting value is `FALSE`.
+//' @param batch Int, the batch size, defaulting value is `100`.
 //'
 //' @return If `output=FALSE`, `list(ind_knn)`, the indexes of KNN, a list with length n, each component of the list is a vector of length r,
 //'  indicating the indexes of KNN for the corresponding original point based on the chosen distance.
@@ -61,7 +62,7 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
 //' KNN_cpp(X, U, r, distance)
 // [[Rcpp::export(KNN_cpp)]]
 Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r = 3,
-                  std::string distance = "Euclidean", bool output = false);
+                  std::string distance = "Euclidean", bool output = false, int batch=100);
 
 
 

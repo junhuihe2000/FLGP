@@ -8,4 +8,7 @@
 #' @importFrom RSpectra eigs_sym
 #' @importFrom irlba irlba
 #' @importFrom RcppParallel RcppParallelLibs
+#' @import BH
+#' @import bigmemory
+#' @importFrom biganalytics bigkmeans
 NULL

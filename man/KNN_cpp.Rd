@@ -4,7 +4,7 @@
 \alias{KNN_cpp}
 \title{k-nearest neighbor reference points}
 \usage{
-KNN_cpp(X, U, r = 3L, distance = "Euclidean", output = FALSE)
+KNN_cpp(X, U, r = 3L, distance = "Euclidean", output = FALSE, batch = 100L)
 }
 \arguments{
 \item{X}{Original points, a (n,d) matrix, each row indicates one original point.}
@@ -18,6 +18,8 @@ including Euclidean distance and geodesic distance, the defaulting distance
 is Euclidean distance.}
 
 \item{output}{Bool, whether to output the distance matrix, defaulting value is \code{FALSE}.}
+
+\item{batch}{Int, the batch size, defaulting value is \code{100}.}
 }
 \value{
 If \code{output=FALSE}, \code{list(ind_knn)}, the indexes of KNN, a list with length n, each component of the list is a vector of length r,

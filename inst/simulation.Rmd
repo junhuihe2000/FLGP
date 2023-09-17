@@ -18,11 +18,55 @@ library(RSpectra)
 library(ggplot2)
 library(Rcpp)
 library(RcppEigen)
+library(pryr)
+library(lineprof)
 ```
 
 ```{r}
 Sys.setlocale("LC_ALL","English")
 ```
+
+```{Rcpp}
+// [[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+
+using namespace Rcpp;
+using namespace Eigen;
+
+void testmap(const MatrixXd & X) {
+  std::cout << "Test" << std::endl;
+}
+
+// [[Rcpp::export(testcpp)]]
+void testcpp(SEXP XX, NumericMatrix ZZ) {
+  const Map<MatrixXd> X(as<Map<MatrixXd>>(XX));
+  testmap(X);
+  const MatrixXd & Y = X;
+  std::cout << "Y is\n" << Y << std::endl;
+  const Map<MatrixXd> Z(as<Map<MatrixXd>>(ZZ));
+  std::cout << "Z is\n" << Z << std::endl;
+}
+
+// [[Rcpp::export(testtype)]]
+void testtype() {
+  SEXP type = R_NilValue;
+  if(TYPEOF(type)==NILSXP){
+    std::cout << "TRUE" << std::endl;
+  } else {
+    std::cout << "FALSE" << std::endl;
+  }
+}
+
+// [[Rcpp::export(testlist)]]
+SEXP testlist() {
+  VectorXd v = VectorXd::Random(4);
+  List l = List::create(_["vec"]=v,_["way"]="TEST");
+  std::cout << TYPEOF(l) << std::endl;
+  return l;
+}
+```
+
+
 
 ```{r}
 n = 2400
@@ -75,19 +119,21 @@ microbenchmark({lapply(c(1:1e3), function(i) {for(j in 1:10) {x*x}})},
 
 
 ```{r}
-X0 <- matrix(rnorm(10*3), 10, 3)
-X1 <- matrix(rnorm(10*3, 3), 10, 3)
-X2 <- matrix(rnorm(10*3, -3), 10, 3)
-Y <- c(rep(0,10), rep(1,10), rep(2,10))
+m = 10
+X0 <- matrix(rnorm(m*3), m, 3)
+X1 <- matrix(rnorm(m*3, 3), m, 3)
+X2 <- matrix(rnorm(m*3, -3), m, 3)
+Y <- c(rep(0,m), rep(1,m), rep(2,m))
 X <- rbind(X0,X1,X2)
-train_ind = sample(10*3)
+train_ind = sample(m*3)
 X <- X[train_ind,]
 Y <- Y[train_ind]
-X0_new <- matrix(rnorm(50*3),50,3)
-X1_new <- matrix(rnorm(50*3, 3),50,3)
-X2_new <- matrix(rnorm(50*3, -3),50,3)
+l = 50
+X0_new <- matrix(rnorm(l*3),l,3)
+X1_new <- matrix(rnorm(l*3, 3),l,3)
+X2_new <- matrix(rnorm(l*3, -3),l,3)
 X_new <- rbind(X0_new, X1_new, X2_new)
-Y_new <- c(rep(0,50),rep(1,50),rep(2,50))
+Y_new <- c(rep(0,l),rep(1,l),rep(2,l))
 s <- 10; r <- 3
 K <- 10
 J <- 3
@@ -100,8 +146,15 @@ Y_pred_se <- fit_se_logit_mult_gp(X, Y, X_new, J, s, r, K)
 Y_pred_se_rcpp <- fit_se_logit_mult_gp_rcpp(X,Y,X_new,s,r,K)
 Y_pred_nystrom_rcpp <- fit_nystrom_logit_mult_gp_rcpp(X,Y,X_new,s,K)
 Y_pred_gl_rcpp <- fit_gl_logit_mult_gp_rcpp(X,Y,X_new,K,threshold = 0.1)
-error_rate(Y_new, Y_pred)
-error_rate(Y_new, Y_pred_rcpp)
+```
+
+```{r}
+error_rate(Y_new, Y_pred_lae)
+error_rate(Y_new, Y_pred_lae_rcpp)
+error_rate(Y_new, Y_pred_se)
+error_rate(Y_new, Y_pred_se_rcpp)
+error_rate(Y_new, Y_pred_nystrom_rcpp)
+error_rate(Y_new, Y_pred_gl_rcpp)
 ```
 
 
@@ -138,26 +191,39 @@ ggplot() + geom_line(aes(X_new, Y_new), col="red") +
 
 
 ```{r}
-n <- 5
+n <- 10
 X0 <- matrix(rnorm(n*3), n, 3)
 X1 <- matrix(rnorm(n*3, 5), n, 3)
 Y <- c(rep(1,n),rep(0,n))
 X <- rbind(X0,X1)
-n_test <- 10
+n_test <- 50
 X0_new <- matrix(rnorm(n_test*3),n_test,3)
 X1_new <- matrix(rnorm(n_test*3, 5),n_test,3)
 X_new <- rbind(X0_new, X1_new)
 Y_new <- c(rep(1,n_test),rep(0,n_test))
 s <- 10; r <- 3
-K <- 3
+K <- 10
 models <- list(subsample="kmeans", kernel="lae", gl="rw", root=FALSE)
 ```
 
+
+
 ```{r}
-X_all = rbind(X,X_new)
-U = subsample_cpp(X_all, s)
-Z = cross_similarity_lae_cpp(X,U,r)
+prof = lineprof(fit_lae_logit_gp(X,Y,X_new,s,r,K))
+shine(prof)
 ```
+
+```{r}
+prof_rcpp = lineprof(fit_lae_logit_gp_rcpp(X,Y,X_new,s,r,K))
+shine(prof_rcpp)
+```
+
+```{r}
+prof_output = lineprof(fit_lae_logit_gp_output(X,Y,X_new,s,r,K))
+shine(prof_output)
+```
+
+
 
 ```{r}
 fit_lae_logit_gp(X,Y,X_new,s,r,K)

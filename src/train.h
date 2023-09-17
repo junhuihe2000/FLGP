@@ -97,7 +97,10 @@ struct ReturnValue{
   double t;
   double obj;
   ReturnValue(double _t, double _obj) : t(_t), obj(_obj) {}
-  ReturnValue() {}
+  ReturnValue() {
+    t = 0;
+    obj = std::numeric_limits<double>::infinity();
+  }
 };
 
 

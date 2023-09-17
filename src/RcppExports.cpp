@@ -11,77 +11,97 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// fit_lae_logit_gp_cpp
-Rcpp::List fit_lae_logit_gp_cpp(Eigen::MatrixXd X, Eigen::VectorXd Y, Eigen::MatrixXd X_new, int s, int r, int K, Eigen::VectorXd N, double sigma, std::string approach, Rcpp::List models, bool output_cov);
-RcppExport SEXP _FLAG_fit_lae_logit_gp_cpp(SEXP XSEXP, SEXP YSEXP, SEXP X_newSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP NSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
+// big_fit_lae_logit_gp_cpp
+Rcpp::List big_fit_lae_logit_gp_cpp(SEXP big_X_all, Rcpp::NumericVector Y_train, int s, int r, int K, Rcpp::NumericVector N_train, double sigma, std::string approach, Rcpp::List models, bool output_cov);
+RcppExport SEXP _FLAG_big_fit_lae_logit_gp_cpp(SEXP big_X_allSEXP, SEXP Y_trainSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP N_trainSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X(XSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_new(X_newSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type big_X_all(big_X_allSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
     Rcpp::traits::input_parameter< int >::type s(sSEXP);
     Rcpp::traits::input_parameter< int >::type r(rSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type N(NSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type N_train(N_trainSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
     Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_lae_logit_gp_cpp(X, Y, X_new, s, r, K, N, sigma, approach, models, output_cov));
+    rcpp_result_gen = Rcpp::wrap(big_fit_lae_logit_gp_cpp(big_X_all, Y_train, s, r, K, N_train, sigma, approach, models, output_cov));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fit_lae_logit_gp_cpp
+Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int r, int K, Rcpp::NumericVector N_train, double sigma, std::string approach, Rcpp::List models, bool output_cov);
+RcppExport SEXP _FLAG_fit_lae_logit_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP N_trainSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< int >::type r(rSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type N_train(N_trainSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_lae_logit_gp_cpp(X_train, Y_train, X_test, s, r, K, N_train, sigma, approach, models, output_cov));
     return rcpp_result_gen;
 END_RCPP
 }
 // fit_lae_logit_mult_gp_cpp
-Rcpp::List fit_lae_logit_mult_gp_cpp(Eigen::MatrixXd X, Eigen::VectorXd Y, Eigen::MatrixXd X_new, int s, int r, int K, double sigma, std::string approach, Rcpp::List models);
-RcppExport SEXP _FLAG_fit_lae_logit_mult_gp_cpp(SEXP XSEXP, SEXP YSEXP, SEXP X_newSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP modelsSEXP) {
+Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int r, int K, double sigma, std::string approach, Rcpp::List models);
+RcppExport SEXP _FLAG_fit_lae_logit_mult_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP modelsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X(XSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_new(X_newSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
     Rcpp::traits::input_parameter< int >::type s(sSEXP);
     Rcpp::traits::input_parameter< int >::type r(rSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_lae_logit_mult_gp_cpp(X, Y, X_new, s, r, K, sigma, approach, models));
+    rcpp_result_gen = Rcpp::wrap(fit_lae_logit_mult_gp_cpp(X_train, Y_train, X_test, s, r, K, sigma, approach, models));
     return rcpp_result_gen;
 END_RCPP
 }
 // fit_se_logit_gp_cpp
-Rcpp::List fit_se_logit_gp_cpp(Eigen::MatrixXd X, Eigen::VectorXd Y, Eigen::MatrixXd X_new, int s, int r, int K, Eigen::VectorXd N, double sigma, std::vector<double> a2s, std::string approach, Rcpp::List models, bool output_cov);
-RcppExport SEXP _FLAG_fit_se_logit_gp_cpp(SEXP XSEXP, SEXP YSEXP, SEXP X_newSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP NSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
+Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int r, int K, Rcpp::NumericVector N_train, double sigma, std::vector<double> a2s, std::string approach, Rcpp::List models, bool output_cov);
+RcppExport SEXP _FLAG_fit_se_logit_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP N_trainSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X(XSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_new(X_newSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
     Rcpp::traits::input_parameter< int >::type s(sSEXP);
     Rcpp::traits::input_parameter< int >::type r(rSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type N(NSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type N_train(N_trainSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type a2s(a2sSEXP);
     Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
     Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_se_logit_gp_cpp(X, Y, X_new, s, r, K, N, sigma, a2s, approach, models, output_cov));
+    rcpp_result_gen = Rcpp::wrap(fit_se_logit_gp_cpp(X_train, Y_train, X_test, s, r, K, N_train, sigma, a2s, approach, models, output_cov));
     return rcpp_result_gen;
 END_RCPP
 }
 // fit_se_logit_mult_gp_cpp
-Rcpp::List fit_se_logit_mult_gp_cpp(Eigen::MatrixXd X, Eigen::VectorXd Y, Eigen::MatrixXd X_new, int s, int r, int K, double sigma, std::vector<double> a2s, std::string approach, Rcpp::List models);
-RcppExport SEXP _FLAG_fit_se_logit_mult_gp_cpp(SEXP XSEXP, SEXP YSEXP, SEXP X_newSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP approachSEXP, SEXP modelsSEXP) {
+Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int r, int K, double sigma, std::vector<double> a2s, std::string approach, Rcpp::List models);
+RcppExport SEXP _FLAG_fit_se_logit_mult_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP approachSEXP, SEXP modelsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X(XSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_new(X_newSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
     Rcpp::traits::input_parameter< int >::type s(sSEXP);
     Rcpp::traits::input_parameter< int >::type r(rSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
@@ -89,61 +109,61 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type a2s(a2sSEXP);
     Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_se_logit_mult_gp_cpp(X, Y, X_new, s, r, K, sigma, a2s, approach, models));
+    rcpp_result_gen = Rcpp::wrap(fit_se_logit_mult_gp_cpp(X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, models));
     return rcpp_result_gen;
 END_RCPP
 }
 // fit_nystrom_logit_gp_cpp
-Rcpp::List fit_nystrom_logit_gp_cpp(Eigen::MatrixXd X, Eigen::VectorXd Y, Eigen::MatrixXd X_new, int s, int K, Eigen::VectorXd N, double sigma, std::vector<double> a2s, std::string approach, Rcpp::List models, bool output_cov);
-RcppExport SEXP _FLAG_fit_nystrom_logit_gp_cpp(SEXP XSEXP, SEXP YSEXP, SEXP X_newSEXP, SEXP sSEXP, SEXP KSEXP, SEXP NSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
+Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int K, Rcpp::NumericVector N_train, double sigma, std::vector<double> a2s, std::string approach, Rcpp::List models, bool output_cov);
+RcppExport SEXP _FLAG_fit_nystrom_logit_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP KSEXP, SEXP N_trainSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X(XSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_new(X_newSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
     Rcpp::traits::input_parameter< int >::type s(sSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type N(NSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type N_train(N_trainSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type a2s(a2sSEXP);
     Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
     Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_nystrom_logit_gp_cpp(X, Y, X_new, s, K, N, sigma, a2s, approach, models, output_cov));
+    rcpp_result_gen = Rcpp::wrap(fit_nystrom_logit_gp_cpp(X_train, Y_train, X_test, s, K, N_train, sigma, a2s, approach, models, output_cov));
     return rcpp_result_gen;
 END_RCPP
 }
 // fit_nystrom_logit_mult_gp_cpp
-Rcpp::List fit_nystrom_logit_mult_gp_cpp(Eigen::MatrixXd X, Eigen::VectorXd Y, Eigen::MatrixXd X_new, int s, int K, double sigma, std::vector<double> a2s, std::string approach, Rcpp::List models);
-RcppExport SEXP _FLAG_fit_nystrom_logit_mult_gp_cpp(SEXP XSEXP, SEXP YSEXP, SEXP X_newSEXP, SEXP sSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP approachSEXP, SEXP modelsSEXP) {
+Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int K, double sigma, std::vector<double> a2s, std::string approach, Rcpp::List models);
+RcppExport SEXP _FLAG_fit_nystrom_logit_mult_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP approachSEXP, SEXP modelsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X(XSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_new(X_newSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
     Rcpp::traits::input_parameter< int >::type s(sSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type a2s(a2sSEXP);
     Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_nystrom_logit_mult_gp_cpp(X, Y, X_new, s, K, sigma, a2s, approach, models));
+    rcpp_result_gen = Rcpp::wrap(fit_nystrom_logit_mult_gp_cpp(X_train, Y_train, X_test, s, K, sigma, a2s, approach, models));
     return rcpp_result_gen;
 END_RCPP
 }
 // fit_gl_logit_gp_cpp
-Rcpp::List fit_gl_logit_gp_cpp(Eigen::MatrixXd X, Eigen::VectorXd Y, Eigen::MatrixXd X_new, int K, Eigen::VectorXd N, double sigma, std::vector<double> a2s, double threshold, bool sparse, std::string approach, Rcpp::List models, bool output_cov);
-RcppExport SEXP _FLAG_fit_gl_logit_gp_cpp(SEXP XSEXP, SEXP YSEXP, SEXP X_newSEXP, SEXP KSEXP, SEXP NSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP thresholdSEXP, SEXP sparseSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
+Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int K, Rcpp::NumericVector N_train, double sigma, std::vector<double> a2s, double threshold, bool sparse, std::string approach, Rcpp::List models, bool output_cov);
+RcppExport SEXP _FLAG_fit_gl_logit_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP KSEXP, SEXP N_trainSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP thresholdSEXP, SEXP sparseSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X(XSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_new(X_newSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type N(NSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type N_train(N_trainSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type a2s(a2sSEXP);
     Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
@@ -151,19 +171,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
     Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_gl_logit_gp_cpp(X, Y, X_new, K, N, sigma, a2s, threshold, sparse, approach, models, output_cov));
+    rcpp_result_gen = Rcpp::wrap(fit_gl_logit_gp_cpp(X_train, Y_train, X_test, K, N_train, sigma, a2s, threshold, sparse, approach, models, output_cov));
     return rcpp_result_gen;
 END_RCPP
 }
 // fit_gl_logit_mult_gp_cpp
-Rcpp::List fit_gl_logit_mult_gp_cpp(Eigen::MatrixXd X, Eigen::VectorXd Y, Eigen::MatrixXd X_new, int K, double sigma, std::vector<double> a2s, double threshold, bool sparse, std::string approach, Rcpp::List models);
-RcppExport SEXP _FLAG_fit_gl_logit_mult_gp_cpp(SEXP XSEXP, SEXP YSEXP, SEXP X_newSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP thresholdSEXP, SEXP sparseSEXP, SEXP approachSEXP, SEXP modelsSEXP) {
+Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int K, double sigma, std::vector<double> a2s, double threshold, bool sparse, std::string approach, Rcpp::List models);
+RcppExport SEXP _FLAG_fit_gl_logit_mult_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP thresholdSEXP, SEXP sparseSEXP, SEXP approachSEXP, SEXP modelsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X(XSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_new(X_newSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type a2s(a2sSEXP);
@@ -171,7 +191,28 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type sparse(sparseSEXP);
     Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_gl_logit_mult_gp_cpp(X, Y, X_new, K, sigma, a2s, threshold, sparse, approach, models));
+    rcpp_result_gen = Rcpp::wrap(fit_gl_logit_mult_gp_cpp(X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, models));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fit_lae_logit_gp_output
+SEXP fit_lae_logit_gp_output(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int r, int K, SEXP N_train, double sigma, std::string approach, SEXP models, bool output_cov);
+RcppExport SEXP _FLAG_fit_lae_logit_gp_output(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP N_trainSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< int >::type r(rSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type N_train(N_trainSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type models(modelsSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_lae_logit_gp_output(X_train, Y_train, X_test, s, r, K, N_train, sigma, approach, models, output_cov));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -218,8 +259,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // KNN_cpp
-Rcpp::List KNN_cpp(const Eigen::MatrixXd& X, const Eigen::MatrixXd& U, int r, std::string distance, bool output);
-RcppExport SEXP _FLAG_KNN_cpp(SEXP XSEXP, SEXP USEXP, SEXP rSEXP, SEXP distanceSEXP, SEXP outputSEXP) {
+Rcpp::List KNN_cpp(const Eigen::MatrixXd& X, const Eigen::MatrixXd& U, int r, std::string distance, bool output, int batch);
+RcppExport SEXP _FLAG_KNN_cpp(SEXP XSEXP, SEXP USEXP, SEXP rSEXP, SEXP distanceSEXP, SEXP outputSEXP, SEXP batchSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -228,7 +269,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type r(rSEXP);
     Rcpp::traits::input_parameter< std::string >::type distance(distanceSEXP);
     Rcpp::traits::input_parameter< bool >::type output(outputSEXP);
-    rcpp_result_gen = Rcpp::wrap(KNN_cpp(X, U, r, distance, output));
+    Rcpp::traits::input_parameter< int >::type batch(batchSEXP);
+    rcpp_result_gen = Rcpp::wrap(KNN_cpp(X, U, r, distance, output, batch));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -285,6 +327,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_FLAG_big_fit_lae_logit_gp_cpp", (DL_FUNC) &_FLAG_big_fit_lae_logit_gp_cpp, 10},
     {"_FLAG_fit_lae_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_lae_logit_gp_cpp, 11},
     {"_FLAG_fit_lae_logit_mult_gp_cpp", (DL_FUNC) &_FLAG_fit_lae_logit_mult_gp_cpp, 9},
     {"_FLAG_fit_se_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_se_logit_gp_cpp, 12},
@@ -293,10 +336,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLAG_fit_nystrom_logit_mult_gp_cpp", (DL_FUNC) &_FLAG_fit_nystrom_logit_mult_gp_cpp, 9},
     {"_FLAG_fit_gl_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_gl_logit_gp_cpp, 12},
     {"_FLAG_fit_gl_logit_mult_gp_cpp", (DL_FUNC) &_FLAG_fit_gl_logit_mult_gp_cpp, 10},
+    {"_FLAG_fit_lae_logit_gp_output", (DL_FUNC) &_FLAG_fit_lae_logit_gp_output, 11},
     {"_FLAG_test_pgbinary_cpp", (DL_FUNC) &_FLAG_test_pgbinary_cpp, 5},
     {"_FLAG_cross_similarity_lae_cpp", (DL_FUNC) &_FLAG_cross_similarity_lae_cpp, 4},
     {"_FLAG_subsample_cpp", (DL_FUNC) &_FLAG_subsample_cpp, 3},
-    {"_FLAG_KNN_cpp", (DL_FUNC) &_FLAG_KNN_cpp, 5},
+    {"_FLAG_KNN_cpp", (DL_FUNC) &_FLAG_KNN_cpp, 6},
     {"_FLAG_LAE_cpp", (DL_FUNC) &_FLAG_LAE_cpp, 3},
     {"_FLAG_local_anchor_embedding_cpp", (DL_FUNC) &_FLAG_local_anchor_embedding_cpp, 2},
     {"_FLAG_v_to_z_cpp", (DL_FUNC) &_FLAG_v_to_z_cpp, 1},

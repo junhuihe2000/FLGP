@@ -9,7 +9,7 @@ Description: The underlying package "FLAG" provides algorithms to make inference
     benefits from subsampling, constructing graph Laplacian through transition decomposition
     and truncated SVD. Then the prior covariance matrix is approximated by 
     spectral properties of heat kernel. The package also includes 
-    Gaussian process logistic regression with Poyla-Gamma samplers and 
+    Gaussian process logistic binary or multinomial regression with Poyla-Gamma samplers and 
     Gaussian regression.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -30,12 +30,17 @@ Imports:
     stats,
     nloptr,
     irlba,
-    RcppParallel
+    RcppParallel,
+    BH,
+    bigmemory,
+    biganalytics
 LinkingTo: 
     Rcpp,
     RcppEigen,
     ClusterR,
     nloptr,
     RSpectra,
-    RcppParallel
-SystemRequirements: GNU make
+    RcppParallel,
+    BH,
+    bigmemory
+SystemRequirements: GNU make, C++11
