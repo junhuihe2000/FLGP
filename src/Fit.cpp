@@ -16,6 +16,74 @@
 
 
 
+Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
+                                int s, int r, int K,
+                                double sigma, std::string approach,
+                                Rcpp::List models,
+                                bool output_cov,
+                                int nstart) {
+  std::cout << "Gaussian regression with local anchor embedding:" << std::endl;
+
+  // map the matrices from R to Eigen
+  const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
+  const Eigen::VectorXd Y(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(Y_train));
+  const Eigen::Map<Eigen::MatrixXd> X_new(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_test));
+
+  int m = X.rows(); int m_new = X_new.rows();
+  int n = m + m_new;
+
+  if(K<0) {
+    K = s;
+  }
+
+
+  EigenPair eigenpair = heat_kernel_spectrum_cpp(X, X_new, s, r, K, models, nstart);
+
+  Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m, 0, m-1);
+
+  // train model
+  std::cout << "Training..." << std::endl;
+  // empirical Bayes to optimize t
+  ReturnValueReg res;
+  if(approach=="posterior") {
+    PostOFDataReg postdatareg(eigenpair, Y, idx, K, sigma);
+    res = train_regression_gp_cpp(&postdatareg, approach);
+  } else if(approach=="marginal") {
+    MargOFDataReg margdatareg(eigenpair, Y, idx, K, sigma);
+    res = train_regression_gp_cpp(&margdatareg, approach);
+  } else {
+    Rcpp::stop("This model selection approach is not supported!");
+  }
+
+
+  std::cout << "By " << approach << " method, optimal t = " << res.x[0] \
+            << ", sigma = " << sqrt(res.x[1]) << ", the objective function is " << res.obj << std::endl;
+
+  // test model
+  std::cout << "Testing..." << std::endl;
+  // construct covariance matrix
+  Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
+  Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, res.x[0], idx0, idx0);
+  Cvv.diagonal().array() += sigma;
+  Cvv.diagonal().array() += res.x[1];
+  Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, res.x[0], idx1, idx0);
+
+  // predict labels on new samples
+  Eigen::VectorXd Y_pred = test_regression_cpp(Cvv, Y, Cnv);
+  std::cout << "Over" << std::endl;
+
+  if(output_cov) {
+    Eigen::MatrixXd C(n,m);
+    C.topRows(m) = Cvv;
+    C.bottomRows(m_new) = Cnv;
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+  } else {
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+  }
+
+}
+
 
 Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                 int s, int r, int K, Rcpp::NumericVector N_train,

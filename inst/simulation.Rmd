@@ -26,6 +26,28 @@ library(lineprof)
 Sys.setlocale("LC_ALL","English")
 ```
 
+```{Rcpp}
+// [[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+
+#include <vector>
+#include <iostream>
+
+
+void testcpp(std::vector<double>* x = nullptr) {
+  x = new std::vector<double>;
+  x->push_back(-1);
+  x->push_back(2);
+  double * p;
+  p = &((*x)[0]);
+  std::cout << (*x)[0] << std::endl;
+}
+
+// [[Rcpp::export(test)]]
+void test() {
+  testcpp();
+}
+```
 
 
 ```{r}

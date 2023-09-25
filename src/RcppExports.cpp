@@ -31,6 +31,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fit_lae_regression_gp_cpp
+Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int r, int K, double sigma, std::string approach, Rcpp::List models, bool output_cov, int nstart);
+RcppExport SEXP _FLAG_fit_lae_regression_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP, SEXP nstartSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< int >::type r(rSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
+    Rcpp::traits::input_parameter< int >::type nstart(nstartSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_lae_regression_gp_cpp(X_train, Y_train, X_test, s, r, K, sigma, approach, models, output_cov, nstart));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fit_lae_logit_gp_cpp
 Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int r, int K, Rcpp::NumericVector N_train, double sigma, std::string approach, Rcpp::List models, bool output_cov, int nstart);
 RcppExport SEXP _FLAG_fit_lae_logit_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP N_trainSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP, SEXP nstartSEXP) {
@@ -238,6 +259,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// test_regression_cpp
+Eigen::VectorXd test_regression_cpp(const Eigen::MatrixXd& C, const Eigen::VectorXd& Y, const Eigen::MatrixXd& Cnv);
+RcppExport SEXP _FLAG_test_regression_cpp(SEXP CSEXP, SEXP YSEXP, SEXP CnvSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type C(CSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Cnv(CnvSEXP);
+    rcpp_result_gen = Rcpp::wrap(test_regression_cpp(C, Y, Cnv));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cross_similarity_lae_cpp
 Eigen::SparseMatrix<double,Eigen::RowMajor> cross_similarity_lae_cpp(const Eigen::MatrixXd& X, const Eigen::MatrixXd& U, int r, Rcpp::String gl);
 RcppExport SEXP _FLAG_cross_similarity_lae_cpp(SEXP XSEXP, SEXP USEXP, SEXP rSEXP, SEXP glSEXP) {
@@ -333,9 +367,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// marginal_log_likelihood_regression_cpp
+double marginal_log_likelihood_regression_cpp(const Eigen::MatrixXd& C, const Eigen::VectorXd& Y);
+RcppExport SEXP _FLAG_marginal_log_likelihood_regression_cpp(SEXP CSEXP, SEXP YSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type C(CSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type Y(YSEXP);
+    rcpp_result_gen = Rcpp::wrap(marginal_log_likelihood_regression_cpp(C, Y));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_FLAG_big_fit_lae_logit_gp_cpp", (DL_FUNC) &_FLAG_big_fit_lae_logit_gp_cpp, 10},
+    {"_FLAG_fit_lae_regression_gp_cpp", (DL_FUNC) &_FLAG_fit_lae_regression_gp_cpp, 11},
     {"_FLAG_fit_lae_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_lae_logit_gp_cpp, 12},
     {"_FLAG_fit_lae_logit_mult_gp_cpp", (DL_FUNC) &_FLAG_fit_lae_logit_mult_gp_cpp, 10},
     {"_FLAG_fit_se_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_se_logit_gp_cpp, 13},
@@ -346,6 +393,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLAG_fit_gl_logit_mult_gp_cpp", (DL_FUNC) &_FLAG_fit_gl_logit_mult_gp_cpp, 10},
     {"_FLAG_fit_lae_logit_gp_output", (DL_FUNC) &_FLAG_fit_lae_logit_gp_output, 12},
     {"_FLAG_test_pgbinary_cpp", (DL_FUNC) &_FLAG_test_pgbinary_cpp, 5},
+    {"_FLAG_test_regression_cpp", (DL_FUNC) &_FLAG_test_regression_cpp, 3},
     {"_FLAG_cross_similarity_lae_cpp", (DL_FUNC) &_FLAG_cross_similarity_lae_cpp, 4},
     {"_FLAG_subsample_cpp", (DL_FUNC) &_FLAG_subsample_cpp, 4},
     {"_FLAG_KNN_cpp", (DL_FUNC) &_FLAG_KNN_cpp, 6},
@@ -353,6 +401,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLAG_local_anchor_embedding_cpp", (DL_FUNC) &_FLAG_local_anchor_embedding_cpp, 2},
     {"_FLAG_v_to_z_cpp", (DL_FUNC) &_FLAG_v_to_z_cpp, 1},
     {"_FLAG_marginal_log_likelihood_logit_la_cpp", (DL_FUNC) &_FLAG_marginal_log_likelihood_logit_la_cpp, 5},
+    {"_FLAG_marginal_log_likelihood_regression_cpp", (DL_FUNC) &_FLAG_marginal_log_likelihood_regression_cpp, 2},
     {NULL, NULL, 0}
 };
 

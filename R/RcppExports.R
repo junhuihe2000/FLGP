@@ -5,6 +5,10 @@ big_fit_lae_logit_gp_cpp <- function(big_X_all, Y_train, s, r, K, N_train, sigma
     .Call(`_FLAG_big_fit_lae_logit_gp_cpp`, big_X_all, Y_train, s, r, K, N_train, sigma, approach, models, output_cov)
 }
 
+fit_lae_regression_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, sigma, approach, models, output_cov, nstart) {
+    .Call(`_FLAG_fit_lae_regression_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, approach, models, output_cov, nstart)
+}
+
 fit_lae_logit_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, N_train, sigma, approach, models, output_cov, nstart) {
     .Call(`_FLAG_fit_lae_logit_gp_cpp`, X_train, Y_train, X_test, s, r, K, N_train, sigma, approach, models, output_cov, nstart)
 }
@@ -62,6 +66,27 @@ fit_lae_logit_gp_output <- function(X_train, Y_train, X_test, s, r, K = -1L, N_t
 #' test_pgbinary_cpp(C, Y, Cnv)
 test_pgbinary_cpp <- function(C, Y, Cnv, N_sample = 100L, output_pi = FALSE) {
     .Call(`_FLAG_test_pgbinary_cpp`, C, Y, Cnv, N_sample, output_pi)
+}
+
+#' Predict labels on new samples in the regression
+#'
+#' @param C A numeric matrix with dim(m,m), the self covariance matrix of noisy targets Y.
+#' in the training samples.
+#' @param Y A numeric vector with length(m), the training labels.
+#' @param Cnv A numeric matrix with dim(m_new,m), cross covariance matrix
+#' between new sample and training sample.
+#'
+#' @return `Y_pred`, A numeric vector with length(m_new), the prediction labels.
+#' @export
+#'
+#' @examples
+#' Z <- matrix(rnorm(3*3),3,3)
+#' C <- Z%*%t(Z)
+#' Y <- runif(3)
+#' Cnv <- matrix(rnorm(5*3),5,3)
+#' test_regression_cpp(C, Y, Cnv)
+test_regression_cpp <- function(C, Y, Cnv) {
+    .Call(`_FLAG_test_regression_cpp`, C, Y, Cnv)
 }
 
 #' Compute cross similarity matrix Z between X and U
@@ -215,5 +240,21 @@ v_to_z_cpp <- function(v) {
 #' marginal_log_likelihood_logit_la_cpp(C, Y, N)
 marginal_log_likelihood_logit_la_cpp <- function(C, Y, N, tol = 1e-5, max_iter = 100L) {
     .Call(`_FLAG_marginal_log_likelihood_logit_la_cpp`, C, Y, N, tol, max_iter)
+}
+
+#' Marginal log likelihood function for GPR
+#'
+#' @param C A numeric matrix with dim(m,m), covariance matrix.
+#' @param Y A numeric vector with length(m), count of the positive class.
+#' @return `mll` A double, the marginal log likelihood.
+#' @export
+#'
+#' @examples
+#' A <- matrix(rnorm(3*3),3,3)
+#' C <- A%*%t(A)
+#' Y <- runif(3)
+#' marginal_log_likelihood_regression_cpp(C, Y)
+marginal_log_likelihood_regression_cpp <- function(C, Y) {
+    .Call(`_FLAG_marginal_log_likelihood_regression_cpp`, C, Y)
 }
 

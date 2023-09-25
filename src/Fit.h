@@ -4,6 +4,59 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 
+
+
+/*
+//' Fit Gaussian process logistic regression with local anchor embedding kernels
+//'
+//' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
+//' @param Y A numeric vector with length(m), count of the positive class.
+//' @param X_new Testing sample, a (n-m, d) matrix, each row indicates one point in R^d.
+//' @param s An integer indicating the number of the subsampling.
+//' @param r An integer, the number of the nearest neighbor points.
+//' @param K An integer, the number of used eigenpairs to construct heat kernel,
+//' the defaulting value is `NULL`, that is, `K=min(n,s)`.
+//' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
+//' the defaulting value is 1e-3.
+//' @param approach A character vector, taking value in c("posterior", "marginal"),
+//' decides which objective function to be optimized, defaulting value is `posterior`.
+//' @param models A list with four components
+//' \describe{
+//' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
+//' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
+//' defaulting value is `lae`.}
+//' \item{gl}{the kind of graph Laplacian L, the defaulting value is `rw`.}
+//' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
+//' the defaulting value is `FALSE`.}
+//' }
+//' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
+//' @param n_start Int, the number of random sets should be chosen in k-means.
+//'
+//' @return `Y_pred` A numeric vector with length(m_new), each element indicates
+//' the label in the corresponding new sample point.
+//' @export
+//'
+//' @examples
+//' X0 <- matrix(rnorm(3*3), 3, 3)
+//' X1 <- matrix(rnorm(3*3, 5), 3, 3)
+//' Y <- runif(6)
+//' X <- rbind(X0,X1)
+//' X0_new <- matrix(rnorm(10*3),10,3)
+//' X1_new <- matrix(rnorm(10*3, 5),10,3)
+//' X_new <- rbind(X0_new, X1_new)
+//' Y_new <- runif(20)
+//' s <- 6; r <- 3
+//' K <- 5
+//' Y_pred <- fit_lae_regression_gp_cpp(X, Y, X_new, s, r, K)
+*/
+// [[Rcpp::export(fit_lae_regression_gp_cpp)]]
+Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
+                                     int s, int r, int K,
+                                     double sigma, std::string approach,
+                                     Rcpp::List models,
+                                     bool output_cov,
+                                     int nstart);
+
 /*
 //' Fit Gaussian process logistic regression with local anchor embedding kernels
 //'

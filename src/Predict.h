@@ -39,4 +39,27 @@ Rcpp::List test_pgbinary_cpp(const Eigen::MatrixXd & C,
                             int N_sample = 100,
                             bool output_pi = false);
 
+
+//' Predict labels on new samples in the regression
+//'
+//' @param C A numeric matrix with dim(m,m), the self covariance matrix of noisy targets Y.
+//' in the training samples.
+//' @param Y A numeric vector with length(m), the training labels.
+//' @param Cnv A numeric matrix with dim(m_new,m), cross covariance matrix
+//' between new sample and training sample.
+//'
+//' @return `Y_pred`, A numeric vector with length(m_new), the prediction labels.
+//' @export
+//'
+//' @examples
+//' Z <- matrix(rnorm(3*3),3,3)
+//' C <- Z%*%t(Z)
+//' Y <- runif(3)
+//' Cnv <- matrix(rnorm(5*3),5,3)
+//' test_regression_cpp(C, Y, Cnv)
+//[[Rcpp::export(test_regression_cpp)]]
+Eigen::VectorXd test_regression_cpp(const Eigen::MatrixXd & C,
+                                    const Eigen::VectorXd & Y,
+                                    const Eigen::MatrixXd & Cnv);
+
 #endif

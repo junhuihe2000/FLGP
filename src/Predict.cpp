@@ -28,3 +28,13 @@ Rcpp::List test_pgbinary_cpp(const Eigen::MatrixXd & C,
   }
 }
 
+Eigen::VectorXd test_regression_cpp(const Eigen::MatrixXd & C,
+                                    const Eigen::VectorXd & Y,
+                                    const Eigen::MatrixXd & Cnv) {
+  // Algorithm 2.1 in GPML
+  Eigen::LLT<Eigen::MatrixXd> chol_C(C);
+  Eigen::VectorXd alpha = chol_C.solve(Y);
+  Eigen::VectorXd Y_pred = Cnv*alpha;
+
+  return Y_pred;
+}

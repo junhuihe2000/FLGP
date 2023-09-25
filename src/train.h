@@ -3,6 +3,7 @@
 
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
+#include <vector>
 
 #include "Spectrum.h"
 
@@ -34,6 +35,22 @@ double marginal_log_likelihood_logit_la_cpp(const Eigen::MatrixXd & C,
                                             double tol = 1e-5,
                                             int max_iter = 100);
 
+//' Marginal log likelihood function for GPR
+//'
+//' @param C A numeric matrix with dim(m,m), covariance matrix.
+//' @param Y A numeric vector with length(m), count of the positive class.
+//' @return `mll` A double, the marginal log likelihood.
+//' @export
+//'
+//' @examples
+//' A <- matrix(rnorm(3*3),3,3)
+//' C <- A%*%t(A)
+//' Y <- runif(3)
+//' marginal_log_likelihood_regression_cpp(C, Y)
+// [[Rcpp::export(marginal_log_likelihood_regression_cpp)]]
+double marginal_log_likelihood_regression_cpp(const Eigen::MatrixXd & C,
+                                              const Eigen::VectorXd & Y);
+
 /*
 //' Create negative log marginal likelihood functional for logistic regression
 //'
@@ -57,12 +74,17 @@ double marginal_log_likelihood_logit_la_cpp(const Eigen::MatrixXd & C,
 */
 double negative_marginal_likelihood_logit_cpp(unsigned n, const double *x, double *grad, void * data);
 
+// Create negative log marginal likelihood functional for the regression
+double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, double *grad, void * data);
 
 // Create negative log posterior functional with inverse gamma prior for logistic regression
 double negative_log_posterior_logit_cpp(unsigned n, const double *x, double *grad, void *data);
 
+// Create negative log posterior functional with inverse gamma prior for the regression
+double negative_log_posterior_regression_cpp(unsigned n, const double *x, double *grad, void *data);
 
-// marginal likelihood objective function data
+
+// marginal likelihood objective function data in the binary classification
 struct MargOFData {
   const EigenPair & eigenpair;
   const Eigen::VectorXd & Y;
@@ -75,8 +97,19 @@ struct MargOFData {
          int _K, double _sigma = 1e-3) : eigenpair(_eigenpair), Y(_Y), N(_N), idx(_idx), K(_K), sigma(_sigma) {}
 };
 
+// marginal likelihood objective function data in the regression
+struct MargOFDataReg {
+  const EigenPair & eigenpair;
+  const Eigen::VectorXd & Y;
+  const Eigen::VectorXi & idx;
+  const int K;
+  const double sigma;
+  MargOFDataReg(const EigenPair & _eigenpair, const Eigen::VectorXd & _Y, const Eigen::VectorXi & _idx,
+                int _K, double _sigma = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma) {}
+};
 
-// posterior objective function data
+
+// posterior objective function data in the binary classification
 struct PostOFData {
   const EigenPair & eigenpair;
   const Eigen::VectorXd & Y;
@@ -91,6 +124,20 @@ struct PostOFData {
              double _tau = 2) : eigenpair(_eigenpair), Y(_Y), N(_N), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau) {}
 };
 
+// posterior objective function data in the regression
+struct PostOFDataReg {
+  const EigenPair & eigenpair;
+  const Eigen::VectorXd & Y;
+  const Eigen::VectorXi & idx;
+  const int K;
+  const double sigma;
+  const double p, q, tau;
+  const double alpha, beta;
+
+  PostOFDataReg(const EigenPair & _eigenpair, const Eigen::VectorXd & _Y,  const Eigen::VectorXi & _idx,
+             int _K, double _sigma = 1e-3, double _p = 1e-2, double _q = 10,
+             double _tau = 2, double _alpha = 1, double _beta = 1) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
+};
 
 // return value, contains optimal parameter t and objective value obj
 struct ReturnValue{
@@ -99,8 +146,19 @@ struct ReturnValue{
   ReturnValue(double _t, double _obj) : t(_t), obj(_obj) {}
   ReturnValue() {
     t = 0;
-    obj = std::numeric_limits<double>::infinity();
+    obj = -std::numeric_limits<double>::infinity();
   }
+};
+
+// return value in regression, contains hyper-parameters x = (t, sigma^2) and objective value obj
+struct ReturnValueReg{
+  std::vector<double> x;
+  double obj;
+  ReturnValueReg(const std::vector<double>& _x, double _obj) : x(_x), obj(_obj) {}
+  ReturnValueReg() {
+    obj = -std::numeric_limits<double>::infinity();
+  }
+
 };
 
 
@@ -144,5 +202,10 @@ ReturnValue train_lae_logit_gp_cpp(void *data, std::string approach = "posterior
                                    double t0 = -1, double lb = 1e-3, double ub = std::numeric_limits<double>::infinity());
 
 
+
+// Learn diffusion time t and noise sigma by maximizing log marginal likelihood or log posterior
+ReturnValueReg train_regression_gp_cpp(void *data, std::string approach = "posterior",
+                                       std::vector<double>* x0 = nullptr,
+                                       std::vector<double>* lb = nullptr, std::vector<double>* ub = nullptr);
 
 #endif
