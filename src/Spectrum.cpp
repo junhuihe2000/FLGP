@@ -23,13 +23,13 @@ using namespace Eigen;
 
 
 EigenPair heat_kernel_spectrum_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
-                                   int s, int r, int K, const Rcpp::List & models) {
+                                   int s, int r, int K, const Rcpp::List & models, int nstart) {
   int m = X.rows(); int m_new = X_new.rows();
   Eigen::MatrixXd X_all(m+m_new, X.cols());
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
 
-  Eigen::MatrixXd U = subsample_cpp(X_all, s, Rcpp::as<std::string>(models["subsample"]));
+  Eigen::MatrixXd U = subsample_cpp(X_all, s, Rcpp::as<std::string>(models["subsample"]), nstart);
   Eigen::SparseMatrix<double, Eigen::RowMajor> Z = cross_similarity_lae_cpp(X_all, U, r, Rcpp::as<std::string>(models["gl"]));
 
   if(K<0) {
@@ -98,15 +98,6 @@ EigenPair truncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & 
     values = svd.singularValues().array().square();
   } else {
     /*
-    Rcpp::Environment RSpectra = Rcpp::Environment::namespace_env("RSpectra");
-    Rcpp::Function eigs_sym = RSpectra["eigs_sym"];
-    Rcpp::List pairs = eigs_sym(Rcpp::Named("A")=Rcpp::wrap(Z.transpose()*Z),
-                                Rcpp::Named("k")=K);
-    values = Rcpp::as<Eigen::VectorXd>(pairs["values"]);
-    vectors = Rcpp::as<Eigen::MatrixXd>(pairs["vectors"]);
-    vectors = Z * (vectors * (1.0/values.array().sqrt()).matrix().asDiagonal());
-    */
-
     Rcpp::Environment irlba_pkg = Rcpp::Environment::namespace_env("irlba");
     Rcpp::Function irlba = irlba_pkg["irlba"];
     Rcpp::List pairs = irlba(Rcpp::Named("A")=Rcpp::wrap(Eigen::SparseMatrix<double>(Z)),
@@ -114,6 +105,16 @@ EigenPair truncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & 
                              Rcpp::Named("work")=2*K);
     values = Rcpp::as<Eigen::VectorXd>(pairs["d"]).array().square();
     vectors = Rcpp::as<Eigen::MatrixXd>(pairs["u"]);
+    */
+
+    Rcpp::Environment RSpectra = Rcpp::Environment::namespace_env("RSpectra");
+    Rcpp::Function svds = RSpectra["svds"];
+    Rcpp::List pairs = svds(Rcpp::Named("A")=Rcpp::wrap(Eigen::SparseMatrix<double>(Z)),
+                            Rcpp::Named("k")=K,
+                            Rcpp::Named("nu")=K,
+                            Rcpp::Named("nv")=0);
+    values = Rcpp::as<Eigen::Map<Eigen::VectorXd>>(pairs["d"]).array().square();
+    vectors = Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(pairs["u"]);
 
     /*
     Spectra::SparseSymMatProd<double> op(Z.transpose()*Z);

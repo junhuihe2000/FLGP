@@ -55,7 +55,8 @@ Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector
                                 int s, int r, int K, Rcpp::NumericVector N_train,
                                 double sigma, std::string approach,
                                 Rcpp::List models,
-                                bool output_cov);
+                                bool output_cov,
+                                int nstart);
 
 
 /*
@@ -111,7 +112,8 @@ Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector
 Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                      int s, int r, int K,
                                      double sigma, std::string approach,
-                                     Rcpp::List models);
+                                     Rcpp::List models,
+                                     int nstart);
 
 
 
@@ -121,7 +123,8 @@ Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
                                int s, int r, int K, Rcpp::NumericVector N_train,
                                double sigma, std::vector<double> a2s, std::string approach,
                                Rcpp::List models,
-                               bool output_cov);
+                               bool output_cov,
+                               int nstart);
 
 
 // Fit Gaussian process logistic multinomial regression with square exponential kernels
@@ -129,7 +132,8 @@ Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
 Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                     int s, int r, int K,
                                     double sigma, std::vector<double> a2s, std::string approach,
-                                    Rcpp::List models);
+                                    Rcpp::List models,
+                                    int nstart);
 
 // Fit Gaussian process logistic regression with Nystrom extension
 // [[Rcpp::export(fit_nystrom_logit_gp_cpp)]]
@@ -137,14 +141,16 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                     int s, int K, Rcpp::NumericVector N_train,
                                     double sigma, std::vector<double> a2s, std::string approach,
                                     Rcpp::List models,
-                                    bool output_cov);
+                                    bool output_cov,
+                                    int nstart);
 
 // Fit Gaussian process logistic multinomial regression with Nystrom extension
 // [[Rcpp::export(fit_nystrom_logit_mult_gp_cpp)]]
 Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                          int s, int K,
                                          double sigma, std::vector<double> a2s, std::string approach,
-                                         Rcpp::List models);
+                                         Rcpp::List models,
+                                         int nstart);
 
 // Fit logistic regression with GLGP
 // [[Rcpp::export(fit_gl_logit_gp_cpp)]]

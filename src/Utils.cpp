@@ -33,7 +33,7 @@ Eigen::VectorXd pi_to_Y(const Eigen::VectorXd & pi) {
 }
 
 
-Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd & X, int s, std::string method) {
+Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd & X, int s, std::string method, int nstart) {
   int n = X.rows(); int d = X.cols();
   Eigen::MatrixXd U;
 
@@ -43,7 +43,7 @@ Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd & X, int s, std::string meth
     Rcpp::List cluster_kmeans = kmeans(Rcpp::Named("x")=Rcpp::wrap(X),
                                        Rcpp::Named("centers")=s,
                                        Rcpp::Named("iter.max")=100,
-                                       Rcpp::Named("nstart")=10);
+                                       Rcpp::Named("nstart")=nstart);
     U.resize(s, d+1);
     U.leftCols(d) = Rcpp::as<Eigen::MatrixXd>(cluster_kmeans["centers"]);
     U.col(d) =  Rcpp::as<Eigen::VectorXd>(cluster_kmeans["size"]);

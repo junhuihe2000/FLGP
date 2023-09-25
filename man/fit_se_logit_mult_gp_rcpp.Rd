@@ -14,7 +14,8 @@ fit_se_logit_mult_gp_rcpp(
   sigma = 0.001,
   a2s = NULL,
   approach = "posterior",
-  models = list(subsample = "kmeans", kernel = "lae", gl = "rw", root = FALSE)
+  models = list(subsample = "kmeans", kernel = "lae", gl = "rw", root = FALSE),
+  nstart = 1
 )
 }
 \arguments{
@@ -47,6 +48,8 @@ defaulting value is \code{lae}.}
 \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
 the defaulting value is \code{FALSE}.}
 }}
+
+\item{nstart}{Int, the number of random sets chosen in kmeans.}
 }
 \value{
 \code{Y_pred} A numeric vector with length(m_new), each element indicates

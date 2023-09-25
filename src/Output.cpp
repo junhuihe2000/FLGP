@@ -9,7 +9,8 @@ SEXP fit_lae_logit_gp_output(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_
                                   int s, int r, int K=-1, SEXP N_train=R_NilValue,
                                   double sigma=1e-3, std::string approach="posterior",
                                   SEXP models=R_NilValue,
-                                  bool output_cov=false) {
+                                  bool output_cov=false,
+                                  int nstart=1) {
 
   Rcpp::NumericVector _N_train;
   if(TYPEOF(N_train)==NILSXP) {
@@ -34,7 +35,7 @@ SEXP fit_lae_logit_gp_output(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_
   }
 
 
-  Rcpp::List res = fit_lae_logit_gp_cpp(X_train, Y_train, X_test, s, r, K, _N_train, sigma, approach, _models, output_cov);
+  Rcpp::List res = fit_lae_logit_gp_cpp(X_train, Y_train, X_test, s, r, K, _N_train, sigma, approach, _models, output_cov, nstart);
 
   if(output_cov) {
     return res;

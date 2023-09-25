@@ -29,7 +29,8 @@ Eigen::VectorXd pi_to_Y(const Eigen::VectorXd & pi);
 //' s <- 3
 //' U = subsample_cpp(X, s, method = "kmeans")
 // [[Rcpp::export(subsample_cpp)]]
-Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd & X, int s, std::string method = "kmeans");
+Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd & X, int s, std::string method = "kmeans",
+                              int nstart = 1);
 
 // Graph Laplacian type
 void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,

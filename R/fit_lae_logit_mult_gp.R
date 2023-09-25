@@ -45,8 +45,8 @@
 #' s <- 6; r <- 3
 #' K <- 5
 #' J <- 3
-#' Y_pred <- fit_lae_logit_mult_gp(X, Y, X_new, J, s, r, K)
-fit_lae_logit_mult_gp <- function(X, Y, X_new, J, s, r, K=NULL, N=NULL, sigma=1e-3,
+#' Y_pred <- fit_lae_logit_mult_gp_r(X, Y, X_new, J, s, r, K)
+fit_lae_logit_mult_gp_r <- function(X, Y, X_new, J, s, r, K=NULL, N=NULL, sigma=1e-3,
                                   approach ="posterior", cl=NULL,
                                   models=list(subsample="kmeans",
                                               kernel="lae",

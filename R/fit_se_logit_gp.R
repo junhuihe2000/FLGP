@@ -42,8 +42,8 @@
 #' Y_new <- c(rep(1,10),rep(0,10))
 #' s <- 6; r <- 3
 #' K <- 5
-#' Y_pred <- fit_se_logit_gp(X, Y, X_new, s, r, K)
-fit_se_logit_gp <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3, a2s=NULL,
+#' Y_pred <- fit_se_logit_gp_r(X, Y, X_new, s, r, K)
+fit_se_logit_gp_r <- function(X, Y, X_new, s, r, K=NULL, N=NULL, sigma=1e-3, a2s=NULL,
                              approach ="posterior", cl=NULL,
                              models=list(subsample="kmeans",
                                          kernel="se",

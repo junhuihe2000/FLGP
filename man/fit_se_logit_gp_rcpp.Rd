@@ -16,7 +16,8 @@ fit_se_logit_gp_rcpp(
   a2s = NULL,
   approach = "posterior",
   models = list(subsample = "kmeans", kernel = "lae", gl = "rw", root = FALSE),
-  output_cov = FALSE
+  output_cov = FALSE,
+  nstart = 1
 )
 }
 \arguments{
@@ -54,6 +55,8 @@ the defaulting value is \code{FALSE}.}
 }}
 
 \item{output_cov}{Bool, whether to output covariance, defaulting value is \code{FALSE}.}
+
+\item{nstart}{Int, the number of random sets chosen in kmeans.}
 }
 \value{
 \code{Y_pred} A numeric vector with length(m_new), each element indicates

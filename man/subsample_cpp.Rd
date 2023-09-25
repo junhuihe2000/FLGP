@@ -4,7 +4,7 @@
 \alias{subsample_cpp}
 \title{Subsample in the domain}
 \usage{
-subsample_cpp(X, s, method = "kmeans")
+subsample_cpp(X, s, method = "kmeans", nstart = 1L)
 }
 \arguments{
 \item{X}{Original sample, a (n, d) matrix, each row indicates one point in R^d.}

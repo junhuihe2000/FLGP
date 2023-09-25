@@ -54,7 +54,8 @@ EigenPair heat_kernel_spectrum_cpp(const Eigen::MatrixXd & X, const Eigen::Matri
                                      Rcpp::List::create(Rcpp::Named("subsample")="kmeans",
                                                         Rcpp::Named("kernel")="lae",
                                                         Rcpp::Named("gl")="rw",
-                                                        Rcpp::Named("root")=false));
+                                                        Rcpp::Named("root")=false),
+                                   int nstart = 1);
 
 
 /*

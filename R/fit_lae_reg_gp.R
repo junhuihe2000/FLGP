@@ -32,8 +32,8 @@
 #' Y_new <- rowSums(X_new)
 #' s <- 5; r <- 3
 #' K <- 3
-#' Y_pred = fit_lae_reg_gp(X, Y, X_new, s, r, K)
-fit_lae_reg_gp <- function(X, Y, X_new, s, r, K=NULL,
+#' Y_pred = fit_lae_reg_gp_r(X, Y, X_new, s, r, K)
+fit_lae_reg_gp_r <- function(X, Y, X_new, s, r, K=NULL,
                              approach ="posterior", cl=NULL,
                              models=list(subsample="kmeans",
                                          kernel="lae",

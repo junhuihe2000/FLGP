@@ -41,8 +41,8 @@
 #' X_new <- rbind(X0_new, X1_new)
 #' Y_new <- c(rep(1,10),rep(0,10))
 #' K <- 5
-#' Y_pred <- fit_gl_logit_gp(X, Y, X_new, K)
-fit_gl_logit_gp <- function(X, Y, X_new, K, N=NULL, sigma=1e-3, a2s=NULL,
+#' Y_pred <- fit_gl_logit_gp_r(X, Y, X_new, K)
+fit_gl_logit_gp_r <- function(X, Y, X_new, K, N=NULL, sigma=1e-3, a2s=NULL,
                             threshold=0.01, sparse=TRUE,
                             approach ="posterior", cl=NULL,
                             models=list(subsample="kmeans",

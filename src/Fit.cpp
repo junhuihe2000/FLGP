@@ -21,7 +21,8 @@ Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector
                                 int s, int r, int K, Rcpp::NumericVector N_train,
                                 double sigma, std::string approach,
                                 Rcpp::List models,
-                                bool output_cov) {
+                                bool output_cov,
+                                int nstart) {
   std::cout << "Binary classification with local anchor embedding:" << std::endl;
 
   // map the matrices from R to Eigen
@@ -38,7 +39,7 @@ Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector
   }
 
 
-  EigenPair eigenpair = heat_kernel_spectrum_cpp(X, X_new, s, r, K, models);
+  EigenPair eigenpair = heat_kernel_spectrum_cpp(X, X_new, s, r, K, models, nstart);
 
   Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m, 0, m-1);
 
@@ -89,7 +90,8 @@ Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector
 Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                 int s, int r, int K,
                                 double sigma, std::string approach,
-                                Rcpp::List models) {
+                                Rcpp::List models,
+                                int nstart) {
   std::cout <<"Multinomial classification with local anchor embedding:" << std::endl;
 
   // map the matrices from R to Eigen
@@ -106,7 +108,7 @@ Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   int min, max;
   min = Y.minCoeff(); max = Y.maxCoeff();
 
-  EigenPair eigenpair = heat_kernel_spectrum_cpp(X, X_new, s, r, K, models);
+  EigenPair eigenpair = heat_kernel_spectrum_cpp(X, X_new, s, r, K, models, nstart);
 
   Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m, 0, m-1);
 
@@ -201,7 +203,8 @@ Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
                                int s, int r, int K, Rcpp::NumericVector N_train,
                                double sigma, std::vector<double> a2s, std::string approach,
                                Rcpp::List models,
-                               bool output_cov) {
+                               bool output_cov,
+                               int nstart) {
   std::cout << "Binary classification with square exponential kernel:" << std::endl;
 
   // map the matrices from R to Eigen
@@ -220,7 +223,7 @@ Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
   Eigen::MatrixXd X_all(n, d);
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
-  Eigen::MatrixXd U = subsample_cpp(X_all, s, Rcpp::as<std::string>(models["subsample"]));
+  Eigen::MatrixXd U = subsample_cpp(X_all, s, Rcpp::as<std::string>(models["subsample"]), nstart);
   Rcpp::List res_knn = KNN_cpp(X_all, U.leftCols(d), r, "Euclidean", true);
   const Eigen::MatrixXi& ind_knn = res_knn["ind_knn"];
   const Eigen::SparseMatrix<double, Eigen::RowMajor> & distances_sp = res_knn["distances_sp"];
@@ -313,7 +316,8 @@ Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
 Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                int s, int r, int K,
                                double sigma, std::vector<double> a2s, std::string approach,
-                               Rcpp::List models) {
+                               Rcpp::List models,
+                               int nstart) {
   std::cout << "Multinomial classification with square exponential kernel:" << std::endl;
 
   // map the matrices from R to Eigen
@@ -334,7 +338,7 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Eigen::MatrixXd X_all(n, d);
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
-  Eigen::MatrixXd U = subsample_cpp(X_all, s, Rcpp::as<std::string>(models["subsample"]));
+  Eigen::MatrixXd U = subsample_cpp(X_all, s, Rcpp::as<std::string>(models["subsample"]), nstart);
   Rcpp::List res_knn = KNN_cpp(X_all, U.leftCols(d), r, "Euclidean", true);
   const Eigen::MatrixXi& ind_knn = res_knn["ind_knn"];
   const Eigen::SparseMatrix<double, Eigen::RowMajor> & distances_sp = res_knn["distances_sp"];
@@ -406,7 +410,8 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                     int s, int K, Rcpp::NumericVector N_train,
                                     double sigma, std::vector<double> a2s, std::string approach,
                                     Rcpp::List models,
-                                    bool output_cov) {
+                                    bool output_cov,
+                                    int nstart) {
   std::cout << "Binary classificaiton with Nystrom extension:" << std::endl;
 
   // map the matrices from R to Eigen
@@ -424,10 +429,9 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 
   const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
 
-  const Eigen::MatrixXd U = subsample_cpp(X_all, s, subsample).leftCols(d);
+  const Eigen::MatrixXd U = subsample_cpp(X_all, s, subsample, nstart).leftCols(d);
 
   const Eigen::MatrixXd distances_UU  = ((-2*U*U.transpose()).colwise() + U.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
-  // const Eigen::MatrixXd distances_XU = ((-2*X*U.transpose()).colwise() + X.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
   const Eigen::MatrixXd distances_allU = ((-2*X_all*U.transpose()).colwise() + X_all.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
   const Eigen::MatrixXd & distances_XU = distances_allU.topRows(m);
 
@@ -532,7 +536,8 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                     int s, int K,
                                     double sigma, std::vector<double> a2s, std::string approach,
-                                    Rcpp::List models) {
+                                    Rcpp::List models,
+                                    int nstart) {
   std::cout << "Multinomial classification with Nystrom extension:" << std::endl;
 
   // map the matrices from R to Eigen
@@ -552,7 +557,7 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
 
   const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
 
-  const Eigen::MatrixXd U = subsample_cpp(X_all, s, subsample).leftCols(d);
+  const Eigen::MatrixXd U = subsample_cpp(X_all, s, subsample, nstart).leftCols(d);
 
   const Eigen::MatrixXd distances_UU  = ((-2*U*U.transpose()).colwise() + U.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
   // const Eigen::MatrixXd distances_XU = ((-2*X*U.transpose()).colwise() + X.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();

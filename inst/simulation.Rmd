@@ -26,46 +26,6 @@ library(lineprof)
 Sys.setlocale("LC_ALL","English")
 ```
 
-```{Rcpp}
-// [[Rcpp::depends(RcppEigen)]]
-#include <RcppEigen.h>
-
-using namespace Rcpp;
-using namespace Eigen;
-
-void testmap(const MatrixXd & X) {
-  std::cout << "Test" << std::endl;
-}
-
-// [[Rcpp::export(testcpp)]]
-void testcpp(SEXP XX, NumericMatrix ZZ) {
-  const Map<MatrixXd> X(as<Map<MatrixXd>>(XX));
-  testmap(X);
-  const MatrixXd & Y = X;
-  std::cout << "Y is\n" << Y << std::endl;
-  const Map<MatrixXd> Z(as<Map<MatrixXd>>(ZZ));
-  std::cout << "Z is\n" << Z << std::endl;
-}
-
-// [[Rcpp::export(testtype)]]
-void testtype() {
-  SEXP type = R_NilValue;
-  if(TYPEOF(type)==NILSXP){
-    std::cout << "TRUE" << std::endl;
-  } else {
-    std::cout << "FALSE" << std::endl;
-  }
-}
-
-// [[Rcpp::export(testlist)]]
-SEXP testlist() {
-  VectorXd v = VectorXd::Random(4);
-  List l = List::create(_["vec"]=v,_["way"]="TEST");
-  std::cout << TYPEOF(l) << std::endl;
-  return l;
-}
-```
-
 
 
 ```{r}
@@ -140,9 +100,9 @@ J <- 3
 ```
 
 ```{r}
-Y_pred_lae <- fit_lae_logit_mult_gp(X, Y, X_new, J, s, r, K)
+Y_pred_lae <- fit_lae_logit_mult_gp_r(X, Y, X_new, J, s, r, K)
 Y_pred_lae_rcpp <- fit_lae_logit_mult_gp_rcpp(X, Y, X_new, s, r, K)
-Y_pred_se <- fit_se_logit_mult_gp(X, Y, X_new, J, s, r, K)
+Y_pred_se <- fit_se_logit_mult_gp_r(X, Y, X_new, J, s, r, K)
 Y_pred_se_rcpp <- fit_se_logit_mult_gp_rcpp(X,Y,X_new,s,r,K)
 Y_pred_nystrom_rcpp <- fit_nystrom_logit_mult_gp_rcpp(X,Y,X_new,s,K)
 Y_pred_gl_rcpp <- fit_gl_logit_mult_gp_rcpp(X,Y,X_new,K,threshold = 0.1)
@@ -160,7 +120,7 @@ error_rate(Y_new, Y_pred_gl_rcpp)
 
 
 ```{r}
-microbenchmark(fit_lae_logit_mult_gp={fit_lae_logit_mult_gp(X, Y, X_new, J, s, r, K)},
+microbenchmark(fit_lae_logit_mult_gp={fit_lae_logit_mult_gp_r(X, Y, X_new, J, s, r, K)},
                fit_lae_logit_mult_gp_rcpp={fit_lae_logit_mult_gp_rcpp(X, Y, X_new, s, r, K)},
                times = 1)
 ```
@@ -180,7 +140,7 @@ X_new <- matrix(runif(200,-1,1),200,1)
 Y_new <- c(X_new)^2
 s <- 50; r <- 3
 K <- 50
-Y_pred = fit_lae_reg_gp(X, Y, X_new, s, r, K)
+Y_pred = fit_lae_reg_gp_r(X, Y, X_new, s, r, K)
 ```
 
 ```{r}
@@ -192,13 +152,14 @@ ggplot() + geom_line(aes(X_new, Y_new), col="red") +
 
 ```{r}
 n <- 10
-X0 <- matrix(rnorm(n*3), n, 3)
-X1 <- matrix(rnorm(n*3, 5), n, 3)
+d <- 10
+X0 <- matrix(rnorm(n*d), n, d)
+X1 <- matrix(rnorm(n*d, 5), n, d)
 Y <- c(rep(1,n),rep(0,n))
 X <- rbind(X0,X1)
-n_test <- 50
-X0_new <- matrix(rnorm(n_test*3),n_test,3)
-X1_new <- matrix(rnorm(n_test*3, 5),n_test,3)
+n_test <- 1000
+X0_new <- matrix(rnorm(n_test*d),n_test,d)
+X1_new <- matrix(rnorm(n_test*d, 5),n_test,d)
 X_new <- rbind(X0_new, X1_new)
 Y_new <- c(rep(1,n_test),rep(0,n_test))
 s <- 10; r <- 3
@@ -209,7 +170,7 @@ models <- list(subsample="kmeans", kernel="lae", gl="rw", root=FALSE)
 
 
 ```{r}
-prof = lineprof(fit_lae_logit_gp(X,Y,X_new,s,r,K))
+prof = lineprof(fit_lae_logit_gp_r(X,Y,X_new,s,r,K))
 shine(prof)
 ```
 
@@ -226,28 +187,28 @@ shine(prof_output)
 
 
 ```{r}
-fit_lae_logit_gp(X,Y,X_new,s,r,K)
+fit_lae_logit_gp_r(X,Y,X_new,s,r,K)
 fit_lae_logit_gp_rcpp(X,Y,X_new,s,r,K)
-fit_se_logit_gp(X,Y,X_new,s,r,K)
+fit_se_logit_gp_r(X,Y,X_new,s,r,K)
 fit_se_logit_gp_rcpp(X,Y,X_new,s,r,K)
-fit_gl_logit_gp(X,Y,X_new,K,sparse = FALSE)
+fit_gl_logit_gp_r(X,Y,X_new,K,sparse = FALSE)
 fit_gl_logit_gp_rcpp(X,Y,X_new,K,sparse = FALSE)
-fit_gl_logit_gp(X,Y,X_new,K,sparse = TRUE)
+fit_gl_logit_gp_r(X,Y,X_new,K,sparse = TRUE)
 fit_gl_logit_gp_rcpp(X,Y,X_new,K,sparse = TRUE)
-fit_nystrom_logit_gp(X,Y,X_new,s,K)
+fit_nystrom_logit_gp_r(X,Y,X_new,s,K)
 fit_nystrom_logit_gp_rcpp(X,Y,X_new,s,K)
 ```
 
 ```{r}
-microbenchmark(lae={fit_lae_logit_gp(X,Y,X_new,s,r,K)},
+microbenchmark(lae={fit_lae_logit_gp_r(X,Y,X_new,s,r,K)},
                lae_cpp={fit_lae_logit_gp_rcpp(X,Y,X_new,s,r,K)},
-               se={fit_se_logit_gp(X,Y,X_new,s,r,K)},
+               se={fit_se_logit_gp_r(X,Y,X_new,s,r,K)},
                se_cpp={fit_se_logit_gp_rcpp(X,Y,X_new,s,r,K)},
-               gl={fit_gl_logit_gp(X,Y,X_new,K, sparse = FALSE)},
+               gl={fit_gl_logit_gp_r(X,Y,X_new,K, sparse = FALSE)},
                gl_cpp={fit_gl_logit_gp_rcpp(X,Y,X_new,K,sparse = FALSE)},
-               gl_sp={fit_gl_logit_gp(X,Y,X_new,K, sparse = TRUE)},
+               gl_sp={fit_gl_logit_gp_r(X,Y,X_new,K, sparse = TRUE)},
                gl_sp_cpp={fit_gl_logit_gp_rcpp(X,Y,X_new,K,sparse = TRUE)},
-               nystrom={fit_nystrom_logit_gp(X,Y,X_new,s,K)},
+               nystrom={fit_nystrom_logit_gp_r(X,Y,X_new,s,K)},
                nystrom_cpp={fit_nystrom_logit_gp_rcpp(X,Y,X_new,s,K)},
                times = 1)
 ```

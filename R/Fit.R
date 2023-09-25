@@ -29,6 +29,7 @@
 #' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
 #' the defaulting value is `FALSE`.}
 #' }
+#' @param nstart Int, the number of random sets chosen in kmeans.
 #'
 #' @return `Y_pred` A numeric vector with length(m_new), each element indicates
 #' the label in the corresponding new sample point.
@@ -53,11 +54,12 @@ fit_lae_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
                                        models=list(subsample="kmeans",
                                                    kernel="lae",
                                                    gl="rw",
-                                                   root=FALSE)) {
+                                                   root=FALSE),
+                                       nstart=1) {
 
   # RcppParallel::setThreadOptions(numThreads = RcppParallel::defaultNumThreads()/2)
 
-  res = fit_lae_logit_mult_gp_cpp(X,Y,X_new,s,r,K,sigma,approach,models)
+  res = fit_lae_logit_mult_gp_cpp(X,Y,X_new,s,r,K,sigma,approach,models,nstart)
 
   return(res$Y_pred)
 }
@@ -86,6 +88,7 @@ fit_lae_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
 #' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
 #' the defaulting value is `FALSE`.}
 #' }
+#' @param nstart Int, the number of random sets chosen in kmeans.
 #'
 #' @return `Y_pred` A numeric vector with length(m_new), each element indicates
 #' the label in the corresponding new sample point.
@@ -110,7 +113,8 @@ fit_se_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
                                        models=list(subsample="kmeans",
                                                    kernel="lae",
                                                    gl="rw",
-                                                   root=FALSE)) {
+                                                   root=FALSE),
+                                      nstart=1) {
 
   # RcppParallel::setThreadOptions(numThreads = RcppParallel::defaultNumThreads()/2)
 
@@ -118,7 +122,7 @@ fit_se_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_se_logit_mult_gp_cpp(X,Y,X_new,s,r,K,sigma,a2s,approach,models)
+  res = fit_se_logit_mult_gp_cpp(X,Y,X_new,s,r,K,sigma,a2s,approach,models,nstart)
 
   return(res$Y_pred)
 }
@@ -147,6 +151,7 @@ fit_se_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
 #' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
 #' the defaulting value is `FALSE`.}
 #' }
+#' @param nstart Int, the number of random sets chosen in kmeans.
 #'
 #' @return `Y_pred` A numeric vector with length(m_new), each element indicates
 #' the label in the corresponding new sample point.
@@ -171,7 +176,8 @@ fit_nystrom_logit_mult_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s
                                       models=list(subsample="kmeans",
                                                   kernel="lae",
                                                   gl="rw",
-                                                  root=FALSE)) {
+                                                  root=FALSE),
+                                      nstart=1) {
 
   # RcppParallel::setThreadOptions(numThreads = RcppParallel::defaultNumThreads()/2)
 
@@ -179,7 +185,7 @@ fit_nystrom_logit_mult_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_nystrom_logit_mult_gp_cpp(X,Y,X_new,s,K,sigma,a2s,approach,models)
+  res = fit_nystrom_logit_mult_gp_cpp(X,Y,X_new,s,K,sigma,a2s,approach,models,nstart)
 
   return(res$Y_pred)
 }
@@ -278,6 +284,7 @@ fit_gl_logit_mult_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-3, a2s=NULL,
 #' the defaulting value is `FALSE`.}
 #' }
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
+#' @param nstart Int, the number of random sets chosen in kmeans.
 #'
 #' @return `Y_pred` A numeric vector with length(m_new), each element indicates
 #' the label in the corresponding new sample point.
@@ -301,13 +308,14 @@ fit_lae_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3,
                                            kernel="lae",
                                            gl="rw",
                                            root=FALSE),
-                               output_cov=FALSE) {
+                               output_cov=FALSE,
+                               nstart=1) {
   # RcppParallel::setThreadOptions(numThreads = RcppParallel::defaultNumThreads()/2)
   if(is.null(N)) {
     N = rep(1,nrow(X))
   }
 
-  res = fit_lae_logit_gp_cpp(X,Y,X_new,s,r,K,N,sigma,approach,models,output_cov)
+  res = fit_lae_logit_gp_cpp(X,Y,X_new,s,r,K,N,sigma,approach,models,output_cov,nstart)
 
   if(output_cov) {
     return(res)
@@ -344,6 +352,7 @@ fit_lae_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3,
 #' the defaulting value is `FALSE`.}
 #' }
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
+#' @param nstart Int, the number of random sets chosen in kmeans.
 #'
 #' @return `Y_pred` A numeric vector with length(m_new), each element indicates
 #' the label in the corresponding new sample point.
@@ -367,7 +376,8 @@ fit_se_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3, a2
                                              kernel="lae",
                                              gl="rw",
                                              root=FALSE),
-                                 output_cov=FALSE) {
+                                 output_cov=FALSE,
+                                 nstart=1) {
   # RcppParallel::setThreadOptions(numThreads = RcppParallel::defaultNumThreads()/2)
   if(is.null(N)) {
     N = rep(1,nrow(X))
@@ -377,7 +387,7 @@ fit_se_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3, a2
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_se_logit_gp_cpp(X,Y,X_new,s,r,K,N,sigma,a2s,approach,models,output_cov)
+  res = fit_se_logit_gp_cpp(X,Y,X_new,s,r,K,N,sigma,a2s,approach,models,output_cov,nstart)
 
   if(output_cov) {
     return(res)
@@ -412,6 +422,7 @@ fit_se_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3, a2
 #' the defaulting value is `FALSE`.}
 #' }
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
+#' @param nstart Int, the number of random sets chosen in kmeans.
 #'
 #' @return `Y_pred` A numeric vector with length(m_new), each element indicates
 #' the label in the corresponding new sample point.
@@ -435,7 +446,8 @@ fit_nystrom_logit_gp_rcpp <- function(X, Y, X_new, s, K=-1, N=NULL, sigma=1e-3, 
                                                   kernel="lae",
                                                   gl="rw",
                                                   root=FALSE),
-                                      output_cov=FALSE) {
+                                      output_cov=FALSE,
+                                      nstart=1) {
 
   if(K<0) {
     K = s
@@ -449,7 +461,7 @@ fit_nystrom_logit_gp_rcpp <- function(X, Y, X_new, s, K=-1, N=NULL, sigma=1e-3, 
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_nystrom_logit_gp_cpp(X,Y,X_new,s,K,N,sigma,a2s,approach,models,output_cov)
+  res = fit_nystrom_logit_gp_cpp(X,Y,X_new,s,K,N,sigma,a2s,approach,models,output_cov,nstart)
 
   if(output_cov) {
     return(res)
