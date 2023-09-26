@@ -35,7 +35,9 @@ devtools::install_github("junhuihe2000/FLAG")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+These are some basic examples which show you how to solve a common problem:
+
+### Gaussian process classification(GPC)
 
 ```{r example}
 library(ggplot2)
@@ -69,7 +71,8 @@ train.label = Y[train.index,]; test.label = Y[test.index,]
 ggplot() + geom_point(aes(X[,1],X[,2],color=factor(Y)), size=0.6, alpha=0.6) +
   scale_color_manual(values = c("red", "orange")) + 
   theme(legend.position="none", 
-        axis.title.x=element_blank(), axis.title.y=element_blank())
+        axis.title.x=element_blank(), axis.title.y=element_blank()) +
+  ggtitle("Classification")
 ```
 
 ```{r}
@@ -103,4 +106,60 @@ cat("The error rate of LKFLAG is",err_lkflag.torus,".\n")
 ```
 
 
+### Gaussian process regression(GPR)
 
+```{r}
+n = 2000
+theta = runif(n,0,8*pi)
+X = cbind((theta+4)^(0.7)*cos(theta), (theta+4)^(0.7)*sin(theta))
+Y = 3*sin(theta/10) + 3*cos(theta/2) + 4*sin(4*theta/5)
+
+ggplot() + geom_point(aes(X[,1],X[,2],color=Y)) +
+  scale_color_gradientn(colours = rainbow(10)) +
+  theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
+  ggtitle("Regression")
+```
+
+```{r}
+m = 200
+train.index = sample.int(n,m); test.index = c(1:n)[-train.index]
+X.train = X[train.index,]; Y.train = Y[train.index]
+X.test = X[test.index,]; Y.test = Y[test.index]
+```
+
+```{r}
+s = 500; r = 3; K = 100
+```
+
+```{r, include=FALSE}
+Y_pred_skflag = fit_se_regression_gp_rcpp(X.train,Y.train,X.test,s,r,K)
+```
+
+```{r}
+rmse_skflag.spiral = sqrt(sum((Y.test-Y_pred_skflag)^2)/(n-m))
+cat("The RMSE of SKFLAG is",rmse_skflag.spiral,".\n")
+```
+
+```{r}
+ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_skflag)) +
+  scale_color_gradientn(colours = rainbow(10)) +
+  theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
+  ggtitle("SKFLAG in Regression")
+```
+
+```{r, include=FALSE}
+Y_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Y.train,X.test,s,r,K)
+```
+
+
+```{r}
+rmse_lkflag.spiral = sqrt(sum((Y.test-Y_pred_lkflag)^2)/(n-m))
+cat("The RMSE of LKFLAG is",rmse_lkflag.spiral,".\n")
+```
+
+```{r}
+ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_lkflag)) +
+  scale_color_gradientn(colours = rainbow(10)) +
+  theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
+  ggtitle("LKFLAG in Regression")
+```

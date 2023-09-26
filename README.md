@@ -27,7 +27,10 @@ devtools::install_github("junhuihe2000/FLAG")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+These are some basic examples which show you how to solve a common
+problem:
+
+### Gaussian process classification(GPC)
 
 ``` r
 library(ggplot2)
@@ -61,7 +64,8 @@ train.label = Y[train.index,]; test.label = Y[test.index,]
 ggplot() + geom_point(aes(X[,1],X[,2],color=factor(Y)), size=0.6, alpha=0.6) +
   scale_color_manual(values = c("red", "orange")) + 
   theme(legend.position="none", 
-        axis.title.x=element_blank(), axis.title.y=element_blank())
+        axis.title.x=element_blank(), axis.title.y=element_blank()) +
+  ggtitle("Classification")
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
@@ -82,7 +86,7 @@ t1 = Sys.time()
 y_skflag.torus = fit_se_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
 t2 = Sys.time()
 print(t2-t1)
-#> Time difference of 20.29764 secs
+#> Time difference of 20.18796 secs
 err_skflag.torus = sum((test.label!=y_skflag.torus)^2)/(n-m)
 cat("The error rate of SKFLAG is",err_skflag.torus,".\n")
 #> The error rate of SKFLAG is 0 .
@@ -96,8 +100,65 @@ t3 = Sys.time()
 y_lkflag.torus = fit_lae_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
 t4 = Sys.time()
 print(t4-t3)
-#> Time difference of 3.817405 secs
+#> Time difference of 3.736453 secs
 err_lkflag.torus = sum((test.label-y_lkflag.torus)^2)/(n-m)
 cat("The error rate of LKFLAG is",err_lkflag.torus,".\n")
 #> The error rate of LKFLAG is 0.02702128 .
 ```
+
+### Gaussian process regression(GPR)
+
+``` r
+n = 2000
+theta = runif(n,0,8*pi)
+X = cbind((theta+4)^(0.7)*cos(theta), (theta+4)^(0.7)*sin(theta))
+Y = 3*sin(theta/10) + 3*cos(theta/2) + 4*sin(4*theta/5)
+
+ggplot() + geom_point(aes(X[,1],X[,2],color=Y)) +
+  scale_color_gradientn(colours = rainbow(10)) +
+  theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
+  ggtitle("Regression")
+```
+
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+
+``` r
+m = 200
+train.index = sample.int(n,m); test.index = c(1:n)[-train.index]
+X.train = X[train.index,]; Y.train = Y[train.index]
+X.test = X[test.index,]; Y.test = Y[test.index]
+```
+
+``` r
+s = 500; r = 3; K = 100
+```
+
+``` r
+rmse_skflag.spiral = sqrt(sum((Y.test-Y_pred_skflag)^2)/(n-m))
+cat("The RMSE of SKFLAG is",rmse_skflag.spiral,".\n")
+#> The RMSE of SKFLAG is 0.9932914 .
+```
+
+``` r
+ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_skflag)) +
+  scale_color_gradientn(colours = rainbow(10)) +
+  theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
+  ggtitle("SKFLAG in Regression")
+```
+
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+
+``` r
+rmse_lkflag.spiral = sqrt(sum((Y.test-Y_pred_lkflag)^2)/(n-m))
+cat("The RMSE of LKFLAG is",rmse_lkflag.spiral,".\n")
+#> The RMSE of LKFLAG is 0.5455141 .
+```
+
+``` r
+ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_lkflag)) +
+  scale_color_gradientn(colours = rainbow(10)) +
+  theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
+  ggtitle("LKFLAG in Regression")
+```
+
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
