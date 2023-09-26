@@ -283,7 +283,7 @@ sum((Y_new-Y_pred_rbf)^2)/m_new
 + spiral case
 
 ```{r}
-n = 10000
+n = 2000
 theta = runif(n,0,8*pi)
 X = cbind((theta+4)^(0.7)*cos(theta), (theta+4)^(0.7)*sin(theta))
 Y = 3*sin(theta/10) + 3*cos(theta/2) + 4*sin(4*theta/5)
@@ -302,7 +302,7 @@ Yobs.train = Y.train
 ```
 
 ```{r}
-s = 1000; r = 3; K = 200
+s = 500; r = 3; K = 100
 ```
 
 ```{r}

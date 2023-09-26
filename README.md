@@ -12,8 +12,8 @@ fast computation speed benefits from subsampling, constructing graph
 Laplacian through the transition decomposition and the truncated SVD.
 Then the prior geometric covariance matrix is calculated by the spectral
 properties of heat kernels. The package also includes Gaussian process
-logistic regression and multinomial logistic regression with Polya-Gamma
-samplers.
+regression(GPR), Gaussian process logistic regression and multinomial
+logistic regression with Polya-Gamma samplers(GPC).
 
 ## Installation
 
@@ -82,7 +82,7 @@ t1 = Sys.time()
 y_skflag.torus = fit_se_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
 t2 = Sys.time()
 print(t2-t1)
-#> Time difference of 19.25519 secs
+#> Time difference of 20.29764 secs
 err_skflag.torus = sum((test.label!=y_skflag.torus)^2)/(n-m)
 cat("The error rate of SKFLAG is",err_skflag.torus,".\n")
 #> The error rate of SKFLAG is 0 .
@@ -96,7 +96,7 @@ t3 = Sys.time()
 y_lkflag.torus = fit_lae_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
 t4 = Sys.time()
 print(t4-t3)
-#> Time difference of 3.546786 secs
+#> Time difference of 3.817405 secs
 err_lkflag.torus = sum((test.label-y_lkflag.torus)^2)/(n-m)
 cat("The error rate of LKFLAG is",err_lkflag.torus,".\n")
 #> The error rate of LKFLAG is 0.02702128 .

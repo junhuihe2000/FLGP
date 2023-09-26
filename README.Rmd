@@ -22,8 +22,7 @@ The goal of FLAG is to provides algorithms to make inference
 in the large scale data by the approximate heat kernel Gaussian process. The fast computation speed
 benefits from subsampling, constructing graph Laplacian through the transition decomposition
 and the truncated SVD. Then the prior geometric covariance matrix is calculated by 
-the spectral properties of heat kernels. The package also includes 
-Gaussian process logistic regression and multinomial logistic regression with Polya-Gamma samplers.
+the spectral properties of heat kernels. The package also includes Gaussian process regression(GPR), Gaussian process logistic regression and multinomial logistic regression with Polya-Gamma samplers(GPC).
 
 ## Installation
 
