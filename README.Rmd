@@ -45,7 +45,9 @@ library(FLAG)
 ## basic example code
 
 set.seed(1234)
+```
 
+```{r,fig.width=5,fig.height=5}
 ## generate samples
 n = 4800; n_each = 800; d = 3
 thetas = runif(n, 0, 2*pi)
@@ -108,8 +110,8 @@ cat("The error rate of LKFLAG is",err_lkflag.torus,".\n")
 
 ### Gaussian process regression(GPR)
 
-```{r}
-n = 2000
+```{r,fig.width=5,fig.height=5}
+n = 4000
 theta = runif(n,0,8*pi)
 X = cbind((theta+4)^(0.7)*cos(theta), (theta+4)^(0.7)*sin(theta))
 Y = 3*sin(theta/10) + 3*cos(theta/2) + 4*sin(4*theta/5)
@@ -121,7 +123,7 @@ ggplot() + geom_point(aes(X[,1],X[,2],color=Y)) +
 ```
 
 ```{r}
-m = 200
+m = 100
 train.index = sample.int(n,m); test.index = c(1:n)[-train.index]
 X.train = X[train.index,]; Y.train = Y[train.index]
 X.test = X[test.index,]; Y.test = Y[test.index]
@@ -131,8 +133,8 @@ X.test = X[test.index,]; Y.test = Y[test.index]
 s = 500; r = 3; K = 100
 ```
 
-```{r, include=FALSE}
-Y_pred_skflag = fit_se_regression_gp_rcpp(X.train,Y.train,X.test,s,r,K)
+```{r}
+Y_pred_skflag = fit_se_regression_gp_rcpp(X.train,Y.train,X.test,s,r,K,models=models)
 ```
 
 ```{r}
@@ -140,15 +142,15 @@ rmse_skflag.spiral = sqrt(sum((Y.test-Y_pred_skflag)^2)/(n-m))
 cat("The RMSE of SKFLAG is",rmse_skflag.spiral,".\n")
 ```
 
-```{r}
+```{r,fig.width=5,fig.height=5}
 ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_skflag)) +
   scale_color_gradientn(colours = rainbow(10)) +
   theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
   ggtitle("SKFLAG in Regression")
 ```
 
-```{r, include=FALSE}
-Y_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Y.train,X.test,s,r,K)
+```{r}
+Y_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Y.train,X.test,s,r,K,models=models)
 ```
 
 
@@ -157,7 +159,7 @@ rmse_lkflag.spiral = sqrt(sum((Y.test-Y_pred_lkflag)^2)/(n-m))
 cat("The RMSE of LKFLAG is",rmse_lkflag.spiral,".\n")
 ```
 
-```{r}
+```{r,fig.width=5,fig.height=5}
 ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_lkflag)) +
   scale_color_gradientn(colours = rainbow(10)) +
   theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
