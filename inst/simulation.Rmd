@@ -20,6 +20,7 @@ library(Rcpp)
 library(RcppEigen)
 library(pryr)
 library(lineprof)
+library(kernlab)
 ```
 
 ```{r}
@@ -33,19 +34,17 @@ Sys.setlocale("LC_ALL","English")
 #include <vector>
 #include <iostream>
 
+using namespace std;
+using namespace Rcpp;
 
-void testcpp(std::vector<double>* x = nullptr) {
-  x = new std::vector<double>;
-  x->push_back(-1);
-  x->push_back(2);
-  double * p;
-  p = &((*x)[0]);
-  std::cout << (*x)[0] << std::endl;
-}
 
 // [[Rcpp::export(test)]]
 void test() {
-  testcpp();
+  Eigen::LLT<Eigen::MatrixXd> chol;
+  Eigen::MatrixXd A = Eigen::MatrixXd::Random(3,3);
+  chol = A.llt();
+  Eigen::MatrixXd B = Eigen::MatrixXd::Random(3,3);
+  std::cout << chol.solve(B) << std::endl;
 }
 ```
 
@@ -250,4 +249,92 @@ microbenchmark(A={irlba(A,K)},
 ```
 
 
++ Regression
 
+```{r}
+m = 100
+X = as.matrix(runif(m,-1,1),m)
+Y = X[,1]^2
+m_new = 1000
+X_new = as.matrix(runif(m_new,-1,1),m_new)
+Y_new = X_new[,1]^2
+s = 100; r = 3; K = 20
+ggplot() + geom_point(aes(X[,1],Y)) + geom_point(aes(X_new[,1],Y_new))
+```
+
+```{r}
+models = list(subsample="kmeans",kernel="lae",gl="cluster-normalized",root=TRUE)
+Y_pred = fit_lae_regression_gp_rcpp(X,Y,X_new,s,r,K,approach = "posterior", models = models)
+sum((Y_new-Y_pred)^2)/m_new
+```
+
+```{r}
+Y_pred_r = fit_lae_reg_gp_r(X,Y,X_new,s,r,K)
+sum((Y_new-Y_pred_r)^2)/m_new
+```
+
+
+```{r}
+rbf = gausspr(X,Y)
+Y_pred_rbf = predict(rbf, X_new)
+sum((Y_new-Y_pred_rbf)^2)/m_new
+```
+
++ spiral case
+
+```{r}
+n = 10000
+theta = runif(n,0,8*pi)
+X = cbind((theta+4)^(0.7)*cos(theta), (theta+4)^(0.7)*sin(theta))
+Y = 3*sin(theta/10) + 3*cos(theta/2) + 4*sin(4*theta/5)
+```
+
+```{r}
+ggplot() + geom_point(aes(X[,1],X[,2],color=Y)) +
+  scale_color_gradientn(colours = rainbow(10))
+```
+```{r}
+m = 100
+train.index = sample.int(n,m); test.index = c(1:n)[-train.index]
+X.train = X[train.index,]; Y.train = Y[train.index]
+X.test = X[test.index,]; Y.test = Y[test.index]
+Yobs.train = Y.train
+```
+
+```{r}
+s = 1000; r = 3; K = 200
+```
+
+```{r}
+Y_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K)
+```
+
+```{r}
+sqrt(sum((Y.test-Y_pred_lkflag)^2)/(n-m))
+```
+
+```{r}
+Y_pred_skflag = fit_se_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K)
+```
+
+```{r}
+sqrt(sum((Y.test-Y_pred_skflag)^2)/(n-m))
+```
+
+
+```{r}
+rbf.spiral = gausspr(X.train,Yobs.train)
+Y_pred_rbf = predict(rbf.spiral, X.test)
+sqrt(sum((Y.test-Y_pred_rbf)^2)/(n-m))
+```
+
+```{r}
+ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_lkflag-Y.test)) +
+  scale_color_gradientn(colours = rainbow(10)) +
+  geom_point(aes(X.train[,1],X.train[,2]),color="black")
+```
+
+```{r}
+ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_rbf-Y.test)) +
+  scale_color_gradientn(colours = rainbow(10))
+```

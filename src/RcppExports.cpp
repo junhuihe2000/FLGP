@@ -52,6 +52,70 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fit_se_regression_gp_cpp
+Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int r, int K, double sigma, std::vector<double> a2s, std::string approach, Rcpp::List models, bool output_cov, int nstart);
+RcppExport SEXP _FLAG_fit_se_regression_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP, SEXP nstartSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< int >::type r(rSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type a2s(a2sSEXP);
+    Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
+    Rcpp::traits::input_parameter< int >::type nstart(nstartSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_se_regression_gp_cpp(X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, models, output_cov, nstart));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fit_nystrom_regression_gp_cpp
+Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int K, double sigma, std::vector<double> a2s, std::string approach, Rcpp::List models, bool output_cov, int nstart);
+RcppExport SEXP _FLAG_fit_nystrom_regression_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP, SEXP nstartSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type a2s(a2sSEXP);
+    Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
+    Rcpp::traits::input_parameter< int >::type nstart(nstartSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_nystrom_regression_gp_cpp(X_train, Y_train, X_test, s, K, sigma, a2s, approach, models, output_cov, nstart));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fit_gl_regression_gp_cpp
+Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int K, double sigma, std::vector<double> a2s, double threshold, bool sparse, std::string approach, Rcpp::List models, bool output_cov);
+RcppExport SEXP _FLAG_fit_gl_regression_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP a2sSEXP, SEXP thresholdSEXP, SEXP sparseSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type a2s(a2sSEXP);
+    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
+    Rcpp::traits::input_parameter< bool >::type sparse(sparseSEXP);
+    Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_gl_regression_gp_cpp(X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, models, output_cov));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fit_lae_logit_gp_cpp
 Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int r, int K, Rcpp::NumericVector N_train, double sigma, std::string approach, Rcpp::List models, bool output_cov, int nstart);
 RcppExport SEXP _FLAG_fit_lae_logit_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP N_trainSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP modelsSEXP, SEXP output_covSEXP, SEXP nstartSEXP) {
@@ -383,6 +447,9 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_FLAG_big_fit_lae_logit_gp_cpp", (DL_FUNC) &_FLAG_big_fit_lae_logit_gp_cpp, 10},
     {"_FLAG_fit_lae_regression_gp_cpp", (DL_FUNC) &_FLAG_fit_lae_regression_gp_cpp, 11},
+    {"_FLAG_fit_se_regression_gp_cpp", (DL_FUNC) &_FLAG_fit_se_regression_gp_cpp, 12},
+    {"_FLAG_fit_nystrom_regression_gp_cpp", (DL_FUNC) &_FLAG_fit_nystrom_regression_gp_cpp, 11},
+    {"_FLAG_fit_gl_regression_gp_cpp", (DL_FUNC) &_FLAG_fit_gl_regression_gp_cpp, 11},
     {"_FLAG_fit_lae_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_lae_logit_gp_cpp, 12},
     {"_FLAG_fit_lae_logit_mult_gp_cpp", (DL_FUNC) &_FLAG_fit_lae_logit_mult_gp_cpp, 10},
     {"_FLAG_fit_se_logit_gp_cpp", (DL_FUNC) &_FLAG_fit_se_logit_gp_cpp, 13},

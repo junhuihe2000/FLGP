@@ -14,7 +14,8 @@ fit_se_logit_mult_gp_rcpp(
   sigma = 0.001,
   a2s = NULL,
   approach = "posterior",
-  models = list(subsample = "kmeans", kernel = "lae", gl = "rw", root = FALSE),
+  models = list(subsample = "kmeans", kernel = "lae", gl = "cluster-normalized", root =
+    TRUE),
   nstart = 1
 )
 }
@@ -44,9 +45,9 @@ decides which objective function to be optimized, defaulting value is \code{post
 \item{subsample}{the method of subsampling, the defaulting value is \code{kmeans}.}
 \item{kernel}{the type of kernel to compute cross similarity matrix W, the
 defaulting value is \code{lae}.}
-\item{gl}{the kind of graph Laplacian L, the defaulting value is \code{rw}.}
+\item{gl}{the kind of graph Laplacian L, the defaulting value is \code{cluster-normalized}.}
 \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
-the defaulting value is \code{FALSE}.}
+the defaulting value is \code{TRUE}.}
 }}
 
 \item{nstart}{Int, the number of random sets chosen in kmeans.}

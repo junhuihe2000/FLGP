@@ -7,7 +7,7 @@
 
 
 /*
-//' Fit Gaussian process logistic regression with local anchor embedding kernels
+//' Fit Gaussian process regression with local anchor embedding kernels
 //'
 //' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
 //' @param Y A numeric vector with length(m), count of the positive class.
@@ -56,6 +56,34 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
                                      Rcpp::List models,
                                      bool output_cov,
                                      int nstart);
+
+// Fit Gaussian process regression with the square exponential kernels
+// [[Rcpp::export(fit_se_regression_gp_cpp)]]
+Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
+                                    int s, int r, int K,
+                                    double sigma, std::vector<double> a2s, std::string approach,
+                                    Rcpp::List models,
+                                    bool output_cov,
+                                    int nstart);
+
+// Fit Gaussian process regression with the nystrom extension
+// [[Rcpp::export(fit_nystrom_regression_gp_cpp)]]
+Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
+                                         int s, int K,
+                                         double sigma, std::vector<double> a2s, std::string approach,
+                                         Rcpp::List models,
+                                         bool output_cov,
+                                         int nstart);
+
+// Fit Gaussian process regression with the graph Laplacian
+// [[Rcpp::export(fit_gl_regression_gp_cpp)]]
+Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
+                                    int K,
+                                    double sigma, std::vector<double> a2s,
+                                    double threshold, bool sparse,
+                                    std::string approach,
+                                    Rcpp::List models,
+                                    bool output_cov);
 
 /*
 //' Fit Gaussian process logistic regression with local anchor embedding kernels

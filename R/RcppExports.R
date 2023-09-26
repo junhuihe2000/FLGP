@@ -9,6 +9,18 @@ fit_lae_regression_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, sigma, 
     .Call(`_FLAG_fit_lae_regression_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, approach, models, output_cov, nstart)
 }
 
+fit_se_regression_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, models, output_cov, nstart) {
+    .Call(`_FLAG_fit_se_regression_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, models, output_cov, nstart)
+}
+
+fit_nystrom_regression_gp_cpp <- function(X_train, Y_train, X_test, s, K, sigma, a2s, approach, models, output_cov, nstart) {
+    .Call(`_FLAG_fit_nystrom_regression_gp_cpp`, X_train, Y_train, X_test, s, K, sigma, a2s, approach, models, output_cov, nstart)
+}
+
+fit_gl_regression_gp_cpp <- function(X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, models, output_cov) {
+    .Call(`_FLAG_fit_gl_regression_gp_cpp`, X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, models, output_cov)
+}
+
 fit_lae_logit_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, N_train, sigma, approach, models, output_cov, nstart) {
     .Call(`_FLAG_fit_lae_logit_gp_cpp`, X_train, Y_train, X_test, s, r, K, N_train, sigma, approach, models, output_cov, nstart)
 }

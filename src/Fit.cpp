@@ -15,6 +15,9 @@
 #include "Fit.h"
 
 
+//-----------------------------------------------------------//
+// Gaussian Process regression
+//-----------------------------------------------------------//
 
 Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                 int s, int r, int K,
@@ -83,6 +86,379 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   }
 
 }
+
+
+Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
+                               int s, int r, int K,
+                               double sigma, std::vector<double> a2s, std::string approach,
+                               Rcpp::List models,
+                               bool output_cov,
+                               int nstart) {
+  std::cout << "Gaussian regression with square exponential kernel:" << std::endl;
+
+  // map the matrices from R to Eigen
+  const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
+  const Eigen::VectorXd Y(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(Y_train));
+  const Eigen::Map<Eigen::MatrixXd> X_new(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_test));
+
+  int m = X.rows(); int m_new = X_new.rows();
+  int n = m + m_new; int d = X.cols();
+
+  if(K<0) {
+    K = s;
+  }
+
+  Eigen::MatrixXd X_all(n, d);
+  X_all.topRows(m) = X;
+  X_all.bottomRows(m_new) = X_new;
+  Eigen::MatrixXd U = subsample_cpp(X_all, s, Rcpp::as<std::string>(models["subsample"]), nstart);
+  Rcpp::List res_knn = KNN_cpp(X_all, U.leftCols(d), r, "Euclidean", true);
+  const Eigen::MatrixXi& ind_knn = res_knn["ind_knn"];
+  const Eigen::SparseMatrix<double, Eigen::RowMajor> & distances_sp = res_knn["distances_sp"];
+
+  double distances_mean = distances_sp.coeffs().sum()/ (n*r);
+
+  Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m, 0, m-1);
+  std::string gl = Rcpp::as<std::string>(models["gl"]);
+  bool root = models["root"];
+  Eigen::SparseMatrix<double, Eigen::RowMajor> Z = distances_sp;
+  int l = a2s.size();
+
+
+  // train model
+  std::cout << "Training..." << std::endl;
+  // grid search
+  double best_a2 = 0;
+  std::vector<double> best_pars;
+  double max_obj = -std::numeric_limits<double>::infinity();
+  EigenPair best_eigenpair;
+  for(int i=0;i<l;i++) {
+    double a2 = a2s[i];
+
+    Z.coeffs() = Eigen::exp(-distances_sp.coeffs()/(a2*distances_mean));
+
+    if(gl=="cluster-normalized") {
+      graphLaplacian_cpp(Z, gl, U.rightCols(1));
+    } else {
+      graphLaplacian_cpp(Z, gl);
+    }
+
+    EigenPair eigenpair = spectrum_from_Z_cpp(Z, K, root);
+
+    // empirical Bayes to optimize t
+    ReturnValueReg res;
+    if(approach=="posterior") {
+      PostOFDataReg postdatareg(eigenpair, Y, idx, K, sigma);
+      res = train_regression_gp_cpp(&postdatareg, approach);
+    } else if(approach=="marginal") {
+      MargOFDataReg margdatareg(eigenpair, Y, idx, K, sigma);
+      res = train_regression_gp_cpp(&margdatareg, approach);
+    } else {
+      Rcpp::stop("This model selection approach is not supported!");
+    }
+
+    if(res.obj>max_obj) {
+      max_obj = res.obj;
+      best_pars = res.x;
+      best_a2 = a2s[i];
+      best_eigenpair = eigenpair;
+    }
+  }
+
+  EigenPair & eigenpair = best_eigenpair;
+
+  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_pars[0] \
+            << ", sigma = " << sqrt(best_pars[1]) << ", the objective function is " << max_obj << std::endl;
+
+  // test model
+  std::cout << "Testing..." << std::endl;
+  // construct covariance matrix
+  Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
+  Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
+  Cvv.diagonal().array() += sigma + best_pars[1];
+  Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
+
+  // predict labels on new samples
+  Eigen::VectorXd Y_pred = test_regression_cpp(Cvv,Y,Cnv);
+  std::cout << "Over" << std::endl;
+
+  if(output_cov) {
+    Eigen::MatrixXd C(n,m);
+    C.topRows(m) = Cvv;
+    C.bottomRows(m_new) = Cnv;
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+  } else {
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+  }
+}
+
+Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
+                                    int s, int K,
+                                    double sigma, std::vector<double> a2s, std::string approach,
+                                    Rcpp::List models,
+                                    bool output_cov,
+                                    int nstart) {
+  std::cout << "Gaussian regression with Nystrom extension:" << std::endl;
+
+  // map the matrices from R to Eigen
+  const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
+  const Eigen::VectorXd Y(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(Y_train));
+  const Eigen::Map<Eigen::MatrixXd> X_new(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_test));
+
+  int m = X.rows(); int m_new = X_new.rows(); int n = m + m_new;
+  int d = X.cols();
+
+  Eigen::MatrixXd X_all(n,d);
+  X_all.topRows(m) = X;
+  X_all.bottomRows(m_new) = X_new;
+
+  const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
+
+  const Eigen::MatrixXd U = subsample_cpp(X_all, s, subsample, nstart).leftCols(d);
+
+  const Eigen::MatrixXd distances_UU  = ((-2*U*U.transpose()).colwise() + U.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
+  const Eigen::MatrixXd distances_allU = ((-2*X_all*U.transpose()).colwise() + X_all.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
+  const Eigen::MatrixXd & distances_XU = distances_allU.topRows(m);
+
+  double distances_mean = distances_UU.array().sum()/(s*s);
+
+  Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m,0,m-1);
+
+  // train model
+  std::cout << "Training..." << std::endl;
+  // grid search
+  double best_a2 = 0;
+  std::vector<double> best_pars;
+  double max_obj = -std::numeric_limits<double>::infinity();
+  EigenPair best_eigenpair;
+  Eigen::MatrixXd best_Z_UU;
+  int l = a2s.size();
+
+  Rcpp::Environment RSpectra = Rcpp::Environment::namespace_env("RSpectra");
+  Rcpp::Function eigs_sym = RSpectra["eigs_sym"];
+
+  for(int i=0;i<l;i++) {
+    double a2 = a2s[i];
+
+    Eigen::MatrixXd Z_UU = Eigen::exp(-distances_UU.array()/(a2*distances_mean));
+    Eigen::VectorXd Z_UU_rowsums = Z_UU.rowwise().sum().array()+1e-5;
+    Eigen::MatrixXd A_UU = (1.0/Z_UU_rowsums.array()).matrix().asDiagonal()*Z_UU*(1.0/Z_UU_rowsums.array()).matrix().asDiagonal();
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> sqrt_D_inv = (1.0/(A_UU.rowwise().sum().array()+1e-5).sqrt()).matrix().asDiagonal();
+    Eigen::MatrixXd W_UU = sqrt_D_inv*A_UU*sqrt_D_inv;
+
+
+    Rcpp::List res_eigs = eigs_sym(Rcpp::Named("A")=W_UU,
+                                   Rcpp::Named("k")=K);
+    EigenPair eigenpair_UU(Rcpp::as<Eigen::VectorXd>(res_eigs["values"]),
+                           Rcpp::as<Eigen::MatrixXd>(res_eigs["vectors"]));
+    eigenpair_UU.vectors = std::sqrt(s)*sqrt_D_inv*eigenpair_UU.vectors;
+
+    // Nystrom extension formula
+    Eigen::MatrixXd Z_XU = Eigen::exp(-distances_XU.array()/(a2*distances_mean));
+    Eigen::VectorXd Z_XU_rowsums = Z_XU.rowwise().sum().array()+1e-5;
+    Eigen::MatrixXd A_XU = (1.0/Z_XU_rowsums.array()).matrix().asDiagonal()*Z_XU*(1.0/Z_UU_rowsums.array()).matrix().asDiagonal();
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> D_inv = (1.0/(A_XU.rowwise().sum().array()+1e-5)).matrix().asDiagonal();
+    Eigen::MatrixXd W_XU = D_inv*A_XU;
+    EigenPair eigenpair = eigenpair_UU;
+    eigenpair.vectors = W_XU*eigenpair.vectors*(1.0/eigenpair.values.array()).matrix().asDiagonal();
+
+    // empirical Bayes to optimize t
+    ReturnValueReg res;
+    if(approach=="posterior") {
+      PostOFDataReg postdatareg(eigenpair, Y, idx, K, sigma);
+      res = train_regression_gp_cpp(&postdatareg, approach);
+    } else if(approach=="marginal") {
+      MargOFDataReg margdatareg(eigenpair, Y, idx, K, sigma);
+      res = train_regression_gp_cpp(&margdatareg, approach);
+    } else {
+      Rcpp::stop("This model selection approach is not supported!");
+    }
+
+    if(res.obj>max_obj) {
+      max_obj = res.obj;
+      best_pars = res.x;
+      best_a2 = a2s[i];
+      best_eigenpair = eigenpair_UU;
+      best_Z_UU = Z_UU;
+    }
+
+  }
+
+  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_pars[0] \
+            << ", sigma = " << sqrt(best_pars[1]) << ", the objective function is " << max_obj << std::endl;
+
+  // test model
+  std::cout << "Testing..." << std::endl;
+  // Nystrom extension
+  Eigen::MatrixXd Z_allU = Eigen::exp(-distances_allU.array()/(best_a2*distances_mean));
+  Eigen::MatrixXd A_allU = (1.0/Z_allU.rowwise().sum().array()).matrix().asDiagonal()*Z_allU*(1.0/(best_Z_UU.colwise().sum().array())).matrix().asDiagonal();
+  Eigen::MatrixXd W_allU = (1.0/A_allU.rowwise().sum().array()).matrix().asDiagonal()*A_allU;
+  EigenPair & eigenpair = best_eigenpair;
+  eigenpair.vectors = W_allU*eigenpair.vectors*(1.0/eigenpair.values.array()).matrix().asDiagonal();
+  // construct covariance matrix
+  Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
+  Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
+  Cvv.diagonal().array() += sigma + best_pars[1];
+  Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
+
+  // predict labels on new samples
+  Eigen::VectorXd Y_pred = test_regression_cpp(Cvv,Y,Cnv);
+  std::cout << "Over" << std::endl;
+
+  if(output_cov) {
+    Eigen::MatrixXd C(n,m);
+    C.topRows(m) = Cvv;
+    C.bottomRows(m_new) = Cnv;
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+  } else {
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+  }
+}
+
+
+Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
+                               int K,
+                               double sigma, std::vector<double> a2s,
+                               double threshold, bool sparse,
+                               std::string approach,
+                               Rcpp::List models,
+                               bool output_cov) {
+  std::cout << "Gaussian regression with graph Laplacian Gaussian process:" << std::endl;
+
+  // map the matrices from R to Eigen
+  const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
+  const Eigen::VectorXd Y(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(Y_train));
+  const Eigen::Map<Eigen::MatrixXd> X_new(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_test));
+
+  int m = X.rows(); int m_new = X_new.rows(); int n = m + m_new;
+  int d = X.cols();
+
+  Eigen::MatrixXd X_all(n,d);
+  X_all.topRows(m) = X;
+  X_all.bottomRows(m_new) = X_new;
+
+  const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
+
+
+  Eigen::MatrixXd distances;
+  double distances_mean;
+  Eigen::SparseMatrix<double, Eigen::RowMajor> distances_sp;
+
+  if(sparse) {
+    int r = std::max((int)std::round(threshold*n),3); // r will be greater than 3.
+    Rcpp::List res_knn = KNN_cpp(X_all, X_all, r, "Euclidean", true);
+    distances_sp = res_knn["distances_sp"];
+    distances_mean = distances_sp.coeffs().sum()/(n*r) * r;
+  } else {
+    distances = ((-2.0*X_all*X_all.transpose()).colwise() + X_all.rowwise().squaredNorm()).rowwise() + X_all.rowwise().squaredNorm().transpose();
+    distances_mean = distances.array().mean();
+  }
+
+
+
+  Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m,0,m-1);
+
+  // train model
+  std::cout << "Training..." << std::endl;
+  // grid search
+  double best_a2 = 0;
+  std::vector<double> best_pars;
+  double max_obj = -std::numeric_limits<double>::infinity();
+  EigenPair best_eigenpair;
+  int l = a2s.size();
+
+  Rcpp::Environment RSpectra = Rcpp::Environment::namespace_env("RSpectra");
+  Rcpp::Function eigs_sym = RSpectra["eigs_sym"];
+
+  for(int i=0;i<l;i++) {
+    double a2 = a2s[i];
+    EigenPair eigenpair;
+    if(sparse) {
+      Eigen::SparseMatrix<double> Z(distances_sp);
+      Z.coeffs() = Eigen::exp(-Z.coeffs()/(a2*distances_mean));
+      Z = (Z + Eigen::SparseMatrix<double>(Z.transpose()))/2.0;
+      Eigen::VectorXd Z_rowsum = Z*Eigen::VectorXd::Ones(n);
+      Eigen::SparseMatrix<double> A = (1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal();
+      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-5).sqrt();
+      Eigen::SparseMatrix<double> W = sqrt_D_inv.asDiagonal()*A*sqrt_D_inv.asDiagonal();
+
+      Rcpp::List res_eigs = eigs_sym(Rcpp::Named("A")=W,
+                                     Rcpp::Named("k")=K);
+      eigenpair = EigenPair(Rcpp::as<Eigen::VectorXd>(res_eigs["values"]),
+                            Rcpp::as<Eigen::MatrixXd>(res_eigs["vectors"]));
+      eigenpair.vectors = std::sqrt(n)*sqrt_D_inv.asDiagonal()*eigenpair.vectors;
+    } else {
+      Eigen::MatrixXd Z = Eigen::exp(-distances.array()/(a2*distances_mean));
+
+      Eigen::VectorXd Z_rowsum = Z*Eigen::VectorXd::Ones(n);
+      Eigen::MatrixXd A = (1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal();
+      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-5).sqrt();
+      Eigen::MatrixXd W = sqrt_D_inv.asDiagonal()*A*sqrt_D_inv.asDiagonal();
+
+      Rcpp::List res_eigs = eigs_sym(Rcpp::Named("A")=W,
+                                     Rcpp::Named("k")=K);
+      eigenpair = EigenPair(Rcpp::as<Eigen::VectorXd>(res_eigs["values"]),
+                            Rcpp::as<Eigen::MatrixXd>(res_eigs["vectors"]));
+      eigenpair.vectors = std::sqrt(n)*sqrt_D_inv.asDiagonal()*eigenpair.vectors;
+    }
+
+    // empirical Bayes to optimize t
+    ReturnValueReg res;
+    if(approach=="posterior") {
+      PostOFDataReg postdatareg(eigenpair, Y, idx, K, sigma);
+      res = train_regression_gp_cpp(&postdatareg, approach);
+    } else if(approach=="marginal") {
+      MargOFDataReg margdatareg(eigenpair, Y, idx, K, sigma);
+      res = train_regression_gp_cpp(&margdatareg, approach);
+    } else {
+      Rcpp::stop("This model selection approach is not supported!");
+    }
+
+    if(res.obj>max_obj) {
+      max_obj = res.obj;
+      best_pars = res.x;
+      best_a2 = a2s[i];
+      best_eigenpair = eigenpair;
+    }
+
+  }
+
+  EigenPair & eigenpair = best_eigenpair;
+
+  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_pars[0] \
+            << ", sigma = " << sqrt(best_pars[1]) << ", the objective function is " << max_obj << std::endl;
+
+  // test model
+  std::cout << "Testing..." << std::endl;
+  // construct covariance matrix
+  Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
+  Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
+  Cvv.diagonal().array() += sigma + best_pars[1];
+  Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
+
+  // predict labels on new samples
+  Eigen::VectorXd Y_pred = test_regression_cpp(Cvv,Y,Cnv);
+  std::cout << "Over" << std::endl;
+
+  if(output_cov) {
+    Eigen::MatrixXd C(n,m);
+    C.topRows(m) = Cvv;
+    C.bottomRows(m_new) = Cnv;
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+  } else {
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+  }
+
+}
+
+
+
+//-----------------------------------------------------------//
+// Gaussian Process Classification
+//-----------------------------------------------------------//
 
 
 Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,

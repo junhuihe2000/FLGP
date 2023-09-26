@@ -136,7 +136,7 @@ struct PostOFDataReg {
 
   PostOFDataReg(const EigenPair & _eigenpair, const Eigen::VectorXd & _Y,  const Eigen::VectorXi & _idx,
              int _K, double _sigma = 1e-3, double _p = 1e-2, double _q = 10,
-             double _tau = 2, double _alpha = 1, double _beta = 1) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
+             double _tau = 2, double _alpha = 1, double _beta = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
 };
 
 // return value, contains optimal parameter t and objective value obj

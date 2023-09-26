@@ -15,7 +15,8 @@ fit_gl_logit_gp_rcpp(
   threshold = 0.01,
   sparse = TRUE,
   approach = "posterior",
-  models = list(subsample = "kmeans", kernel = "se", gl = "rw", root = FALSE),
+  models = list(subsample = "kmeans", kernel = "lae", gl = "cluster-normalized", root =
+    TRUE),
   output_cov = FALSE
 )
 }
@@ -48,9 +49,9 @@ decides which objective function to be optimized, defaulting value is \code{post
 \item{subsample}{the method of subsampling, the defaulting value is \code{kmeans}.}
 \item{kernel}{the type of kernel to compute cross similarity matrix W, the
 defaulting value is \code{lae}.}
-\item{gl}{the kind of graph Laplacian L, the defaulting value is \code{rw}.}
+\item{gl}{the kind of graph Laplacian L, the defaulting value is \code{cluster-normalized}.}
 \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
-the defaulting value is \code{FALSE}.}
+the defaulting value is \code{TRUE}.}
 }}
 
 \item{output_cov}{Bool, whether to output covariance, defaulting value is \code{FALSE}.}
