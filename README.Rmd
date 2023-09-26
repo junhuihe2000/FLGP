@@ -47,7 +47,7 @@ library(FLAG)
 set.seed(1234)
 ```
 
-```{r,fig.width=5,fig.height=5}
+```{r,fig.width=10,fig.height=10}
 ## generate samples
 n = 4800; n_each = 800; d = 3
 thetas = runif(n, 0, 2*pi)
@@ -110,7 +110,7 @@ cat("The error rate of LKFLAG is",err_lkflag.torus,".\n")
 
 ### Gaussian process regression(GPR)
 
-```{r,fig.width=5,fig.height=5}
+```{r,fig.width=10,fig.height=10}
 n = 4000
 theta = runif(n,0,8*pi)
 X = cbind((theta+4)^(0.7)*cos(theta), (theta+4)^(0.7)*sin(theta))
@@ -142,7 +142,7 @@ rmse_skflag.spiral = sqrt(sum((Y.test-Y_pred_skflag)^2)/(n-m))
 cat("The RMSE of SKFLAG is",rmse_skflag.spiral,".\n")
 ```
 
-```{r,fig.width=5,fig.height=5}
+```{r,fig.width=10,fig.height=10}
 ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_skflag)) +
   scale_color_gradientn(colours = rainbow(10)) +
   theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
@@ -159,7 +159,7 @@ rmse_lkflag.spiral = sqrt(sum((Y.test-Y_pred_lkflag)^2)/(n-m))
 cat("The RMSE of LKFLAG is",rmse_lkflag.spiral,".\n")
 ```
 
-```{r,fig.width=5,fig.height=5}
+```{r,fig.width=10,fig.height=10}
 ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_lkflag)) +
   scale_color_gradientn(colours = rainbow(10)) +
   theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +

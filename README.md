@@ -88,7 +88,7 @@ t1 = Sys.time()
 y_skflag.torus = fit_se_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
 t2 = Sys.time()
 print(t2-t1)
-#> Time difference of 19.93066 secs
+#> Time difference of 20.72625 secs
 err_skflag.torus = sum((test.label!=y_skflag.torus)^2)/(n-m)
 cat("The error rate of SKFLAG is",err_skflag.torus,".\n")
 #> The error rate of SKFLAG is 0 .
@@ -102,7 +102,7 @@ t3 = Sys.time()
 y_lkflag.torus = fit_lae_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
 t4 = Sys.time()
 print(t4-t3)
-#> Time difference of 3.678423 secs
+#> Time difference of 3.782275 secs
 err_lkflag.torus = sum((test.label-y_lkflag.torus)^2)/(n-m)
 cat("The error rate of LKFLAG is",err_lkflag.torus,".\n")
 #> The error rate of LKFLAG is 0.02702128 .
