@@ -254,19 +254,3 @@ marginal_log_likelihood_logit_la_cpp <- function(C, Y, N, tol = 1e-5, max_iter =
     .Call(`_FLAG_marginal_log_likelihood_logit_la_cpp`, C, Y, N, tol, max_iter)
 }
 
-#' Marginal log likelihood function for GPR
-#'
-#' @param C A numeric matrix with dim(m,m), covariance matrix.
-#' @param Y A numeric vector with length(m), count of the positive class.
-#' @return `mll` A double, the marginal log likelihood.
-#' @export
-#'
-#' @examples
-#' A <- matrix(rnorm(3*3),3,3)
-#' C <- A%*%t(A)
-#' Y <- runif(3)
-#' marginal_log_likelihood_regression_cpp(C, Y)
-marginal_log_likelihood_regression_cpp <- function(C, Y) {
-    .Call(`_FLAG_marginal_log_likelihood_regression_cpp`, C, Y)
-}
-

@@ -57,8 +57,13 @@ the defaulting value is \code{TRUE}.}
 \item{nstart}{Int, the number of random sets chosen in kmeans.}
 }
 \value{
-\code{Y_pred} A numeric vector with length(m_new), each element indicates
-the label in the corresponding new sample point.
+\code{Y_pred} A list with two components
+\describe{
+\item{train}{A numeric vector with length(m), each element indicates
+the label in the train data point.}
+\item{test}{A numeric vector with length(m_new), each element indicates
+the label in the test data point.}
+}
 }
 \description{
 Fit Gaussian process regression with square exponential kernels

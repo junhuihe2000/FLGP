@@ -29,8 +29,13 @@
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `Y_pred` A list with two components
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
 #' @export
 #'
 #' @examples
@@ -88,8 +93,13 @@ fit_lae_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `Y_pred` A list with two components
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
 #' @export
 #'
 #' @examples
@@ -151,8 +161,13 @@ fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `Y_pred` A list with two components
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
 #' @export
 #'
 #' @examples
@@ -218,8 +233,13 @@ fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s
 #' }
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `Y_pred` A list with two components
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
 #' @export
 #'
 #' @examples

@@ -35,21 +35,14 @@ double marginal_log_likelihood_logit_la_cpp(const Eigen::MatrixXd & C,
                                             double tol = 1e-5,
                                             int max_iter = 100);
 
-//' Marginal log likelihood function for GPR
-//'
-//' @param C A numeric matrix with dim(m,m), covariance matrix.
-//' @param Y A numeric vector with length(m), count of the positive class.
-//' @return `mll` A double, the marginal log likelihood.
-//' @export
-//'
-//' @examples
-//' A <- matrix(rnorm(3*3),3,3)
-//' C <- A%*%t(A)
-//' Y <- runif(3)
-//' marginal_log_likelihood_regression_cpp(C, Y)
-// [[Rcpp::export(marginal_log_likelihood_regression_cpp)]]
-double marginal_log_likelihood_regression_cpp(const Eigen::MatrixXd & C,
-                                              const Eigen::VectorXd & Y);
+// Marginal log likelihood function for GPR
+double marginal_log_likelihood_regression_cpp(const EigenPair & eigenpair,
+                                              const Eigen::VectorXd & Y,
+                                              const Eigen::VectorXi & idx,
+                                              int K,
+                                              double t,
+                                              double noise,
+                                              double sigma = 1e-3);
 
 /*
 //' Create negative log marginal likelihood functional for logistic regression
@@ -136,7 +129,7 @@ struct PostOFDataReg {
 
   PostOFDataReg(const EigenPair & _eigenpair, const Eigen::VectorXd & _Y,  const Eigen::VectorXi & _idx,
              int _K, double _sigma = 1e-3, double _p = 1e-2, double _q = 10,
-             double _tau = 2, double _alpha = 1, double _beta = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
+             double _tau = 2, double _alpha = 10, double _beta = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
 };
 
 // return value, contains optimal parameter t and objective value obj

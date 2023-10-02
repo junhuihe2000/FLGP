@@ -283,7 +283,12 @@ sum((Y_new-Y_pred_rbf)^2)/m_new
 + spiral case
 
 ```{r}
-n = 2000
+set.seed(1234)
+```
+
+
+```{r}
+n = 4000
 theta = runif(n,0,8*pi)
 X = cbind((theta+4)^(0.7)*cos(theta), (theta+4)^(0.7)*sin(theta))
 Y = 3*sin(theta/10) + 3*cos(theta/2) + 4*sin(4*theta/5)
@@ -310,7 +315,7 @@ Y_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K)
 ```
 
 ```{r}
-sqrt(sum((Y.test-Y_pred_lkflag)^2)/(n-m))
+sqrt(sum((Y.test-Y_pred_lkflag$test)^2)/(n-m))
 ```
 
 ```{r}
@@ -318,7 +323,7 @@ Y_pred_skflag = fit_se_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K)
 ```
 
 ```{r}
-sqrt(sum((Y.test-Y_pred_skflag)^2)/(n-m))
+sqrt(sum((Y.test-Y_pred_skflag$test)^2)/(n-m))
 ```
 
 

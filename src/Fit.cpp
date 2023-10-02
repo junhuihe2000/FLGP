@@ -68,12 +68,19 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
   Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, res.x[0], idx0, idx0);
-  Cvv.diagonal().array() += sigma;
-  Cvv.diagonal().array() += res.x[1];
+  Eigen::MatrixXd C_noisy = Cvv;
+  C_noisy.diagonal().array() += sigma;
+  C_noisy.diagonal().array() += res.x[1];
   Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, res.x[0], idx1, idx0);
 
-  // predict labels on new samples
-  Eigen::VectorXd Y_pred = test_regression_cpp(Cvv, Y, Cnv);
+  // predict labels on the training set
+  Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
+  // predict labels on the testing set
+  Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
+
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
+
   std::cout << "Over" << std::endl;
 
   if(output_cov) {
@@ -176,11 +183,18 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
   Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
-  Cvv.diagonal().array() += sigma + best_pars[1];
+  Eigen::MatrixXd C_noisy = Cvv;
+  C_noisy.diagonal().array() += sigma + best_pars[1];
   Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
 
-  // predict labels on new samples
-  Eigen::VectorXd Y_pred = test_regression_cpp(Cvv,Y,Cnv);
+  // predict labels on the training set
+  Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
+  // predict labels on the testing set
+  Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
+
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
+
   std::cout << "Over" << std::endl;
 
   if(output_cov) {
@@ -300,11 +314,18 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
   Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
-  Cvv.diagonal().array() += sigma + best_pars[1];
+  Eigen::MatrixXd C_noisy = Cvv;
+  C_noisy.diagonal().array() += sigma + best_pars[1];
   Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
 
-  // predict labels on new samples
-  Eigen::VectorXd Y_pred = test_regression_cpp(Cvv,Y,Cnv);
+  // predict labels on the training set
+  Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
+  // predict labels on the testing set
+  Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
+
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
+
   std::cout << "Over" << std::endl;
 
   if(output_cov) {
@@ -436,11 +457,19 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
   Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
-  Cvv.diagonal().array() += sigma + best_pars[1];
+  Eigen::MatrixXd C_noisy = Cvv;
+  C_noisy.diagonal().array() += sigma + best_pars[1];
   Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
 
-  // predict labels on new samples
-  Eigen::VectorXd Y_pred = test_regression_cpp(Cvv,Y,Cnv);
+
+  // predict labels on the training set
+  Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
+  // predict labels on the testing set
+  Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
+
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
+
   std::cout << "Over" << std::endl;
 
   if(output_cov) {

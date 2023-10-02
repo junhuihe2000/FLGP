@@ -431,18 +431,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// marginal_log_likelihood_regression_cpp
-double marginal_log_likelihood_regression_cpp(const Eigen::MatrixXd& C, const Eigen::VectorXd& Y);
-RcppExport SEXP _FLAG_marginal_log_likelihood_regression_cpp(SEXP CSEXP, SEXP YSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type C(CSEXP);
-    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type Y(YSEXP);
-    rcpp_result_gen = Rcpp::wrap(marginal_log_likelihood_regression_cpp(C, Y));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_FLAG_big_fit_lae_logit_gp_cpp", (DL_FUNC) &_FLAG_big_fit_lae_logit_gp_cpp, 10},
@@ -468,7 +456,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLAG_local_anchor_embedding_cpp", (DL_FUNC) &_FLAG_local_anchor_embedding_cpp, 2},
     {"_FLAG_v_to_z_cpp", (DL_FUNC) &_FLAG_v_to_z_cpp, 1},
     {"_FLAG_marginal_log_likelihood_logit_la_cpp", (DL_FUNC) &_FLAG_marginal_log_likelihood_logit_la_cpp, 5},
-    {"_FLAG_marginal_log_likelihood_regression_cpp", (DL_FUNC) &_FLAG_marginal_log_likelihood_regression_cpp, 2},
     {NULL, NULL, 0}
 };
 
