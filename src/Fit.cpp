@@ -67,6 +67,7 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  /*
   Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, res.x[0], idx0, idx0);
   Eigen::MatrixXd C_noisy = Cvv;
   C_noisy.diagonal().array() += sigma;
@@ -77,6 +78,12 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
   // predict labels on the testing set
   Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
+  */
+
+  // predict labels on the training set
+  Eigen::VectorXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, res.x[0], res.x[1]);
+  // predict labels on the testing set
+  Eigen::VectorXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, res.x[0], res.x[1]);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
@@ -84,6 +91,9 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   std::cout << "Over" << std::endl;
 
   if(output_cov) {
+    Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, res.x[0], idx0, idx0);
+    Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, res.x[0], idx1, idx0);
+
     Eigen::MatrixXd C(n,m);
     C.topRows(m) = Cvv;
     C.bottomRows(m_new) = Cnv;
@@ -182,6 +192,7 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  /*
   Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
   Eigen::MatrixXd C_noisy = Cvv;
   C_noisy.diagonal().array() += sigma + best_pars[1];
@@ -191,6 +202,12 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
   // predict labels on the testing set
   Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
+  */
+
+  // predict labels on the training set
+  Eigen::VectorXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
+  // predict labels on the testing set
+  Eigen::VectorXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
@@ -198,6 +215,9 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   std::cout << "Over" << std::endl;
 
   if(output_cov) {
+    Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
+    Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
+
     Eigen::MatrixXd C(n,m);
     C.topRows(m) = Cvv;
     C.bottomRows(m_new) = Cnv;
@@ -313,6 +333,7 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  /*
   Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
   Eigen::MatrixXd C_noisy = Cvv;
   C_noisy.diagonal().array() += sigma + best_pars[1];
@@ -322,6 +343,12 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
   // predict labels on the testing set
   Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
+  */
+
+  // predict labels on the training set
+  Eigen::VectorXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
+  // predict labels on the testing set
+  Eigen::VectorXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
@@ -329,6 +356,9 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   std::cout << "Over" << std::endl;
 
   if(output_cov) {
+    Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
+    Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
+
     Eigen::MatrixXd C(n,m);
     C.topRows(m) = Cvv;
     C.bottomRows(m_new) = Cnv;
@@ -456,6 +486,7 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  /*
   Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
   Eigen::MatrixXd C_noisy = Cvv;
   C_noisy.diagonal().array() += sigma + best_pars[1];
@@ -466,6 +497,12 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
   // predict labels on the testing set
   Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
+  */
+
+  // predict labels on the training set
+  Eigen::VectorXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
+  // predict labels on the testing set
+  Eigen::VectorXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
@@ -473,6 +510,9 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   std::cout << "Over" << std::endl;
 
   if(output_cov) {
+    Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
+    Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
+
     Eigen::MatrixXd C(n,m);
     C.topRows(m) = Cvv;
     C.bottomRows(m_new) = Cnv;

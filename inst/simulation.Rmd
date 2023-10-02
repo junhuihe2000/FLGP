@@ -303,7 +303,7 @@ m = 100
 train.index = sample.int(n,m); test.index = c(1:n)[-train.index]
 X.train = X[train.index,]; Y.train = Y[train.index]
 X.test = X[test.index,]; Y.test = Y[test.index]
-Yobs.train = Y.train
+Yobs.train = Y.train + rnorm(m)
 ```
 
 ```{r}
