@@ -65,9 +65,9 @@ Eigen::VectorXd predict_regression_cpp(const EigenPair & eigenpair, const Eigen:
     Eigen::MatrixXd V = mat_indexing(eigenvectors, idx0, cols);
     Eigen::DiagonalMatrix<double, Eigen::Dynamic> Lambda_sqrt = (Eigen::exp(-0.5*t*eigenvalues.array())+0.0).matrix().asDiagonal();
     Eigen::MatrixXd Q = Lambda_sqrt*V.transpose()*V*Lambda_sqrt;
-    Q.diagonal().array() += noise;
+    Q.diagonal().array() += noise + sigma;
     Eigen::LLT<Eigen::MatrixXd> chol_Q(Q);
-    Eigen::VectorXd alpha = 1.0/(noise)*(Y - V*Lambda_sqrt*chol_Q.solve(Lambda_sqrt*(V.transpose()*Y)));
+    Eigen::VectorXd alpha = 1.0/(noise+sigma)*(Y - V*Lambda_sqrt*chol_Q.solve(Lambda_sqrt*(V.transpose()*Y)));
 
     Eigen::MatrixXd Vnv = mat_indexing(eigenvectors, idx1, cols);
     Eigen::VectorXd Y_pred = Vnv*(Eigen::exp(-t*eigenvalues.array()+0.0).matrix().asDiagonal()*(V.transpose()*alpha));

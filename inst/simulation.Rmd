@@ -299,11 +299,11 @@ ggplot() + geom_point(aes(X[,1],X[,2],color=Y)) +
   scale_color_gradientn(colours = rainbow(10))
 ```
 ```{r}
-m = 100
+m = 500
 train.index = sample.int(n,m); test.index = c(1:n)[-train.index]
 X.train = X[train.index,]; Y.train = Y[train.index]
 X.test = X[test.index,]; Y.test = Y[test.index]
-Yobs.train = Y.train + rnorm(m)
+Yobs.train = Y.train + rnorm(m,0,1)
 ```
 
 ```{r}
@@ -314,9 +314,13 @@ s = 500; r = 3; K = 100
 Y_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K)
 ```
 
+
 ```{r}
+sqrt(sum((Y.train-Y_pred_lkflag$train)^2)/m)
 sqrt(sum((Y.test-Y_pred_lkflag$test)^2)/(n-m))
 ```
+
+
 
 ```{r}
 Y_pred_skflag = fit_se_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K)
