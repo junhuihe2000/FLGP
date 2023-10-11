@@ -88,10 +88,10 @@ double negative_log_posterior_regression_cpp(unsigned n, const double *x, double
 
   // prior
   double pr0 = _data->p*std::log(x[0]+1e-5) + std::pow(x[0]/_data->tau,-_data->q);
-  double pr1 = (_data->alpha+1)*std::log(x[1]+1e-5) + _data->beta/(x[1]+1e-5);
+  double pr1 = (_data->alpha+1)*std::log(x[1]+_data->sigma) + _data->beta/(x[1]+_data->sigma);
 
   grad[0] += _data->p/(x[0]+1e-5) - (_data->q/_data->tau)*std::pow(x[0]/_data->tau, -_data->q-1);
-  grad[1] += (_data->alpha+1)/(x[1]+1e-5) - _data->beta/(x[1]*x[1]);
+  grad[1] += (_data->alpha+1)/(x[1]+_data->sigma) - _data->beta/std::pow(x[1]+_data->sigma,2);
 
   return (nmll+pr0+pr1);
 }
@@ -128,6 +128,12 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
 
       grad[0] = -0.5*(U.array()*grad_t.transpose().array()).sum();
       grad[1] = -0.5*U.trace();
+
+      // gradient clipping
+      double threshold = 10;
+      if(std::abs(grad[1])>=threshold) {
+        grad[1] = grad[1]/std::abs(grad[1])*threshold;
+      }
     }
     // use Algorithm 2.1 in GPML
     nmll += 0.5*(_data->Y.array()*alpha.array()).sum();
@@ -180,6 +186,12 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
       grad[1] = -0.5*(alpha.array()*alpha.array()).sum();
       grad[1] += 0.5/(x[1]+_data->sigma)*(m-(Q_inv.array()*(Lambda_sqrt*VtV*Lambda_sqrt).transpose().array()).sum());
 
+      // gradient clipping
+      double threshold = 10;
+      if(std::abs(grad[1])>=threshold) {
+        grad[1] = grad[1]/std::abs(grad[1])*threshold;
+      }
+
       //------------------------------------------------------------------------------------------
       /*
 
@@ -192,12 +204,9 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
       double grad_0 = -0.5*(U.array()*grad_t.transpose().array()).sum();
       double grad_1 = -0.5*U.trace();
 
-
-
-      std::cout << "Matrix inversion lemma: grad_t = " << grad[0] << ", grad_sigma = " << grad[1] << std::endl;
       std::cout << "Gaussian process: grad_t = " << grad_0 << ", grad_sigma = " << grad_1 << std::endl;
-
       */
+      std::cout << "Matrix inversion lemma: grad_t = " << grad[0] << ", grad_sigma = " << grad[1] << std::endl;
 
       /*
       Eigen::MatrixXd Q_inv = chol_Q.solve(Eigen::MatrixXd::Identity(_data->K,_data->K));
@@ -250,9 +259,9 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
   */
 
 
-  /*
   std::cout << "The " << count << " iteration: " << " t = " << x[0] << ", sigma = " \
-            << x[1] << ", obj = " << nmll << std::endl;
+            << x[1] << ", obj = " << -nmll << std::endl;
+  /*
   std::cout << "obj = " << nmll_2 << std::endl;
   */
 
@@ -270,15 +279,15 @@ ReturnValueReg train_regression_gp_cpp(void *data, std::string approach,
   if(x0==nullptr) {
     x0 = new std::vector<double>;
     new_x = true;
-    x0->push_back(10);
+    x0->push_back(100);
     x0->push_back(1);
   }
 
   if(lb==nullptr) {
     lb = new std::vector<double>;
     new_lb = true;
-    lb->push_back(1e-5);
-    lb->push_back(1e-5);
+    lb->push_back(1e-3);
+    lb->push_back(1e-4);
   }
 
   if(ub==nullptr) {
@@ -289,7 +298,7 @@ ReturnValueReg train_regression_gp_cpp(void *data, std::string approach,
   }
 
   nlopt_opt opt;
-  // opt = nlopt_create(NLOPT_LN_COBYLA, 2); // local derivative-free algorithm
+  // opt = nlopt_create(NLOPT_LN_COBYLA,2); // local derivative-free algorithm
   opt = nlopt_create(NLOPT_LD_MMA, 2); // local gradient-based optimization
   nlopt_set_lower_bounds(opt, &((*lb)[0]));
   nlopt_set_upper_bounds(opt, &((*ub)[0]));
@@ -305,7 +314,7 @@ ReturnValueReg train_regression_gp_cpp(void *data, std::string approach,
     Rcpp::stop("This model selection approach is not supported!");
   }
 
-  nlopt_set_xtol_rel(opt, 1e-3);
+  nlopt_set_xtol_rel(opt, 1e-5);
 
   count = 0;
 

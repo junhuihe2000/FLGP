@@ -98,7 +98,18 @@ struct MargOFDataReg {
   const int K;
   const double sigma;
   MargOFDataReg(const EigenPair & _eigenpair, const Eigen::VectorXd & _Y, const Eigen::VectorXi & _idx,
-                int _K, double _sigma = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma) {}
+                int _K, double _sigma = 1e-8) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma) {}
+};
+
+// marginal likelihood objective function data in the multi regression
+struct MargOFDataMulReg {
+  const EigenPair & eigenpair;
+  const Eigen::MatrixXd & Y;
+  const Eigen::VectorXi & idx;
+  const int K;
+  const double sigma;
+  MargOFDataMulReg(const EigenPair & _eigenpair, const Eigen::MatrixXd & _Y, const Eigen::VectorXi & _idx,
+                int _K, double _sigma = 1e-8) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma) {}
 };
 
 
@@ -128,8 +139,23 @@ struct PostOFDataReg {
   const double alpha, beta;
 
   PostOFDataReg(const EigenPair & _eigenpair, const Eigen::VectorXd & _Y,  const Eigen::VectorXi & _idx,
-             int _K, double _sigma = 1e-3, double _p = 1e-2, double _q = 10,
-             double _tau = 2, double _alpha = 10, double _beta = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
+             int _K, double _sigma = 1e-5, double _p = 1, double _q = 10,
+             double _tau = 2, double _alpha = 1e-1, double _beta = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
+};
+
+// posterior objective function data in the multi regression
+struct PostOFDataMulReg {
+  const EigenPair & eigenpair;
+  const Eigen::MatrixXd & Y;
+  const Eigen::VectorXi & idx;
+  const int K;
+  const double sigma;
+  const double p, q, tau;
+  const double alpha, beta;
+
+  PostOFDataMulReg(const EigenPair & _eigenpair, const Eigen::MatrixXd & _Y,  const Eigen::VectorXi & _idx,
+                int _K, double _sigma = 1e-5, double _p = 1, double _q = 10,
+                double _tau = 2, double _alpha = 1e-1, double _beta = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
 };
 
 // return value, contains optimal parameter t and objective value obj
