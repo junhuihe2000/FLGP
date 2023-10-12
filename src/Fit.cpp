@@ -29,7 +29,8 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
-  const Eigen::VectorXd Y(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(Y_train));
+  // Map<MatrixXd> fails for Y
+  const Eigen::MatrixXd Y(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(Y_train));
   const Eigen::Map<Eigen::MatrixXd> X_new(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_test));
 
   int m = X.rows(); int m_new = X_new.rows();
@@ -81,9 +82,9 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   */
 
   // predict labels on the training set
-  Eigen::VectorXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, res.x[0], res.x[1]);
+  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, res.x[0], res.x[1]);
   // predict labels on the testing set
-  Eigen::VectorXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, res.x[0], res.x[1]);
+  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, res.x[0], res.x[1]);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
@@ -115,7 +116,8 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
-  const Eigen::VectorXd Y(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(Y_train));
+  // const Eigen::VectorXd Y(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(Y_train));
+  const Eigen::MatrixXd Y(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(Y_train));
   const Eigen::Map<Eigen::MatrixXd> X_new(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_test));
 
   int m = X.rows(); int m_new = X_new.rows();
@@ -205,9 +207,9 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   */
 
   // predict labels on the training set
-  Eigen::VectorXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
   // predict labels on the testing set
-  Eigen::VectorXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
@@ -237,7 +239,8 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
-  const Eigen::VectorXd Y(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(Y_train));
+  // const Eigen::VectorXd Y(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(Y_train));
+  const Eigen::MatrixXd Y(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(Y_train));
   const Eigen::Map<Eigen::MatrixXd> X_new(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_test));
 
   int m = X.rows(); int m_new = X_new.rows(); int n = m + m_new;
@@ -346,9 +349,9 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   */
 
   // predict labels on the training set
-  Eigen::VectorXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
   // predict labels on the testing set
-  Eigen::VectorXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
@@ -380,7 +383,8 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
-  const Eigen::VectorXd Y(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(Y_train));
+  // const Eigen::VectorXd Y(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(Y_train));
+  const Eigen::MatrixXd Y(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(Y_train));
   const Eigen::Map<Eigen::MatrixXd> X_new(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_test));
 
   int m = X.rows(); int m_new = X_new.rows(); int n = m + m_new;
@@ -500,9 +504,9 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   */
 
   // predict labels on the training set
-  Eigen::VectorXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
   // predict labels on the testing set
-  Eigen::VectorXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);

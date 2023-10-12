@@ -93,11 +93,11 @@ struct MargOFData {
 // marginal likelihood objective function data in the regression
 struct MargOFDataReg {
   const EigenPair & eigenpair;
-  const Eigen::VectorXd & Y;
+  const Eigen::MatrixXd & Y;
   const Eigen::VectorXi & idx;
   const int K;
   const double sigma;
-  MargOFDataReg(const EigenPair & _eigenpair, const Eigen::VectorXd & _Y, const Eigen::VectorXi & _idx,
+  MargOFDataReg(const EigenPair & _eigenpair, const Eigen::MatrixXd & _Y, const Eigen::VectorXi & _idx,
                 int _K, double _sigma = 1e-8) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma) {}
 };
 
@@ -131,14 +131,14 @@ struct PostOFData {
 // posterior objective function data in the regression
 struct PostOFDataReg {
   const EigenPair & eigenpair;
-  const Eigen::VectorXd & Y;
+  const Eigen::MatrixXd & Y;
   const Eigen::VectorXi & idx;
   const int K;
   const double sigma;
   const double p, q, tau;
   const double alpha, beta;
 
-  PostOFDataReg(const EigenPair & _eigenpair, const Eigen::VectorXd & _Y,  const Eigen::VectorXi & _idx,
+  PostOFDataReg(const EigenPair & _eigenpair, const Eigen::MatrixXd & _Y,  const Eigen::VectorXi & _idx,
              int _K, double _sigma = 1e-5, double _p = 1, double _q = 10,
              double _tau = 2, double _alpha = 1e-1, double _beta = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
 };

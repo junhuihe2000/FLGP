@@ -41,7 +41,7 @@ Eigen::VectorXd test_regression_cpp(const Eigen::MatrixXd & C,
 }
 
 
-Eigen::VectorXd predict_regression_cpp(const EigenPair & eigenpair, const Eigen::VectorXd & Y,
+Eigen::MatrixXd predict_regression_cpp(const EigenPair & eigenpair, const Eigen::MatrixXd & Y,
                                     const Eigen::VectorXi & idx0, const Eigen::VectorXi & idx1,
                                     int K, double t, double noise, double sigma) {
   int m = Y.rows();
@@ -54,8 +54,8 @@ Eigen::VectorXd predict_regression_cpp(const EigenPair & eigenpair, const Eigen:
 
     // Algorithm 2.1 in GPML
     Eigen::LLT<Eigen::MatrixXd> chol_C(C_noisy);
-    Eigen::VectorXd alpha = chol_C.solve(Y);
-    Eigen::VectorXd Y_pred = Cnv*alpha;
+    Eigen::MatrixXd alpha = chol_C.solve(Y);
+    Eigen::MatrixXd Y_pred = Cnv*alpha;
     return Y_pred;
   } else {
     Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(K).array();
@@ -67,10 +67,10 @@ Eigen::VectorXd predict_regression_cpp(const EigenPair & eigenpair, const Eigen:
     Eigen::MatrixXd Q = Lambda_sqrt*V.transpose()*V*Lambda_sqrt;
     Q.diagonal().array() += noise + sigma;
     Eigen::LLT<Eigen::MatrixXd> chol_Q(Q);
-    Eigen::VectorXd alpha = 1.0/(noise+sigma)*(Y - V*Lambda_sqrt*chol_Q.solve(Lambda_sqrt*(V.transpose()*Y)));
+    Eigen::MatrixXd alpha = 1.0/(noise+sigma)*(Y - V*Lambda_sqrt*chol_Q.solve(Lambda_sqrt*(V.transpose()*Y)));
 
     Eigen::MatrixXd Vnv = mat_indexing(eigenvectors, idx1, cols);
-    Eigen::VectorXd Y_pred = Vnv*(Eigen::exp(-t*eigenvalues.array()+0.0).matrix().asDiagonal()*(V.transpose()*alpha));
+    Eigen::MatrixXd Y_pred = Vnv*(Eigen::exp(-t*eigenvalues.array()+0.0).matrix().asDiagonal()*(V.transpose()*alpha));
     return Y_pred;
   }
 }

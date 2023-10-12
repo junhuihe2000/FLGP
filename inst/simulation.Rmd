@@ -36,15 +36,18 @@ Sys.setlocale("LC_ALL","English")
 
 using namespace std;
 using namespace Rcpp;
+using namespace Eigen;
 
+void refvec(const MatrixXd & mm) {
+  const MatrixXd & mat = mm;
+  cout << mat.rows() << "," << mat.cols() << endl;
+  cout << (mat.array()*mat.array()).sum() << endl;
+}
 
 // [[Rcpp::export(test)]]
-void test() {
-  Eigen::LLT<Eigen::MatrixXd> chol;
-  Eigen::MatrixXd A = Eigen::MatrixXd::Random(3,3);
-  chol = A.llt();
-  Eigen::MatrixXd B = Eigen::MatrixXd::Random(3,3);
-  std::cout << chol.solve(B) << std::endl;
+void test(NumericVector v) {
+  Map<MatrixXd> mat = as<Map<MatrixXd>>(v);
+  cout << mat << endl;
 }
 ```
 
@@ -328,6 +331,7 @@ Y_pred_skflag = fit_se_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K)
 ```
 
 ```{r}
+sqrt(sum((Y.train-Y_pred_skflag$train)^2)/m)
 sqrt(sum((Y.test-Y_pred_skflag$test)^2)/(n-m))
 ```
 

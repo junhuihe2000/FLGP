@@ -63,7 +63,7 @@ Eigen::VectorXd test_regression_cpp(const Eigen::MatrixXd & C,
                                     const Eigen::VectorXd & Y,
                                     const Eigen::MatrixXd & Cnv);
 
-Eigen::VectorXd predict_regression_cpp(const EigenPair & eigenpair, const Eigen::VectorXd & Y,
+Eigen::MatrixXd predict_regression_cpp(const EigenPair & eigenpair, const Eigen::MatrixXd & Y,
                                        const Eigen::VectorXi & idx0, const Eigen::VectorXi & idx1,
                                        int K, double t, double noise, double sigma = 1e-3);
 

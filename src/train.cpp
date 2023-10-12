@@ -101,6 +101,7 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
   ++count;
   MargOFDataReg * _data = (MargOFDataReg *) data;
   int m = _data->Y.rows();
+  int q = _data->Y.cols();
 
   // negative marginal log likelihood
   double nmll = 0.0;
@@ -113,11 +114,11 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
     C.diagonal().array() += x[1];
 
     Eigen::LLT<Eigen::MatrixXd> chol_C(C);
-    Eigen::VectorXd alpha = chol_C.solve(_data->Y);
+    Eigen::MatrixXd alpha = chol_C.solve(_data->Y);
     // use Equation 5.9 in GPML
     if(grad) {
       Eigen::MatrixXd C_inv = chol_C.solve(Eigen::MatrixXd::Identity(C.rows(),C.cols()));
-      Eigen::MatrixXd U = alpha*alpha.transpose() - C_inv;
+      Eigen::MatrixXd U = alpha*alpha.transpose()/q - C_inv;
       const EigenPair & eigenpair = _data->eigenpair;
       Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(_data->K).array();
       const Eigen::MatrixXd & eigenvectors = eigenpair.vectors;
@@ -136,7 +137,7 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
       }
     }
     // use Algorithm 2.1 in GPML
-    nmll += 0.5*(_data->Y.array()*alpha.array()).sum();
+    nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
     nmll += Eigen::MatrixXd(chol_C.matrixL()).diagonal().array().log().sum();
   } else {
     /*
@@ -161,7 +162,7 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
     Eigen::MatrixXd Q = Lambda_sqrt*V.transpose()*V*Lambda_sqrt;
     Q.diagonal().array() += x[1] + _data->sigma;
     Eigen::LLT<Eigen::MatrixXd> chol_Q(Q);
-    Eigen::VectorXd alpha = 1.0/(x[1]+_data->sigma)*(_data->Y - V*Lambda_sqrt*chol_Q.solve(Lambda_sqrt*(V.transpose()*_data->Y)));
+    Eigen::MatrixXd alpha = 1.0/(x[1]+_data->sigma)*(_data->Y - V*Lambda_sqrt*chol_Q.solve(Lambda_sqrt*(V.transpose()*_data->Y)));
     // use Equation 5.9 in GPML
 
 
@@ -178,12 +179,12 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
     if(grad) {
       Eigen::MatrixXd Q_inv = chol_Q.solve(Eigen::MatrixXd::Identity(_data->K,_data->K));
       Eigen::DiagonalMatrix<double, Eigen::Dynamic> A = ((-eigenvalues.array()*(Eigen::exp(-x[0]*eigenvalues.array())+0.0))+0.0).matrix().asDiagonal();
-      grad[0] = -0.5*(alpha.array()*((alpha.transpose()*V)*A*V.transpose()).transpose().array()).sum();
+      grad[0] = -0.5*(alpha.array()*((alpha.transpose()*V)*A*V.transpose()).transpose().array()).sum()/q;
       Eigen::MatrixXd VtV = V.transpose()*V;
       grad[0] += 0.5/(x[1]+_data->sigma)*(A*VtV).trace();
       grad[0] += -0.5/(x[1]+_data->sigma)*((Q_inv*Lambda_sqrt*VtV).array()*(A*VtV*Lambda_sqrt).transpose().array()).sum();
 
-      grad[1] = -0.5*(alpha.array()*alpha.array()).sum();
+      grad[1] = -0.5*(alpha.array()*alpha.array()).sum()/q;
       grad[1] += 0.5/(x[1]+_data->sigma)*(m-(Q_inv.array()*(Lambda_sqrt*VtV*Lambda_sqrt).transpose().array()).sum());
 
       // gradient clipping
@@ -206,7 +207,7 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
 
       std::cout << "Gaussian process: grad_t = " << grad_0 << ", grad_sigma = " << grad_1 << std::endl;
       */
-      std::cout << "Matrix inversion lemma: grad_t = " << grad[0] << ", grad_sigma = " << grad[1] << std::endl;
+      // std::cout << "Matrix inversion lemma: grad_t = " << grad[0] << ", grad_sigma = " << grad[1] << std::endl;
 
       /*
       Eigen::MatrixXd Q_inv = chol_Q.solve(Eigen::MatrixXd::Identity(_data->K,_data->K));
@@ -235,7 +236,7 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
 
     // Objective function value is wrong!
     // use Algorithm 2.1 in GPML
-    nmll += 0.5*(_data->Y.array()*alpha.array()).sum();
+    nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
     nmll += (Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array()).log().sum();
     nmll += 0.5*(m-_data->K)*std::log(x[1]+_data->sigma);
     /*
@@ -259,8 +260,10 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
   */
 
 
+  /*
   std::cout << "The " << count << " iteration: " << " t = " << x[0] << ", sigma = " \
             << x[1] << ", obj = " << -nmll << std::endl;
+  */
   /*
   std::cout << "obj = " << nmll_2 << std::endl;
   */
