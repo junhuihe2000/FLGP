@@ -21,7 +21,7 @@
 
 Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                 int s, int r, int K,
-                                double sigma, std::string approach,
+                                double sigma, std::string approach, std::string noise,
                                 Rcpp::List models,
                                 bool output_cov,
                                 int nstart) {
@@ -51,17 +51,17 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   ReturnValueReg res;
   if(approach=="posterior") {
     PostOFDataReg postdatareg(eigenpair, Y, idx, K, sigma);
-    res = train_regression_gp_cpp(&postdatareg, approach);
+    res = train_regression_gp_cpp(&postdatareg, approach, noise);
   } else if(approach=="marginal") {
     MargOFDataReg margdatareg(eigenpair, Y, idx, K, sigma);
-    res = train_regression_gp_cpp(&margdatareg, approach);
+    res = train_regression_gp_cpp(&margdatareg, approach, noise);
   } else {
     Rcpp::stop("This model selection approach is not supported!");
   }
 
 
   std::cout << "By " << approach << " method, optimal t = " << res.x[0] \
-            << ", sigma = " << sqrt(res.x[1]) << ", the objective function is " << res.obj << std::endl;
+            << ", the objective function is " << res.obj << std::endl;
 
   // test model
   std::cout << "Testing..." << std::endl;
@@ -82,9 +82,9 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   */
 
   // predict labels on the training set
-  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, res.x[0], res.x[1]);
+  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, res.x, sigma, noise);
   // predict labels on the testing set
-  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, res.x[0], res.x[1]);
+  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, res.x, sigma, noise);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
@@ -98,9 +98,11 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
     Eigen::MatrixXd C(n,m);
     C.topRows(m) = Cvv;
     C.bottomRows(m_new) = Cnv;
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
+                              Rcpp::Named("pars")=res.x);
   } else {
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
+                              Rcpp::Named("pars")=res.x);
   }
 
 }
@@ -108,7 +110,7 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
 
 Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                int s, int r, int K,
-                               double sigma, std::vector<double> a2s, std::string approach,
+                               double sigma, std::vector<double> a2s, std::string approach, std::string noise,
                                Rcpp::List models,
                                bool output_cov,
                                int nstart) {
@@ -168,10 +170,10 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
     ReturnValueReg res;
     if(approach=="posterior") {
       PostOFDataReg postdatareg(eigenpair, Y, idx, K, sigma);
-      res = train_regression_gp_cpp(&postdatareg, approach);
+      res = train_regression_gp_cpp(&postdatareg, approach, noise);
     } else if(approach=="marginal") {
       MargOFDataReg margdatareg(eigenpair, Y, idx, K, sigma);
-      res = train_regression_gp_cpp(&margdatareg, approach);
+      res = train_regression_gp_cpp(&margdatareg, approach, noise);
     } else {
       Rcpp::stop("This model selection approach is not supported!");
     }
@@ -207,9 +209,9 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   */
 
   // predict labels on the training set
-  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars, sigma, noise);
   // predict labels on the testing set
-  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars, sigma, noise);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
@@ -223,15 +225,17 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
     Eigen::MatrixXd C(n,m);
     C.topRows(m) = Cvv;
     C.bottomRows(m_new) = Cnv;
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
+                              Rcpp::Named("pars")=best_pars);
   } else {
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
+                              Rcpp::Named("pars")=best_pars);
   }
 }
 
 Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                     int s, int K,
-                                    double sigma, std::vector<double> a2s, std::string approach,
+                                    double sigma, std::vector<double> a2s, std::string approach, std::string noise,
                                     Rcpp::List models,
                                     bool output_cov,
                                     int nstart) {
@@ -304,10 +308,10 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
     ReturnValueReg res;
     if(approach=="posterior") {
       PostOFDataReg postdatareg(eigenpair, Y, idx, K, sigma);
-      res = train_regression_gp_cpp(&postdatareg, approach);
+      res = train_regression_gp_cpp(&postdatareg, approach, noise);
     } else if(approach=="marginal") {
       MargOFDataReg margdatareg(eigenpair, Y, idx, K, sigma);
-      res = train_regression_gp_cpp(&margdatareg, approach);
+      res = train_regression_gp_cpp(&margdatareg, approach, noise);
     } else {
       Rcpp::stop("This model selection approach is not supported!");
     }
@@ -349,9 +353,9 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   */
 
   // predict labels on the training set
-  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars, sigma, noise);
   // predict labels on the testing set
-  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars, sigma, noise);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
@@ -365,9 +369,11 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
     Eigen::MatrixXd C(n,m);
     C.topRows(m) = Cvv;
     C.bottomRows(m_new) = Cnv;
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
+                              Rcpp::Named("pars")=best_pars);
   } else {
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
+                              Rcpp::Named("pars")=best_pars);
   }
 }
 
@@ -376,7 +382,7 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                int K,
                                double sigma, std::vector<double> a2s,
                                double threshold, bool sparse,
-                               std::string approach,
+                               std::string approach, std::string noise,
                                Rcpp::List models,
                                bool output_cov) {
   std::cout << "Gaussian regression with graph Laplacian Gaussian process:" << std::endl;
@@ -463,10 +469,10 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
     ReturnValueReg res;
     if(approach=="posterior") {
       PostOFDataReg postdatareg(eigenpair, Y, idx, K, sigma);
-      res = train_regression_gp_cpp(&postdatareg, approach);
+      res = train_regression_gp_cpp(&postdatareg, approach, noise);
     } else if(approach=="marginal") {
       MargOFDataReg margdatareg(eigenpair, Y, idx, K, sigma);
-      res = train_regression_gp_cpp(&margdatareg, approach);
+      res = train_regression_gp_cpp(&margdatareg, approach, noise);
     } else {
       Rcpp::stop("This model selection approach is not supported!");
     }
@@ -504,9 +510,9 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   */
 
   // predict labels on the training set
-  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars, sigma, noise);
   // predict labels on the testing set
-  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars[0], best_pars[1]);
+  Eigen::MatrixXd test_pred = predict_regression_cpp(eigenpair, Y, idx0, idx1, K, best_pars, sigma, noise);
 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
@@ -520,9 +526,11 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
     Eigen::MatrixXd C(n,m);
     C.topRows(m) = Cvv;
     C.bottomRows(m_new) = Cnv;
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
+                              Rcpp::Named("pars")=best_pars);
   } else {
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
+                              Rcpp::Named("pars")=best_pars);
   }
 
 }

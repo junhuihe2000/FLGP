@@ -14,6 +14,7 @@ fit_se_regression_gp_rcpp(
   sigma = 0.001,
   a2s = NULL,
   approach = "posterior",
+  noise = "same",
   models = list(subsample = "kmeans", kernel = "lae", gl = "cluster-normalized", root =
     TRUE),
   output_cov = FALSE,
@@ -75,5 +76,5 @@ X_new <- matrix(runif(10),5,2)
 Y_new <- X_new[,1]^2 + X_new[,2]^2
 s <- 6; r <- 3
 K <- 5
-Y_pred <- fit_se_regression_gp_rcpp(X, Y, X_new, s, r, K)
+se <- fit_se_regression_gp_rcpp(X, Y, X_new, s, r, K)
 }

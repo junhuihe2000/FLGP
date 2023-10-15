@@ -13,6 +13,7 @@ fit_lae_regression_gp_rcpp(
   K = -1,
   sigma = 0.001,
   approach = "posterior",
+  noise = "same",
   models = list(subsample = "kmeans", kernel = "lae", gl = "cluster-normalized", root =
     TRUE),
   output_cov = FALSE,
@@ -72,5 +73,5 @@ X_new <- matrix(runif(10),5,2)
 Y_new <- X_new[,1]^2 + X_new[,2]^2
 s <- 6; r <- 3
 K <- 5
-Y_pred <- fit_lae_regression_gp_rcpp(X, Y, X_new, s, r, K)
+lae <- fit_lae_regression_gp_rcpp(X, Y, X_new, s, r, K)
 }

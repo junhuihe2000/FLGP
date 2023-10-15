@@ -52,7 +52,7 @@
 // [[Rcpp::export(fit_lae_regression_gp_cpp)]]
 Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                      int s, int r, int K,
-                                     double sigma, std::string approach,
+                                     double sigma, std::string approach, std::string noise,
                                      Rcpp::List models,
                                      bool output_cov,
                                      int nstart);
@@ -62,6 +62,7 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
 Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                     int s, int r, int K,
                                     double sigma, std::vector<double> a2s, std::string approach,
+                                    std::string noise,
                                     Rcpp::List models,
                                     bool output_cov,
                                     int nstart);
@@ -71,6 +72,7 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                          int s, int K,
                                          double sigma, std::vector<double> a2s, std::string approach,
+                                         std::string noise,
                                          Rcpp::List models,
                                          bool output_cov,
                                          int nstart);
@@ -81,7 +83,7 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                     int K,
                                     double sigma, std::vector<double> a2s,
                                     double threshold, bool sparse,
-                                    std::string approach,
+                                    std::string approach, std::string noise,
                                     Rcpp::List models,
                                     bool output_cov);
 

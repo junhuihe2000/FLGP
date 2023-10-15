@@ -45,9 +45,9 @@
 #' Y_new <- X_new[,1]^2 + X_new[,2]^2
 #' s <- 6; r <- 3
 #' K <- 5
-#' Y_pred <- fit_lae_regression_gp_rcpp(X, Y, X_new, s, r, K)
+#' lae <- fit_lae_regression_gp_rcpp(X, Y, X_new, s, r, K)
 fit_lae_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
-                                  approach="posterior",
+                                  approach="posterior", noise="same",
                                   models=list(subsample="kmeans",
                                               kernel="lae",
                                               gl="cluster-normalized",
@@ -56,13 +56,9 @@ fit_lae_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
                                   nstart=1) {
   # RcppParallel::setThreadOptions(numThreads = RcppParallel::defaultNumThreads()/2)
 
-  res = fit_lae_regression_gp_cpp(X,Y,X_new,s,r,K,sigma,approach,models,output_cov,nstart)
+  res = fit_lae_regression_gp_cpp(X,Y,X_new,s,r,K,sigma,approach,noise,models,output_cov,nstart)
 
-  if(output_cov) {
-    return(res)
-  } else {
-    return(res$Y_pred)
-  }
+  return(res)
 
 }
 
@@ -109,9 +105,9 @@ fit_lae_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
 #' Y_new <- X_new[,1]^2 + X_new[,2]^2
 #' s <- 6; r <- 3
 #' K <- 5
-#' Y_pred <- fit_se_regression_gp_rcpp(X, Y, X_new, s, r, K)
+#' se <- fit_se_regression_gp_rcpp(X, Y, X_new, s, r, K)
 fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=NULL,
-                                 approach="posterior",
+                                 approach="posterior", noise="same",
                                  models=list(subsample="kmeans",
                                              kernel="lae",
                                              gl="cluster-normalized",
@@ -124,13 +120,9 @@ fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_se_regression_gp_cpp(X,Y,X_new,s,r,K,sigma,a2s,approach,models,output_cov,nstart)
+  res = fit_se_regression_gp_cpp(X,Y,X_new,s,r,K,sigma,a2s,approach,noise,models,output_cov,nstart)
 
-  if(output_cov) {
-    return(res)
-  } else {
-    return(res$Y_pred)
-  }
+  return(res)
 
 }
 
@@ -177,9 +169,9 @@ fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
 #' Y_new <- X_new[,1]^2 + X_new[,2]^2
 #' s <- 6
 #' K <- 5
-#' Y_pred <- fit_nystrom_regression_gp_rcpp(X, Y, X_new, s, K)
+#' nystrom <- fit_nystrom_regression_gp_rcpp(X, Y, X_new, s, K)
 fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s=NULL,
-                                      approach="posterior",
+                                      approach="posterior", noise="same",
                                       models=list(subsample="kmeans",
                                                   kernel="lae",
                                                   gl="cluster-normalized",
@@ -195,13 +187,9 @@ fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_nystrom_regression_gp_cpp(X,Y,X_new,s,K,sigma,a2s,approach,models,output_cov,nstart)
+  res = fit_nystrom_regression_gp_cpp(X,Y,X_new,s,K,sigma,a2s,approach,noise,models,output_cov,nstart)
 
-  if(output_cov) {
-    return(res)
-  } else {
-    return(res$Y_pred)
-  }
+  return(res)
 
 }
 
@@ -248,10 +236,10 @@ fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s
 #' X_new <- matrix(runif(10),5,2)
 #' Y_new <- X_new[,1]^2 + X_new[,2]^2
 #' K <- 5
-#' Y_pred <- fit_gl_regression_gp_rcpp(X, Y, X_new, K)
+#' gl <- fit_gl_regression_gp_rcpp(X, Y, X_new, K)
 fit_gl_regression_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-3, a2s=NULL,
                                  threshold=0.01, sparse=TRUE,
-                                 approach ="posterior",
+                                 approach ="posterior", noise="same",
                                  models=list(subsample="kmeans",
                                              kernel="lae",
                                              gl="cluster-normalized",
@@ -262,13 +250,9 @@ fit_gl_regression_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-3, a2s=NULL,
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_gl_regression_gp_cpp(X,Y,X_new,K,sigma,a2s,threshold,sparse,approach,models,output_cov)
+  res = fit_gl_regression_gp_cpp(X,Y,X_new,K,sigma,a2s,threshold,sparse,approach,noise,models,output_cov)
 
-  if(output_cov) {
-    return(res)
-  } else {
-    return(res$Y_pred)
-  }
+  return(res)
 
 }
 

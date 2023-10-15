@@ -27,6 +27,11 @@ library(kernlab)
 Sys.setlocale("LC_ALL","English")
 ```
 
+```{r}
+load_all()
+```
+
+
 ```{Rcpp}
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
@@ -38,16 +43,14 @@ using namespace std;
 using namespace Rcpp;
 using namespace Eigen;
 
-void refvec(const MatrixXd & mm) {
-  const MatrixXd & mat = mm;
-  cout << mat.rows() << "," << mat.cols() << endl;
-  cout << (mat.array()*mat.array()).sum() << endl;
-}
 
 // [[Rcpp::export(test)]]
-void test(NumericVector v) {
-  Map<MatrixXd> mat = as<Map<MatrixXd>>(v);
-  cout << mat << endl;
+void test() {
+  int m = 3;
+  Eigen::DiagonalMatrix<double, Eigen::Dynamic> Z_inv(m);
+  
+  Z_inv.diagonal() = VectorXd::LinSpaced(m,0,m-1);
+  cout << Z_inv.diagonal() << endl;
 }
 ```
 
@@ -303,25 +306,30 @@ ggplot() + geom_point(aes(X[,1],X[,2],color=Y)) +
 ```
 
 ```{r}
-m = 200
+m = 500
+q = 200
 train.index = sample.int(n,m); test.index = c(1:n)[-train.index]
 X.train = X[train.index,]; Y.train = Y[train.index]
 X.test = X[test.index,]; Y.test = Y[test.index]
-Yobs.train = Y.train + rnorm(m,0,0.5)
+Yobs.train = Y.train + rbind(matrix(rnorm(m*q/2,0,0.5),m/2,q),matrix(rnorm(m*q/2,0,2),m/2,q))
 ```
 
 ```{r}
 s = 500; r = 3; K = 100
 ```
 
-```{r}
-Y_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K)
+```{r, include=FALSE}
+res_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K,noise="different")
 ```
 
+```{r}
+sqrt(res_pred_lkflag$pars[-1])
+```
 
 ```{r}
-sqrt(sum((Y.train-Y_pred_lkflag$train)^2)/m)
-sqrt(sum((Y.test-Y_pred_lkflag$test)^2)/(n-m))
+Y_pred_lkflag = res_pred_lkflag$Y_pred
+sqrt(sum((Y.train-Y_pred_lkflag$train)^2)/m/q)
+sqrt(sum((Y.test-Y_pred_lkflag$test)^2)/(n-m)/q)
 ```
 
 

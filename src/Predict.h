@@ -65,6 +65,7 @@ Eigen::VectorXd test_regression_cpp(const Eigen::MatrixXd & C,
 
 Eigen::MatrixXd predict_regression_cpp(const EigenPair & eigenpair, const Eigen::MatrixXd & Y,
                                        const Eigen::VectorXi & idx0, const Eigen::VectorXi & idx1,
-                                       int K, double t, double noise, double sigma = 1e-3);
+                                       int K, const std::vector<double> & pars, double sigma = 1e-5,
+                                       std::string noisepar="same");
 
 #endif

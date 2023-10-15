@@ -70,11 +70,15 @@ double negative_marginal_likelihood_logit_cpp(unsigned n, const double *x, doubl
 // Create negative log marginal likelihood functional for the regression
 double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, double *grad, void * data);
 
+double negative_marginal_likelihood_diff_noise_regression_cpp(unsigned n, const double *x, double *grad, void * data);
+
 // Create negative log posterior functional with inverse gamma prior for logistic regression
 double negative_log_posterior_logit_cpp(unsigned n, const double *x, double *grad, void *data);
 
 // Create negative log posterior functional with inverse gamma prior for the regression
 double negative_log_posterior_regression_cpp(unsigned n, const double *x, double *grad, void *data);
+
+double negative_log_posterior_diff_noise_regression_cpp(unsigned n, const double *x, double *grad, void *data);
 
 
 // marginal likelihood objective function data in the binary classification
@@ -140,7 +144,7 @@ struct PostOFDataReg {
 
   PostOFDataReg(const EigenPair & _eigenpair, const Eigen::MatrixXd & _Y,  const Eigen::VectorXi & _idx,
              int _K, double _sigma = 1e-5, double _p = 1, double _q = 10,
-             double _tau = 2, double _alpha = 1e-1, double _beta = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
+             double _tau = 2, double _alpha = 1e-1, double _beta = 3e-2) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
 };
 
 // posterior objective function data in the multi regression
@@ -224,6 +228,7 @@ ReturnValue train_lae_logit_gp_cpp(void *data, std::string approach = "posterior
 
 // Learn diffusion time t and noise sigma by maximizing log marginal likelihood or log posterior
 ReturnValueReg train_regression_gp_cpp(void *data, std::string approach = "posterior",
+                                       std::string noise = "same",
                                        std::vector<double>* x0 = nullptr,
                                        std::vector<double>* lb = nullptr, std::vector<double>* ub = nullptr);
 

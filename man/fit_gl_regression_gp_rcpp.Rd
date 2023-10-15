@@ -14,6 +14,7 @@ fit_gl_regression_gp_rcpp(
   threshold = 0.01,
   sparse = TRUE,
   approach = "posterior",
+  noise = "same",
   models = list(subsample = "kmeans", kernel = "lae", gl = "cluster-normalized", root =
     TRUE),
   output_cov = FALSE
@@ -73,5 +74,5 @@ Y <- X[,1]^2 + X[,2]^2
 X_new <- matrix(runif(10),5,2)
 Y_new <- X_new[,1]^2 + X_new[,2]^2
 K <- 5
-Y_pred <- fit_gl_regression_gp_rcpp(X, Y, X_new, K)
+gl <- fit_gl_regression_gp_rcpp(X, Y, X_new, K)
 }
