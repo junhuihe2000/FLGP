@@ -68,4 +68,10 @@ Eigen::MatrixXd predict_regression_cpp(const EigenPair & eigenpair, const Eigen:
                                        int K, const std::vector<double> & pars, double sigma = 1e-5,
                                        std::string noisepar="same");
 
+Eigen::MatrixXd predict_rbf_regression_cpp(const Eigen::MatrixXd & Y,
+                                           const Eigen::MatrixXd & dist_UU, const Eigen::MatrixXd & dist_XU,
+                                           const Eigen::MatrixXd & dist_XnewU,
+                                           int s, const std::vector<double> & pars, double sigma,
+                                           std::string noisepar);
+
 #endif

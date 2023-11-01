@@ -31,6 +31,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fit_rbf_regression_gp_cpp
+Rcpp::List fit_rbf_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, double sigma, std::string approach, std::string noise, std::string sample, bool output_cov, int nstart);
+RcppExport SEXP _FLAG_fit_rbf_regression_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP noiseSEXP, SEXP sampleSEXP, SEXP output_covSEXP, SEXP nstartSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_train(X_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Y_train(Y_trainSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_test(X_testSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< std::string >::type approach(approachSEXP);
+    Rcpp::traits::input_parameter< std::string >::type noise(noiseSEXP);
+    Rcpp::traits::input_parameter< std::string >::type sample(sampleSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_cov(output_covSEXP);
+    Rcpp::traits::input_parameter< int >::type nstart(nstartSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_rbf_regression_gp_cpp(X_train, Y_train, X_test, s, sigma, approach, noise, sample, output_cov, nstart));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fit_lae_regression_gp_cpp
 Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test, int s, int r, int K, double sigma, std::string approach, std::string noise, Rcpp::List models, bool output_cov, int nstart);
 RcppExport SEXP _FLAG_fit_lae_regression_gp_cpp(SEXP X_trainSEXP, SEXP Y_trainSEXP, SEXP X_testSEXP, SEXP sSEXP, SEXP rSEXP, SEXP KSEXP, SEXP sigmaSEXP, SEXP approachSEXP, SEXP noiseSEXP, SEXP modelsSEXP, SEXP output_covSEXP, SEXP nstartSEXP) {
@@ -438,6 +458,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_FLAG_big_fit_lae_logit_gp_cpp", (DL_FUNC) &_FLAG_big_fit_lae_logit_gp_cpp, 10},
+    {"_FLAG_fit_rbf_regression_gp_cpp", (DL_FUNC) &_FLAG_fit_rbf_regression_gp_cpp, 10},
     {"_FLAG_fit_lae_regression_gp_cpp", (DL_FUNC) &_FLAG_fit_lae_regression_gp_cpp, 12},
     {"_FLAG_fit_se_regression_gp_cpp", (DL_FUNC) &_FLAG_fit_se_regression_gp_cpp, 13},
     {"_FLAG_fit_nystrom_regression_gp_cpp", (DL_FUNC) &_FLAG_fit_nystrom_regression_gp_cpp, 12},

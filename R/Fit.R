@@ -4,6 +4,62 @@
 # Regression
 #################################################################
 
+
+#' Fit Gaussian process regression with RBF kernel
+#'
+#' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
+#' @param Y A numeric vector with length(m), the training labels.
+#' @param X_new Testing sample, a (n-m, d) matrix, each row indicates one point in R^d.
+#' @param s An integer indicating the number of the subsampling.
+#' @param r An integer, the number of the nearest neighbor points.
+#' @param K An integer, the number of used eigenpairs to construct heat kernel,
+#' the defaulting value is `NULL`, that is, `K=min(n,s)`.
+#' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
+#' the defaulting value is 1e-3.
+#' @param approach A character vector, taking value in c("posterior", "marginal"),
+#' decides which objective function to be optimized, defaulting value is `posterior`.
+#' @param models A list with four components
+#' \describe{
+#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
+#' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
+#' defaulting value is `lae`.}
+#' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
+#' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
+#' the defaulting value is `TRUE`.}
+#' }
+#' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
+#' @param nstart Int, the number of random sets chosen in kmeans.
+#'
+#' @return `Y_pred` A list with two components
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
+#' @export
+#'
+#' @examples
+#' X <- matrix(runif(6),3,2)
+#' Y <- X[,1]^2 + X[,2]^2
+#' X_new <- matrix(runif(10),5,2)
+#' Y_new <- X_new[,1]^2 + X_new[,2]^2
+#' s <- 6
+#' rbf <- fit_rbf_regression_gp_rcpp(X, Y, X_new, s)
+fit_rbf_regression_gp_rcpp <- function(X, Y, X_new, s, sigma=1e-5,
+                                       approach="posterior", noise="same",
+                                       sampling="kmeans",
+                                       output_cov=FALSE,
+                                       nstart=1) {
+  # RcppParallel::setThreadOptions(numThreads = RcppParallel::defaultNumThreads()/2)
+
+  res = fit_rbf_regression_gp_cpp(X,Y,X_new,s,sigma,approach,noise,sampling,output_cov,nstart)
+
+  return(res)
+
+}
+
+
 #' Fit Gaussian process regression with local anchor embedding kernels
 #'
 #' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
@@ -46,7 +102,7 @@
 #' s <- 6; r <- 3
 #' K <- 5
 #' lae <- fit_lae_regression_gp_rcpp(X, Y, X_new, s, r, K)
-fit_lae_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
+fit_lae_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-5,
                                   approach="posterior", noise="same",
                                   models=list(subsample="kmeans",
                                               kernel="lae",
@@ -106,7 +162,7 @@ fit_lae_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
 #' s <- 6; r <- 3
 #' K <- 5
 #' se <- fit_se_regression_gp_rcpp(X, Y, X_new, s, r, K)
-fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=NULL,
+fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-5, a2s=NULL,
                                  approach="posterior", noise="same",
                                  models=list(subsample="kmeans",
                                              kernel="lae",
@@ -170,7 +226,7 @@ fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
 #' s <- 6
 #' K <- 5
 #' nystrom <- fit_nystrom_regression_gp_rcpp(X, Y, X_new, s, K)
-fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s=NULL,
+fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-5, a2s=NULL,
                                       approach="posterior", noise="same",
                                       models=list(subsample="kmeans",
                                                   kernel="lae",
@@ -237,7 +293,7 @@ fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s
 #' Y_new <- X_new[,1]^2 + X_new[,2]^2
 #' K <- 5
 #' gl <- fit_gl_regression_gp_rcpp(X, Y, X_new, K)
-fit_gl_regression_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-3, a2s=NULL,
+fit_gl_regression_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-5, a2s=NULL,
                                  threshold=0.01, sparse=TRUE,
                                  approach ="posterior", noise="same",
                                  models=list(subsample="kmeans",

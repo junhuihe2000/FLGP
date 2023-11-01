@@ -80,6 +80,13 @@ double negative_log_posterior_regression_cpp(unsigned n, const double *x, double
 
 double negative_log_posterior_diff_noise_regression_cpp(unsigned n, const double *x, double *grad, void *data);
 
+double nmll_rbf_regression_cpp(unsigned n, const double *x, double *grad, void *data);
+
+double npll_rbf_regression_cpp(unsigned n, const double *x, double *grad, void *data);
+
+double npll_rbf_diff_noise_regression_cpp(unsigned n, const double *x, double *grad, void *data);
+
+double nmll_rbf_diff_noise_regression_cpp(unsigned n, const double *x, double *grad, void *data);
 
 // marginal likelihood objective function data in the binary classification
 struct MargOFData {
@@ -102,18 +109,19 @@ struct MargOFDataReg {
   const int K;
   const double sigma;
   MargOFDataReg(const EigenPair & _eigenpair, const Eigen::MatrixXd & _Y, const Eigen::VectorXi & _idx,
-                int _K, double _sigma = 1e-8) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma) {}
+                int _K, double _sigma = 1e-5) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma) {}
 };
 
-// marginal likelihood objective function data in the multi regression
-struct MargOFDataMulReg {
-  const EigenPair & eigenpair;
+// marginal likelihood objective function data in the RBF GP
+struct MargDataRBF {
+  const Eigen::MatrixXd & dist_UU;
+  const Eigen::MatrixXd & dist_XU;
   const Eigen::MatrixXd & Y;
-  const Eigen::VectorXi & idx;
-  const int K;
+  const int s;
   const double sigma;
-  MargOFDataMulReg(const EigenPair & _eigenpair, const Eigen::MatrixXd & _Y, const Eigen::VectorXi & _idx,
-                int _K, double _sigma = 1e-8) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma) {}
+
+  MargDataRBF(const Eigen::MatrixXd & _dist_UU, const Eigen::MatrixXd & _dist_XU, const Eigen::MatrixXd & _Y,
+              int _s, double _sigma = 1e-5) : dist_UU(_dist_UU), dist_XU(_dist_XU), Y(_Y), s(_s), sigma(_sigma) {}
 };
 
 
@@ -128,7 +136,7 @@ struct PostOFData {
   const double p, q, tau;
 
   PostOFData(const EigenPair & _eigenpair, const Eigen::VectorXd & _Y, const Eigen::VectorXd & _N, const Eigen::VectorXi & _idx,
-             int _K, double _sigma = 1e-3, double _p = 1e-2, double _q = 10,
+             int _K, double _sigma = 1e-5, double _p = 1e-2, double _q = 10,
              double _tau = 2) : eigenpair(_eigenpair), Y(_Y), N(_N), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau) {}
 };
 
@@ -144,22 +152,21 @@ struct PostOFDataReg {
 
   PostOFDataReg(const EigenPair & _eigenpair, const Eigen::MatrixXd & _Y,  const Eigen::VectorXi & _idx,
              int _K, double _sigma = 1e-5, double _p = 1, double _q = 10,
-             double _tau = 2, double _alpha = 1e-1, double _beta = 3e-2) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
+             double _tau = 2, double _alpha = 1e-1, double _beta = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
 };
 
-// posterior objective function data in the multi regression
-struct PostOFDataMulReg {
-  const EigenPair & eigenpair;
+// posterior objective function data in the RBF GP
+struct PostDataRBF {
+  const Eigen::MatrixXd & dist_UU;
+  const Eigen::MatrixXd & dist_XU;
   const Eigen::MatrixXd & Y;
-  const Eigen::VectorXi & idx;
-  const int K;
+  const int s;
   const double sigma;
-  const double p, q, tau;
   const double alpha, beta;
 
-  PostOFDataMulReg(const EigenPair & _eigenpair, const Eigen::MatrixXd & _Y,  const Eigen::VectorXi & _idx,
-                int _K, double _sigma = 1e-5, double _p = 1, double _q = 10,
-                double _tau = 2, double _alpha = 1e-1, double _beta = 1e-3) : eigenpair(_eigenpair), Y(_Y), idx(_idx), K(_K), sigma(_sigma), p(_p), q(_q), tau(_tau), alpha(_alpha), beta(_beta) {}
+  PostDataRBF(const Eigen::MatrixXd & _dist_UU, const Eigen::MatrixXd & _dist_XU, const Eigen::MatrixXd & _Y,
+              int _s, double _sigma = 1e-5,
+              double _alpha = 1e-1, double _beta = 1e-3) : dist_UU(_dist_UU), dist_XU(_dist_XU), Y(_Y), s(_s), sigma(_sigma), alpha(_alpha), beta(_beta) {}
 };
 
 // return value, contains optimal parameter t and objective value obj
@@ -232,4 +239,8 @@ ReturnValueReg train_regression_gp_cpp(void *data, std::string approach = "poste
                                        std::vector<double>* x0 = nullptr,
                                        std::vector<double>* lb = nullptr, std::vector<double>* ub = nullptr);
 
+ReturnValueReg train_rbf_regression_gp_cpp(void *data, std::string approach,
+                                           std::string noise,
+                                           std::vector<double>* x0 = nullptr,
+                                           std::vector<double>* lb = nullptr, std::vector<double>* ub = nullptr);
 #endif

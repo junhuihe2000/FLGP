@@ -5,6 +5,13 @@
 #include <RcppEigen.h>
 
 
+// [[Rcpp::export(fit_rbf_regression_gp_cpp)]]
+Rcpp::List fit_rbf_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
+                                     int s,
+                                     double sigma, std::string approach, std::string noise,
+                                     std::string sample,
+                                     bool output_cov,
+                                     int nstart);
 
 /*
 //' Fit Gaussian process regression with local anchor embedding kernels

@@ -258,6 +258,10 @@ microbenchmark(A={irlba(A,K)},
 + Regression
 
 ```{r}
+set.seed(1234)
+```
+
+```{r}
 m = 100
 X = as.matrix(runif(m,-1,1),m)
 Y = X[,1]^2
@@ -270,7 +274,15 @@ ggplot() + geom_point(aes(X[,1],Y)) + geom_point(aes(X_new[,1],Y_new))
 
 ```{r}
 models = list(subsample="kmeans",kernel="lae",gl="cluster-normalized",root=TRUE)
-Y_pred = fit_lae_regression_gp_rcpp(X,Y,X_new,s,r,K,approach = "posterior", models = models)
+res_pred = fit_lae_regression_gp_rcpp(X,Y,X_new,s,r,K,approach = "posterior", models = models)
+Y_pred = res_pred$Y_pred
+sum((Y_new-Y_pred$test)^2)/m_new
+```
+
+```{r}
+S = 100
+res_pred = fit_rbf_regression_gp_rcpp(X,Y,X_new,S,approach = "posterior", sampling = "random")
+Y_pred = res_pred$Y_pred
 sum((Y_new-Y_pred$test)^2)/m_new
 ```
 
@@ -306,8 +318,8 @@ ggplot() + geom_point(aes(X[,1],X[,2],color=Y)) +
 ```
 
 ```{r}
-m = 500
-q = 200
+m = 200
+q = 1
 train.index = sample.int(n,m); test.index = c(1:n)[-train.index]
 X.train = X[train.index,]; Y.train = Y[train.index]
 X.test = X[test.index,]; Y.test = Y[test.index]
@@ -319,7 +331,7 @@ s = 500; r = 3; K = 100
 ```
 
 ```{r, include=FALSE}
-res_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K,noise="different")
+res_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K,noise="same")
 ```
 
 ```{r}
@@ -332,6 +344,20 @@ sqrt(sum((Y.train-Y_pred_lkflag$train)^2)/m/q)
 sqrt(sum((Y.test-Y_pred_lkflag$test)^2)/(n-m)/q)
 ```
 
+```{r, include=FALSE}
+S = 100
+res_pred_rbf = fit_rbf_regression_gp_rcpp(X.train,Yobs.train,X.test,S,noise="same")
+```
+
+```{r}
+sqrt(res_pred_rbf$pars[-1])
+```
+
+```{r}
+Y_pred_rbf = res_pred_rbf$Y_pred
+sqrt(sum((Y.train-Y_pred_rbf$train)^2)/m/q)
+sqrt(sum((Y.test-Y_pred_rbf$test)^2)/(n-m)/q)
+```
 
 
 ```{r}

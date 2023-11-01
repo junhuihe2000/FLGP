@@ -5,6 +5,10 @@ big_fit_lae_logit_gp_cpp <- function(big_X_all, Y_train, s, r, K, N_train, sigma
     .Call(`_FLAG_big_fit_lae_logit_gp_cpp`, big_X_all, Y_train, s, r, K, N_train, sigma, approach, models, output_cov)
 }
 
+fit_rbf_regression_gp_cpp <- function(X_train, Y_train, X_test, s, sigma, approach, noise, sample, output_cov, nstart) {
+    .Call(`_FLAG_fit_rbf_regression_gp_cpp`, X_train, Y_train, X_test, s, sigma, approach, noise, sample, output_cov, nstart)
+}
+
 fit_lae_regression_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, sigma, approach, noise, models, output_cov, nstart) {
     .Call(`_FLAG_fit_lae_regression_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, approach, noise, models, output_cov, nstart)
 }

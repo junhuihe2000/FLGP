@@ -19,6 +19,83 @@
 // Gaussian Process regression
 //-----------------------------------------------------------//
 
+Rcpp::List fit_rbf_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
+                                     int s,
+                                     double sigma, std::string approach, std::string noise,
+                                     std::string sample,
+                                     bool output_cov,
+                                     int nstart) {
+  std::cout << "Gaussian regression with RBF kernel:" << std::endl;
+
+  // map the matrices from R to Eigen
+  const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
+  // Map<MatrixXd> fails for Y
+  const Eigen::MatrixXd Y(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(Y_train));
+  const Eigen::Map<Eigen::MatrixXd> X_new(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_test));
+
+  int m = X.rows(); int m_new = X_new.rows();
+  int n = m + m_new; int d = X.cols();
+
+  const Eigen::MatrixXd U = subsample_cpp(X, s, sample, nstart).leftCols(d);
+  const Eigen::MatrixXd dist_UU  = ((-2*U*U.transpose()).colwise() + U.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
+  const Eigen::MatrixXd dist_XU = ((-2*X*U.transpose()).colwise() + X.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
+
+  // train model
+  std::cout << "Training..." << std::endl;
+  // empirical Bayes to optimize t
+  ReturnValueReg res;
+  if(approach=="posterior") {
+    PostDataRBF postdatareg(dist_UU, dist_XU, Y, s, sigma);
+    res = train_rbf_regression_gp_cpp(&postdatareg, approach, noise);
+  } else if(approach=="marginal") {
+    MargDataRBF margdatareg(dist_UU, dist_XU, Y, s, sigma);
+    res = train_rbf_regression_gp_cpp(&margdatareg, approach, noise);
+  } else {
+    Rcpp::stop("This model selection approach is not supported!");
+  }
+
+
+  std::cout << "By " << approach << " method, optimal epsilon = " << res.x[0] \
+            << ", the objective function is " << res.obj << std::endl;
+
+  // test model
+  std::cout << "Testing..." << std::endl;
+  // construct covariance matrix
+  // predict labels on the training set
+  Eigen::MatrixXd train_pred = predict_rbf_regression_cpp(Y, dist_UU, dist_XU, dist_XU, s, res.x, sigma, noise);
+  // predict labels on the testing set
+  Eigen::MatrixXd dist_XnewU = ((-2*X_new*U.transpose()).colwise() + X_new.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
+  Eigen::MatrixXd test_pred = predict_rbf_regression_cpp(Y, dist_UU, dist_XU, dist_XnewU, s, res.x, sigma, noise);
+
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
+
+  std::cout << "Over" << std::endl;
+
+  if(output_cov) {
+    Eigen::MatrixXd C_ss = Eigen::exp(-dist_UU.array()/(2*res.x[0]));
+    Eigen::MatrixXd C_ms = Eigen::exp(-dist_XU.array()/(2*res.x[0]));
+    Eigen::MatrixXd C_ns = Eigen::exp(-dist_XnewU.array()/(2*res.x[0]));
+
+    Eigen::LLT<Eigen::MatrixXd> chol_C(C_ss);
+
+    Eigen::MatrixXd K(n,s);
+    K.topRows(m) = C_ms;
+    K.bottomRows(m_new) = C_ns;
+
+    Eigen::MatrixXd C = K*chol_C.solve(C_ms.transpose());
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
+                              Rcpp::Named("pars")=res.x);
+  } else {
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
+                              Rcpp::Named("pars")=res.x);
+  }
+
+}
+
+
+
+
 Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                 int s, int r, int K,
                                 double sigma, std::string approach, std::string noise,

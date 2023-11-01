@@ -118,4 +118,51 @@ Eigen::MatrixXd predict_regression_cpp(const EigenPair & eigenpair, const Eigen:
     Rcpp::stop("The noise setting is illegal!");
   }
 
+  }
+
+
+Eigen::MatrixXd predict_rbf_regression_cpp(const Eigen::MatrixXd & Y,
+                                           const Eigen::MatrixXd & dist_UU, const Eigen::MatrixXd & dist_XU,
+                                           const Eigen::MatrixXd & dist_XnewU,
+                                           int s, const std::vector<double> & pars, double sigma,
+                                           std::string noisepar) {
+  int m = Y.rows();
+  if(noisepar=="same") {
+    double t = pars[0];
+    double noise = pars[1];
+
+    Eigen::MatrixXd C_ss = Eigen::exp(-dist_UU.array()/(2*t));
+    Eigen::MatrixXd C_ms = Eigen::exp(-dist_XU.array()/(2*t));
+
+    Eigen::MatrixXd Q = (noise+sigma)*C_ss + C_ms.transpose()*C_ms;
+    Eigen::LLT<Eigen::MatrixXd> chol_Q(Q);
+    Eigen::MatrixXd alpha = chol_Q.solve(C_ms.transpose()*Y);
+
+    Eigen::MatrixXd C_ns = Eigen::exp(-dist_XnewU.array()/(2*t));
+
+    Eigen::MatrixXd Y_pred = C_ns*alpha;
+    return Y_pred;
+  } else if(noisepar=="different") {
+    double t = pars[0];
+    Eigen::MatrixXd C_ss = Eigen::exp(-dist_UU.array()/(2*t));
+    Eigen::MatrixXd C_ms = Eigen::exp(-dist_XU.array()/(2*t));
+
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> Z(m);
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> Z_inv(m);
+    for(int i=1;i<=m;i++) {
+      Z.diagonal()[i-1] = pars[i] + sigma;
+      Z_inv.diagonal()[i-1] = 1.0/(pars[i]+sigma);
+    }
+
+    Eigen::MatrixXd Q = C_ss + C_ms.transpose()*Z_inv*C_ms;
+    Eigen::LLT<Eigen::MatrixXd> chol_Q(Q);
+    Eigen::MatrixXd alpha = chol_Q.solve(C_ms.transpose()*Z_inv*Y);
+
+    Eigen::MatrixXd C_ns = Eigen::exp(-dist_XnewU.array()/(2*t));
+
+    Eigen::MatrixXd Y_pred = C_ns*alpha;
+    return Y_pred;
+  } else {
+    Rcpp::stop("The noise setting is illegal!");
+  }
 }

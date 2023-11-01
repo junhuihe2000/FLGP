@@ -11,7 +11,7 @@ fit_lae_regression_gp_rcpp(
   s,
   r,
   K = -1,
-  sigma = 0.001,
+  sigma = 1e-05,
   approach = "posterior",
   noise = "same",
   models = list(subsample = "kmeans", kernel = "lae", gl = "cluster-normalized", root =

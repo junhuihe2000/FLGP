@@ -79,6 +79,259 @@ ReturnValue train_lae_logit_gp_cpp(void *data, std::string approach,
 
 int count = 0;
 
+double npll_rbf_regression_cpp(unsigned n, const double *x, double *grad, void *data) {
+  PostDataRBF* _data = (PostDataRBF* ) data;
+
+  // negative_marginal log likelihood
+  double nmll = nmll_rbf_regression_cpp(n, x, grad, data);
+
+  // prior
+  double pr = (_data->alpha+1)*std::log(x[1]+_data->sigma) + _data->beta/(x[1]+_data->sigma);
+
+  grad[1] += (_data->alpha+1)/(x[1]+_data->sigma) - _data->beta/std::pow(x[1]+_data->sigma,2);
+
+  return (nmll+pr);
+}
+
+// Subset of Regressors
+double nmll_rbf_regression_cpp(unsigned n, const double *x, double *grad, void *data) {
+  ++count;
+  MargDataRBF* _data = (MargDataRBF*) data;
+  int m = _data->Y.rows(); int q = _data->Y.cols();
+
+  // negative marginal log likelihood
+  double nmll = 0.0;
+
+  // using Equation 8.17 in GPML
+  // RBF kernel
+  Eigen::MatrixXd C_ss = Eigen::exp(-_data->dist_UU.array()/(2*x[0]));
+  Eigen::MatrixXd C_ms = Eigen::exp(-_data->dist_XU.array()/(2*x[0]));
+  Eigen::LLT<Eigen::MatrixXd> chol_C_ss(C_ss);
+
+  Eigen::MatrixXd Q = (x[1]+_data->sigma)*C_ss + C_ms.transpose()*C_ms;
+  Eigen::LLT<Eigen::MatrixXd> chol_Q(Q);
+  Eigen::MatrixXd alpha = 1.0/(x[1]+_data->sigma)*(_data->Y - C_ms*chol_Q.solve(C_ms.transpose()*_data->Y));
+
+  if(grad) {
+    Eigen::MatrixXd grad_C_ss = C_ss.array()*(_data->dist_UU.array()/(2*x[0]*x[0]));
+    Eigen::MatrixXd grad_C_ms = C_ms.array()*(_data->dist_XU.array()/(2*x[0]*x[0]));
+
+    Eigen::MatrixXd Q_inv = chol_Q.solve(Eigen::MatrixXd::Identity(_data->s, _data->s));
+    Eigen::MatrixXd C_ss_inv = chol_C_ss.solve(Eigen::MatrixXd::Identity(_data->s,_data->s));
+    Eigen::MatrixXd CinvC = C_ss_inv*C_ms.transpose();
+    Eigen::MatrixXd beta = CinvC*alpha;
+
+    grad[0] = -(alpha.array()*(grad_C_ms*beta).array()).sum()/q + 0.5*(beta.array()*(grad_C_ss*beta).array()).sum()/q;
+    grad[0] += 1.0/(x[1]+_data->sigma)*(CinvC.array()*grad_C_ms.transpose().array()).sum();
+    grad[0] += -1.0/(x[1]+_data->sigma)*((Q_inv*C_ms.transpose()*grad_C_ms).transpose().array()*(CinvC*C_ms).array()).sum();
+    grad[0] += -0.5/(x[1]+_data->sigma)*(CinvC.array()*(grad_C_ss*CinvC).array()).sum();
+    grad[0] += 0.5/(x[1]+_data->sigma)*((Q_inv*C_ms.transpose()*CinvC.transpose()).transpose().array()*(grad_C_ss*CinvC*C_ms).array()).sum();
+
+    grad[1] = -0.5*(alpha.array()*alpha.array()).sum()/q;
+    grad[1] += 0.5/(x[1]+_data->sigma)*(m-(C_ms.array()*(Q_inv*C_ms.transpose()).transpose().array()).sum());
+  }
+
+  nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
+  nmll += Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array().log().sum() - Eigen::MatrixXd(chol_C_ss.matrixL()).diagonal().array().log().sum();
+  nmll += 0.5*(m-_data->s)*std::log(x[1]+_data->sigma);
+
+  return nmll;
+}
+
+double npll_rbf_diff_noise_regression_cpp(unsigned n, const double *x, double *grad, void *data) {
+  PostDataRBF* _data = (PostDataRBF* ) data;
+  int m = _data->Y.rows();
+
+  // negative_marginal log likelihood
+  double nmll = nmll_rbf_diff_noise_regression_cpp(n, x, grad, data);
+
+  // prior
+  double pr = 0.0;
+  for(int i=1;i<=m;i++) {
+    pr += ((_data->alpha+1)*std::log(x[i]+_data->sigma) + _data->beta/(x[i]+_data->sigma))/m;
+    grad[i] += ((_data->alpha+1)/(x[i]+_data->sigma) - _data->beta/std::pow(x[i]+_data->sigma,2))/m;
+  }
+
+  return (nmll+pr);
+}
+
+double nmll_rbf_diff_noise_regression_cpp(unsigned n, const double *x, double *grad, void *data) {
+  ++count;
+  MargDataRBF* _data = (MargDataRBF*) data;
+  int m = _data->Y.rows(); int q = _data->Y.cols();
+
+  // negative marginal log likelihood
+  double nmll = 0.0;
+
+  // using Equation 8.17 in GPML
+  // RBF kernel
+  Eigen::MatrixXd C_ss = Eigen::exp(-_data->dist_UU.array()/(2*x[0]));
+  Eigen::MatrixXd C_ms = Eigen::exp(-_data->dist_XU.array()/(2*x[0]));
+  Eigen::LLT<Eigen::MatrixXd> chol_C_ss(C_ss);
+
+  Eigen::DiagonalMatrix<double, Eigen::Dynamic> Z(m);
+  Eigen::DiagonalMatrix<double, Eigen::Dynamic> Z_inv(m);
+  for(int i=1;i<=m;i++) {
+    Z.diagonal()[i-1] = x[i] + _data->sigma;
+    Z_inv.diagonal()[i-1] = 1.0/(x[i]+_data->sigma);
+  }
+
+  Eigen::MatrixXd Q = C_ss + C_ms.transpose()*Z_inv*C_ms;
+  Eigen::LLT<Eigen::MatrixXd> chol_Q(Q);
+  Eigen::MatrixXd alpha = Z_inv*_data->Y - Z_inv*C_ms*chol_Q.solve(C_ms.transpose()*Z_inv*_data->Y);
+
+  if(grad) {
+    Eigen::MatrixXd grad_C_ss = C_ss.array()*(_data->dist_UU.array()/(2*x[0]*x[0]));
+    Eigen::MatrixXd grad_C_ms = C_ms.array()*(_data->dist_XU.array()/(2*x[0]*x[0]));
+
+    Eigen::MatrixXd Q_inv = chol_Q.solve(Eigen::MatrixXd::Identity(_data->s, _data->s));
+    Eigen::MatrixXd C_ss_inv = chol_C_ss.solve(Eigen::MatrixXd::Identity(_data->s,_data->s));
+    Eigen::MatrixXd CinvC = C_ss_inv*C_ms.transpose();
+    Eigen::MatrixXd beta = CinvC*alpha;
+
+    grad[0] = -(alpha.array()*(grad_C_ms*beta).array()).sum()/q + 0.5*(beta.array()*(grad_C_ss*beta).array()).sum()/q;
+    grad[0] += (CinvC.array()*(Z_inv*grad_C_ms).transpose().array()).sum();
+    grad[0] += -((Q_inv*C_ms.transpose()*Z_inv*grad_C_ms).transpose().array()*(CinvC*Z_inv*C_ms).array()).sum();
+    grad[0] += -0.5*(CinvC.array()*(grad_C_ss*CinvC*Z_inv).array()).sum();
+    grad[0] += 0.5*((Q_inv*C_ms.transpose()*Z_inv*CinvC.transpose()).transpose().array()*(grad_C_ss*CinvC*Z_inv*C_ms).array()).sum();
+
+    Eigen::MatrixXd tmp;
+    for(int i=1;i<=m;i++) {
+      grad[i] = -0.5*(alpha.row(i-1).array()*alpha.row(i-1).array()).sum()/q;
+      tmp = C_ms.row(i-1).transpose()*Z_inv.diagonal()[i-1];
+      grad[i] += 0.5*(Z_inv.diagonal()[i-1]-(tmp.array()*(Q_inv*tmp).array()).sum());
+    }
+
+  }
+
+  nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
+  nmll += Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array().log().sum() - Eigen::MatrixXd(chol_C_ss.matrixL()).diagonal().array().log().sum();
+  nmll += 0.5*(Z.diagonal().array().log().sum());
+
+  return nmll;
+}
+
+ReturnValueReg train_rbf_regression_gp_cpp(void *data, std::string approach,
+                                           std::string noise,
+                                           std::vector<double>* x0,
+                                           std::vector<double>* lb, std::vector<double>* ub) {
+  MargDataRBF * _data = (MargDataRBF *) data;
+  int m = _data->Y.rows();
+  // initialize x, lower bound and upper bound
+  bool new_x = false;
+  bool new_lb = false;
+  bool new_ub = false;
+  if(noise=="same") {
+    if(x0==nullptr) {
+      x0 = new std::vector<double>;
+      new_x = true;
+      x0->push_back(1);
+      x0->push_back(1);
+    }
+
+    if(lb==nullptr) {
+      lb = new std::vector<double>;
+      new_lb = true;
+      lb->push_back(1e-4);
+      lb->push_back(1e-4);
+    }
+
+    if(ub==nullptr) {
+      ub = new std::vector<double>;
+      new_ub = true;
+      ub->push_back(std::numeric_limits<double>::infinity());
+      ub->push_back(std::numeric_limits<double>::infinity());
+    }
+  } else if (noise=="different") {
+    if(x0==nullptr) {
+      x0 = new std::vector<double>;
+      new_x = true;
+      x0->push_back(1);
+      for(int i=0;i<m;i++) {
+        x0->push_back(1);
+      }
+    }
+
+    if(lb==nullptr) {
+      lb = new std::vector<double>;
+      new_lb = true;
+      lb->push_back(1e-4);
+      for(int i=0;i<m;i++) {
+        lb->push_back(1e-4);
+      }
+    }
+
+    if(ub==nullptr) {
+      ub = new std::vector<double>;
+      new_ub = true;
+      ub->push_back(std::numeric_limits<double>::infinity());
+      for(int i=0;i<m;i++) {
+        ub->push_back(std::numeric_limits<double>::infinity());
+      }
+    }
+  } else {
+    Rcpp::stop("The noise setting is illegal!");
+  }
+
+  nlopt_opt opt;
+  // opt = nlopt_create(NLOPT_LN_COBYLA,2); // local derivative-free algorithm
+  if(noise=="same") {
+    opt = nlopt_create(NLOPT_LD_MMA, 2); // local gradient-based optimization
+  } else if(noise=="different") {
+    opt = nlopt_create(NLOPT_LD_MMA, m+1); // local gradient-based optimization
+  }
+  nlopt_set_lower_bounds(opt, &((*lb)[0]));
+  nlopt_set_upper_bounds(opt, &((*ub)[0]));
+
+  // nlopt_set_param(opt, "inner_maxeval", 10);
+
+  // empirical Bayes
+  if(noise=="same") {
+    if(approach=="marginal") {
+      nlopt_set_min_objective(opt, nmll_rbf_regression_cpp, data);
+    } else if(approach=="posterior") {
+      nlopt_set_min_objective(opt, npll_rbf_regression_cpp, data);
+    } else {
+      Rcpp::stop("This model selection approach is not supported!");
+    }
+  } else if(noise=="different") {
+    if(approach=="marginal") {
+      nlopt_set_min_objective(opt, nmll_rbf_diff_noise_regression_cpp, data);
+    } else if(approach=="posterior") {
+      nlopt_set_min_objective(opt, npll_rbf_diff_noise_regression_cpp, data);
+    } else {
+      Rcpp::stop("This model selection approach is not supported!");
+    }
+  }
+
+  nlopt_set_xtol_rel(opt, 1e-5);
+
+  count = 0;
+
+  std::vector<double> x = *x0;
+  double obj;
+  nlopt_result res = nlopt_optimize(opt, &(x[0]), &obj);
+  if(res<0) {
+    std::cout << "nlopt failed!" << std::endl;
+  }
+  std::cout << "The status is " << res << std::endl;
+
+
+
+  std::printf("found minimum after %d evaluations\n", count);
+
+  nlopt_destroy(opt);
+
+  if(new_x) {delete x0;}
+  if(new_lb) {delete lb;}
+  if(new_ub) {delete ub;}
+
+  // negative objective function
+  return ReturnValueReg(x, -obj);
+}
+
+
+
 double negative_log_posterior_regression_cpp(unsigned n, const double *x, double *grad, void *data) {
   // ++count;
   PostOFDataReg * _data = (PostOFDataReg *) data;
@@ -180,7 +433,9 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
     if(grad) {
       Eigen::MatrixXd Q_inv = chol_Q.solve(Eigen::MatrixXd::Identity(_data->K,_data->K));
       Eigen::DiagonalMatrix<double, Eigen::Dynamic> A = ((-eigenvalues.array()*(Eigen::exp(-x[0]*eigenvalues.array())+0.0))+0.0).matrix().asDiagonal();
-      grad[0] = -0.5*(alpha.array()*((alpha.transpose()*V)*A*V.transpose()).transpose().array()).sum()/q;
+      Eigen::MatrixXd Vta = V.transpose()*alpha;
+      grad[0] = -0.5*(Vta.array()*(A*Vta).array()).sum()/q;
+      // grad[0] = -0.5*(alpha.array()*((alpha.transpose()*V)*A*V.transpose()).transpose().array()).sum()/q;
       // Eigen::MatrixXd VtV = V.transpose()*V;
       grad[0] += 0.5/(x[1]+_data->sigma)*(A*VtV).trace();
       grad[0] += -0.5/(x[1]+_data->sigma)*((Q_inv*Lambda_sqrt*VtV).array()*(A*VtV*Lambda_sqrt).transpose().array()).sum();
@@ -351,7 +606,6 @@ double negative_marginal_likelihood_diff_noise_regression_cpp(unsigned n, const 
     // use Algorithm 2.1 in GPML
     nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
     nmll += Eigen::MatrixXd(chol_C.matrixL()).diagonal().array().log().sum();
-    std::cout << "nmll is " << nmll << std::endl;
   } else {
     const EigenPair & eigenpair = _data->eigenpair;
     Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(_data->K).array();
@@ -387,8 +641,6 @@ double negative_marginal_likelihood_diff_noise_regression_cpp(unsigned n, const 
         tmp = Z_inv.diagonal()[i-1]*V.row(i-1)*Lambda_sqrt;
         grad[i] += 0.5*(Z_inv.diagonal()[i-1]-((tmp*Q_inv).array()*tmp.array()).sum());
       }
-
-
 
       // gradient clipping
       double threshold = 1;
@@ -432,8 +684,8 @@ ReturnValueReg train_regression_gp_cpp(void *data, std::string approach,
     if(lb==nullptr) {
       lb = new std::vector<double>;
       new_lb = true;
-      lb->push_back(1e-2);
-      lb->push_back(1e-2);
+      lb->push_back(1e-3);
+      lb->push_back(1e-4);
     }
 
     if(ub==nullptr) {
@@ -455,9 +707,9 @@ ReturnValueReg train_regression_gp_cpp(void *data, std::string approach,
     if(lb==nullptr) {
       lb = new std::vector<double>;
       new_lb = true;
-      lb->push_back(1e-2);
+      lb->push_back(1e-3);
       for(int i=0;i<m;i++) {
-        lb->push_back(1e-2);
+        lb->push_back(1e-4);
       }
     }
 

@@ -11,7 +11,7 @@ fit_se_regression_gp_rcpp(
   s,
   r,
   K = -1,
-  sigma = 0.001,
+  sigma = 1e-05,
   a2s = NULL,
   approach = "posterior",
   noise = "same",
