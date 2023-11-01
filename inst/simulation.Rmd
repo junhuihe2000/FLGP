@@ -103,6 +103,11 @@ microbenchmark({lapply(c(1:1e3), function(i) {for(j in 1:10) {x*x}})},
 
 + test pgbinary
 
++ multinomial classification
+
+```{r}
+set.seed(1234)
+```
 
 
 ```{r}
@@ -126,7 +131,7 @@ K <- 10
 J <- 3
 ```
 
-```{r}
+```{r, include=FALSE}
 Y_pred_lae <- fit_lae_logit_mult_gp_r(X, Y, X_new, J, s, r, K)
 Y_pred_lae_rcpp <- fit_lae_logit_mult_gp_rcpp(X, Y, X_new, s, r, K)
 Y_pred_se <- fit_se_logit_mult_gp_r(X, Y, X_new, J, s, r, K)
@@ -137,11 +142,11 @@ Y_pred_gl_rcpp <- fit_gl_logit_mult_gp_rcpp(X,Y,X_new,K,threshold = 0.1)
 
 ```{r}
 error_rate(Y_new, Y_pred_lae)
-error_rate(Y_new, Y_pred_lae_rcpp)
+error_rate(Y_new, Y_pred_lae_rcpp$test)
 error_rate(Y_new, Y_pred_se)
-error_rate(Y_new, Y_pred_se_rcpp)
-error_rate(Y_new, Y_pred_nystrom_rcpp)
-error_rate(Y_new, Y_pred_gl_rcpp)
+error_rate(Y_new, Y_pred_se_rcpp$test)
+error_rate(Y_new, Y_pred_nystrom_rcpp$test)
+error_rate(Y_new, Y_pred_gl_rcpp$test)
 ```
 
 
@@ -176,6 +181,7 @@ ggplot() + geom_line(aes(X_new, Y_new), col="red") +
   geom_point(aes(X, Y), col="black")
 ```
 
++ binary classification
 
 ```{r}
 n <- 10
@@ -213,7 +219,7 @@ shine(prof_output)
 
 
 
-```{r}
+```{r, include=FALSE}
 fit_lae_logit_gp_r(X,Y,X_new,s,r,K)
 fit_lae_logit_gp_rcpp(X,Y,X_new,s,r,K)
 fit_se_logit_gp_r(X,Y,X_new,s,r,K)
@@ -279,12 +285,6 @@ Y_pred = res_pred$Y_pred
 sum((Y_new-Y_pred$test)^2)/m_new
 ```
 
-```{r}
-S = 100
-res_pred = fit_rbf_regression_gp_rcpp(X,Y,X_new,S,approach = "posterior", sampling = "random")
-Y_pred = res_pred$Y_pred
-sum((Y_new-Y_pred$test)^2)/m_new
-```
 
 ```{r}
 Y_pred_r = fit_lae_reg_gp_r(X,Y,X_new,s,r,K)
@@ -344,31 +344,6 @@ sqrt(sum((Y.train-Y_pred_lkflag$train)^2)/m/q)
 sqrt(sum((Y.test-Y_pred_lkflag$test)^2)/(n-m)/q)
 ```
 
-```{r, include=FALSE}
-S = 100
-res_pred_rbf = fit_rbf_regression_gp_rcpp(X.train,Yobs.train,X.test,S,noise="same")
-```
-
-```{r}
-sqrt(res_pred_rbf$pars[-1])
-```
-
-```{r}
-Y_pred_rbf = res_pred_rbf$Y_pred
-sqrt(sum((Y.train-Y_pred_rbf$train)^2)/m/q)
-sqrt(sum((Y.test-Y_pred_rbf$test)^2)/(n-m)/q)
-```
-
-
-```{r}
-Y_pred_skflag = fit_se_regression_gp_rcpp(X.train,Yobs.train,X.test,s,r,K)
-```
-
-```{r}
-sqrt(sum((Y.train-Y_pred_skflag$train)^2)/m)
-sqrt(sum((Y.test-Y_pred_skflag$test)^2)/(n-m))
-```
-
 
 ```{r}
 rbf.spiral = gausspr(X.train,Yobs.train)
@@ -377,7 +352,7 @@ sqrt(sum((Y.test-Y_pred_rbf)^2)/(n-m))
 ```
 
 ```{r}
-ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_lkflag-Y.test)) +
+ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_lkflag$test-Y.test)) +
   scale_color_gradientn(colours = rainbow(10)) +
   geom_point(aes(X.train[,1],X.train[,2]),color="black")
 ```

@@ -78,4 +78,11 @@ Eigen::VectorXd test_logit_mult_gp_cpp(const std::list<BinaryModel> & models,
                               int K, int min, int max,
                               double sigma);
 
+// Predict Gaussian process logistic multinomial regression
+Eigen::VectorXd predict_logit_mult_gp_cpp(const std::list<BinaryModel> & models,
+                                          const EigenPair & eigenpair,
+                                          const Eigen::VectorXi & idx,
+                                          int K, int min, int max,
+                                          double sigma);
+
 #endif

@@ -672,17 +672,24 @@ Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector
   Cvv.diagonal().array() += sigma;
   Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, res.t, idx1, idx0);
 
-  // predict labels on new samples
-  Eigen::VectorXd Y_pred = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, Y, Cnv)["Y_pred"]);
+  Eigen::MatrixXd C(n,m);
+  C.topRows(m) = Cvv;
+  C.bottomRows(m_new) = Cnv;
+
+  // predict labels on all samples
+  Eigen::VectorXd label_pred = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, Y, C)["Y_pred"]);
+  Eigen::VectorXd train_pred = label_pred.topRows(m);
+  Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
   std::cout << "Over" << std::endl;
 
   if(output_cov) {
-    Eigen::MatrixXd C(n,m);
-    C.topRows(m) = Cvv;
-    C.bottomRows(m_new) = Cnv;
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
+                              Rcpp::Named("pars")=res.t);
   } else {
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
+                              Rcpp::Named("pars")=res.t);
   }
 
 }
@@ -702,6 +709,7 @@ Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   const Eigen::Map<Eigen::MatrixXd> X_new(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_test));
 
   int m = X.rows(); int m_new = X_new.rows();
+  int n = m + m_new;
 
   if(K<0) {
     K = s;
@@ -730,10 +738,18 @@ Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   std::cout << "Testing..." << std::endl;
 
   // predict labels on new samples
-  Eigen::VectorXd Y_pred = test_logit_mult_gp_cpp(multi_models, eigenpair, m, m_new, K, min, max, sigma);
+  // Eigen::VectorXd Y_pred = test_logit_mult_gp_cpp(multi_models, eigenpair, m, m_new, K, min, max, sigma);
+
+  // predict labels on all samples
+  Eigen::VectorXi idx_pred = Eigen::VectorXi::LinSpaced(n, 0, n-1);
+  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multi_models, eigenpair, idx_pred, K, min, max, sigma);
+  Eigen::VectorXd train_pred = label_pred.topRows(m);
+  Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
   std::cout << "Over" << std::endl;
 
-  return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+  return Y_pred;
 }
 
 
@@ -900,16 +916,27 @@ Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
   Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_t, idx1, idx0);
 
   // predict labels on new samples
-  Eigen::VectorXd Y_pred = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, Y, Cnv)["Y_pred"]);
+  // Eigen::VectorXd Y_pred = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, Y, Cnv)["Y_pred"]);
+
+  Eigen::MatrixXd C(n,m);
+  C.topRows(m) = Cvv;
+  C.bottomRows(m_new) = Cnv;
+
+  // predict labels on all samples
+  Eigen::VectorXd label_pred = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, Y, C)["Y_pred"]);
+  Eigen::VectorXd train_pred = label_pred.topRows(m);
+  Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
+
   std::cout << "Over" << std::endl;
 
   if(output_cov) {
-    Eigen::MatrixXd C(n,m);
-    C.topRows(m) = Cvv;
-    C.bottomRows(m_new) = Cnv;
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
+                              Rcpp::Named("pars")=best_t);
   } else {
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
+                              Rcpp::Named("pars")=best_t);
   }
 }
 
@@ -998,11 +1025,16 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   // test model
   std::cout << "Testing..." << std::endl;
 
-  // predict labels on new samples
-  Eigen::VectorXd Y_pred = test_logit_mult_gp_cpp(multi_models, eigenpair, m, m_new, K, min, max, sigma);
+  // predict labels on all samples
+  Eigen::VectorXi idx_pred = Eigen::VectorXi::LinSpaced(n, 0, n-1);
+  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multi_models, eigenpair, idx_pred, K, min, max, sigma);
+  Eigen::VectorXd train_pred = label_pred.topRows(m);
+  Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
   std::cout << "Over" << std::endl;
 
-  return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+  return Y_pred;
 }
 
 
@@ -1118,17 +1150,24 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Cvv.diagonal().array() += sigma;
   Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_t, idx1, idx0);
 
-  // predict labels on new samples
-  Eigen::VectorXd Y_pred = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, Y, Cnv)["Y_pred"]);
+  Eigen::MatrixXd C(n,m);
+  C.topRows(m) = Cvv;
+  C.bottomRows(m_new) = Cnv;
+
+  // predict labels on all samples
+  Eigen::VectorXd label_pred = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, Y, C)["Y_pred"]);
+  Eigen::VectorXd train_pred = label_pred.topRows(m);
+  Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
   std::cout << "Over" << std::endl;
 
   if(output_cov) {
-    Eigen::MatrixXd C(n,m);
-    C.topRows(m) = Cvv;
-    C.bottomRows(m_new) = Cnv;
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
+                              Rcpp::Named("pars")=best_t);
   } else {
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
+                              Rcpp::Named("pars")=best_t);
   }
 }
 
@@ -1238,11 +1277,16 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   EigenPair & eigenpair = best_eigenpair;
   eigenpair.vectors = W_allU*eigenpair.vectors*(1.0/eigenpair.values.array()).matrix().asDiagonal();
 
-  // predict labels on new samples
-  Eigen::VectorXd Y_pred = test_logit_mult_gp_cpp(multi_models, eigenpair, m, m_new, K, min, max, sigma);
+  // predict labels on all samples
+  Eigen::VectorXi idx_pred = Eigen::VectorXi::LinSpaced(n, 0, n-1);
+  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multi_models, eigenpair, idx_pred, K, min, max, sigma);
+  Eigen::VectorXd train_pred = label_pred.topRows(m);
+  Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
   std::cout << "Over" << std::endl;
 
-  return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+  return Y_pred;
 }
 
 
@@ -1375,17 +1419,24 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
   Cvv.diagonal().array() += sigma;
   Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_t, idx1, idx0);
 
-  // predict labels on new samples
-  Eigen::VectorXd Y_pred = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, Y, Cnv)["Y_pred"]);
+  Eigen::MatrixXd C(n,m);
+  C.topRows(m) = Cvv;
+  C.bottomRows(m_new) = Cnv;
+
+  // predict labels on all samples
+  Eigen::VectorXd label_pred = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, Y, C)["Y_pred"]);
+  Eigen::VectorXd train_pred = label_pred.topRows(m);
+  Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
   std::cout << "Over" << std::endl;
 
   if(output_cov) {
-    Eigen::MatrixXd C(n,m);
-    C.topRows(m) = Cvv;
-    C.bottomRows(m_new) = Cnv;
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
+                              Rcpp::Named("pars")=best_t);
   } else {
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
+                              Rcpp::Named("pars")=best_t);
   }
 
 }
@@ -1512,10 +1563,15 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   // test model
   std::cout << "Testing..." << std::endl;
 
-  // predict labels on new samples
-  Eigen::VectorXd Y_pred = test_logit_mult_gp_cpp(multi_models, eigenpair, m, m_new, K, min, max, sigma);
+  // predict labels on all samples
+  Eigen::VectorXi idx_pred = Eigen::VectorXi::LinSpaced(n, 0, n-1);
+  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multi_models, eigenpair, idx_pred, K, min, max, sigma);
+  Eigen::VectorXd train_pred = label_pred.topRows(m);
+  Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
+  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
+                                         Rcpp::Named("test")=test_pred);
   std::cout << "Over" << std::endl;
 
-  return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred);
+  return Y_pred;
 
 }

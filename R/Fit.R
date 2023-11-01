@@ -85,7 +85,8 @@ fit_rbf_regression_gp_rcpp <- function(X, Y, X_new, s, sigma=1e-5,
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A list with two components
+#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
 #' the label in the train data point.}
@@ -145,7 +146,8 @@ fit_lae_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-5,
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A list with two components
+#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
 #' the label in the train data point.}
@@ -209,7 +211,8 @@ fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-5, a2s=N
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A list with two components
+#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
 #' the label in the train data point.}
@@ -277,7 +280,8 @@ fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-5, a2s
 #' }
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #'
-#' @return `Y_pred` A list with two components
+#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
 #' the label in the train data point.}
@@ -344,8 +348,14 @@ fit_gl_regression_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-5, a2s=NULL,
 #' }
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `Y_pred` A list with two components, that is,
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
+#'
 #' @export
 #'
 #' @examples
@@ -372,9 +382,9 @@ fit_lae_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
 
   # RcppParallel::setThreadOptions(numThreads = RcppParallel::defaultNumThreads()/2)
 
-  res = fit_lae_logit_mult_gp_cpp(X,Y,X_new,s,r,K,sigma,approach,models,nstart)
+  Y_pred = fit_lae_logit_mult_gp_cpp(X,Y,X_new,s,r,K,sigma,approach,models,nstart)
 
-  return(res$Y_pred)
+  return(Y_pred)
 }
 
 
@@ -403,8 +413,13 @@ fit_lae_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
 #' }
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `Y_pred` A list with two components, that is,
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
 #' @export
 #'
 #' @examples
@@ -435,9 +450,9 @@ fit_se_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_se_logit_mult_gp_cpp(X,Y,X_new,s,r,K,sigma,a2s,approach,models,nstart)
+  Y_pred = fit_se_logit_mult_gp_cpp(X,Y,X_new,s,r,K,sigma,a2s,approach,models,nstart)
 
-  return(res$Y_pred)
+  return(Y_pred)
 }
 
 
@@ -466,8 +481,13 @@ fit_se_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
 #' }
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `Y_pred` A list with two components, that is,
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
 #' @export
 #'
 #' @examples
@@ -498,9 +518,9 @@ fit_nystrom_logit_mult_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_nystrom_logit_mult_gp_cpp(X,Y,X_new,s,K,sigma,a2s,approach,models,nstart)
+  Y_pred = fit_nystrom_logit_mult_gp_cpp(X,Y,X_new,s,K,sigma,a2s,approach,models,nstart)
 
-  return(res$Y_pred)
+  return(Y_pred)
 }
 
 
@@ -529,8 +549,13 @@ fit_nystrom_logit_mult_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s
 #' the defaulting value is `TRUE`.}
 #' }
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `Y_pred` A list with two components, that is,
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
 #' @export
 #'
 #' @examples
@@ -560,9 +585,9 @@ fit_gl_logit_mult_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-3, a2s=NULL,
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_gl_logit_mult_gp_cpp(X,Y,X_new,K,sigma,a2s,threshold,sparse,approach,models)
+  Y_pred = fit_gl_logit_mult_gp_cpp(X,Y,X_new,K,sigma,a2s,threshold,sparse,approach,models)
 
-  return(res$Y_pred)
+  return(Y_pred)
 }
 
 
@@ -599,8 +624,14 @@ fit_gl_logit_mult_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-3, a2s=NULL,
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' where `Y_pred` is also a list with two components, that is,
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
 #' @export
 #'
 #' @examples
@@ -614,7 +645,7 @@ fit_gl_logit_mult_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-3, a2s=NULL,
 #' Y_new <- c(rep(1,10),rep(0,10))
 #' s <- 6; r <- 3
 #' K <- 5
-#' Y_pred <- fit_lae_logit_gp_rcpp(X, Y, X_new, s, r, K)
+#' res_pred <- fit_lae_logit_gp_rcpp(X, Y, X_new, s, r, K)
 fit_lae_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3,
                                approach="posterior",
                                models=list(subsample="kmeans",
@@ -630,11 +661,7 @@ fit_lae_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3,
 
   res = fit_lae_logit_gp_cpp(X,Y,X_new,s,r,K,N,sigma,approach,models,output_cov,nstart)
 
-  if(output_cov) {
-    return(res)
-  } else {
-    return(res$Y_pred)
-  }
+  return(res)
 
 }
 
@@ -667,8 +694,14 @@ fit_lae_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3,
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' where `Y_pred` is also a list with two components, that is,
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
 #' @export
 #'
 #' @examples
@@ -682,7 +715,7 @@ fit_lae_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3,
 #' Y_new <- c(rep(1,10),rep(0,10))
 #' s <- 6; r <- 3
 #' K <- 5
-#' Y_pred <- fit_se_logit_gp_rcpp(X, Y, X_new, s, r, K)
+#' res_pred <- fit_se_logit_gp_rcpp(X, Y, X_new, s, r, K)
 fit_se_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3, a2s=NULL,
                                  approach="posterior",
                                  models=list(subsample="kmeans",
@@ -702,12 +735,7 @@ fit_se_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3, a2
 
   res = fit_se_logit_gp_cpp(X,Y,X_new,s,r,K,N,sigma,a2s,approach,models,output_cov,nstart)
 
-  if(output_cov) {
-    return(res)
-  } else {
-    return(res$Y_pred)
-  }
-
+  return(res)
 }
 
 
@@ -737,8 +765,14 @@ fit_se_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3, a2
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' where `Y_pred` is also a list with two components, that is,
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
 #' @export
 #'
 #' @examples
@@ -776,12 +810,7 @@ fit_nystrom_logit_gp_rcpp <- function(X, Y, X_new, s, K=-1, N=NULL, sigma=1e-3, 
 
   res = fit_nystrom_logit_gp_cpp(X,Y,X_new,s,K,N,sigma,a2s,approach,models,output_cov,nstart)
 
-  if(output_cov) {
-    return(res)
-  } else {
-    return(res$Y_pred)
-  }
-
+  return(res)
 }
 
 
@@ -812,8 +841,14 @@ fit_nystrom_logit_gp_rcpp <- function(X, Y, X_new, s, K=-1, N=NULL, sigma=1e-3, 
 #' }
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #'
-#' @return `Y_pred` A numeric vector with length(m_new), each element indicates
-#' the label in the corresponding new sample point.
+#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' where `Y_pred` is also a list with two components, that is,
+#' \describe{
+#' \item{train}{A numeric vector with length(m), each element indicates
+#' the label in the train data point.}
+#' \item{test}{A numeric vector with length(m_new), each element indicates
+#' the label in the test data point.}
+#' }
 #' @export
 #'
 #' @examples
@@ -845,10 +880,5 @@ fit_gl_logit_gp_rcpp <- function(X, Y, X_new, K, N=NULL, sigma=1e-3, a2s=NULL,
 
   res = fit_gl_logit_gp_cpp(X,Y,X_new,K,N,sigma,a2s,threshold,sparse,approach,models,output_cov)
 
-  if(output_cov) {
-    return(res)
-  } else {
-    return(res$Y_pred)
-  }
-
+  return(res)
 }

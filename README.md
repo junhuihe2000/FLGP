@@ -85,11 +85,12 @@ models = list(subsample="kmeans", kernel="lae", gl="cluster-normalized", root=TR
 cat("SKFLAG:\n")
 #> SKFLAG:
 t1 = Sys.time()
-y_skflag.torus = fit_se_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
+res_skflag.torus = fit_se_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
+y_skflag.torus = res_skflag.torus$Y_pred
 t2 = Sys.time()
 print(t2-t1)
-#> Time difference of 20.72625 secs
-err_skflag.torus = sum((test.label!=y_skflag.torus)^2)/(n-m)
+#> Time difference of 20.16691 secs
+err_skflag.torus = sum((test.label!=y_skflag.torus$test)^2)/(n-m)
 cat("The error rate of SKFLAG is",err_skflag.torus,".\n")
 #> The error rate of SKFLAG is 0 .
 ```
@@ -99,11 +100,12 @@ cat("The error rate of SKFLAG is",err_skflag.torus,".\n")
 cat("LKFLAG:\n")
 #> LKFLAG:
 t3 = Sys.time()
-y_lkflag.torus = fit_lae_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
+res_lkflag.torus = fit_lae_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
+y_lkflag.torus = res_lkflag.torus$Y_pred
 t4 = Sys.time()
 print(t4-t3)
-#> Time difference of 3.782275 secs
-err_lkflag.torus = sum((test.label-y_lkflag.torus)^2)/(n-m)
+#> Time difference of 3.789705 secs
+err_lkflag.torus = sum((test.label-y_lkflag.torus$test)^2)/(n-m)
 cat("The error rate of LKFLAG is",err_lkflag.torus,".\n")
 #> The error rate of LKFLAG is 0.02702128 .
 ```
@@ -111,6 +113,7 @@ cat("The error rate of LKFLAG is",err_lkflag.torus,".\n")
 ### Gaussian process regression(GPR)
 
 ``` r
+set.seed(1234)
 n = 4000
 theta = runif(n,0,8*pi)
 X = cbind((theta+4)^(0.7)*cos(theta), (theta+4)^(0.7)*sin(theta))
@@ -125,9 +128,10 @@ ggplot() + geom_point(aes(X[,1],X[,2],color=Y)) +
 <img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
 
 ``` r
-m = 100
+m = 200
 train.index = sample.int(n,m); test.index = c(1:n)[-train.index]
 X.train = X[train.index,]; Y.train = Y[train.index]
+Y.train = Y.train + rnorm(m,0,1)
 X.test = X[test.index,]; Y.test = Y[test.index]
 ```
 
@@ -136,17 +140,18 @@ s = 500; r = 3; K = 100
 ```
 
 ``` r
-Y_pred_skflag = fit_se_regression_gp_rcpp(X.train,Y.train,X.test,s,r,K,models=models)
+res_pred_skflag = fit_se_regression_gp_rcpp(X.train,Y.train,X.test,s,r,K,models=models)
+Y_pred_skflag = res_pred_skflag$Y_pred
 ```
 
 ``` r
-rmse_skflag.spiral = sqrt(sum((Y.test-Y_pred_skflag)^2)/(n-m))
+rmse_skflag.spiral = sqrt(sum((Y.test-Y_pred_skflag$test)^2)/(n-m))
 cat("The RMSE of SKFLAG is",rmse_skflag.spiral,".\n")
-#> The RMSE of SKFLAG is 0.3497363 .
+#> The RMSE of SKFLAG is 0.5032034 .
 ```
 
 ``` r
-ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_skflag)) +
+ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_skflag$test)) +
   scale_color_gradientn(colours = rainbow(10)) +
   theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
   ggtitle("SKFLAG in Regression")
@@ -155,17 +160,18 @@ ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_skflag)) +
 <img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 ``` r
-Y_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Y.train,X.test,s,r,K,models=models)
+res_pred_lkflag = fit_lae_regression_gp_rcpp(X.train,Y.train,X.test,s,r,K,models=models)
+Y_pred_lkflag = res_pred_lkflag$Y_pred
 ```
 
 ``` r
-rmse_lkflag.spiral = sqrt(sum((Y.test-Y_pred_lkflag)^2)/(n-m))
+rmse_lkflag.spiral = sqrt(sum((Y.test-Y_pred_lkflag$test)^2)/(n-m))
 cat("The RMSE of LKFLAG is",rmse_lkflag.spiral,".\n")
-#> The RMSE of LKFLAG is 0.5704005 .
+#> The RMSE of LKFLAG is 0.4582096 .
 ```
 
 ``` r
-ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_lkflag)) +
+ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_lkflag$test)) +
   scale_color_gradientn(colours = rainbow(10)) +
   theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
   ggtitle("LKFLAG in Regression")
