@@ -1,4 +1,4 @@
-#' @useDynLib FLAG, .registration = TRUE
+#' @useDynLib FLGP, .registration = TRUE
 #' @importFrom Rcpp evalCpp
 #' @importFrom pgdraw pgdraw
 #' @import RcppEigen

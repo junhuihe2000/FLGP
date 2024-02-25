@@ -33,7 +33,7 @@ and regression problems with FLGP:
 
 ``` r
 library(ggplot2)
-library(FLAG)
+library(FLGP)
 ## basic example code
 
 set.seed(1234)
@@ -72,7 +72,7 @@ ggplot() + geom_point(aes(X[,1],X[,2],color=factor(Y)), size=0.6, alpha=0.6) +
 <img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
 
 ``` r
-## FLAG
+## FLGP
 
 ## set hyper-parameters
 s = 600; r = 3; K = 100
@@ -80,33 +80,33 @@ models = list(subsample="kmeans", kernel="lae", gl="cluster-normalized", root=TR
 ```
 
 ``` r
-## FLAG with the square exponential kernel and k-means subsampling
-cat("SKFLAG:\n")
-#> SKFLAG:
+## FLGP with the square exponential kernel and k-means subsampling
+cat("SKFLGP:\n")
+#> SKFLGP:
 t1 = Sys.time()
 res_skflag.torus = fit_se_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
 y_skflag.torus = res_skflag.torus$Y_pred
 t2 = Sys.time()
 print(t2-t1)
-#> Time difference of 2.672746 secs
+#> Time difference of 20.95316 secs
 err_skflag.torus = sum((test.label!=y_skflag.torus$test)^2)/(n-m)
-cat("The error rate of SKFLAG is",err_skflag.torus,".\n")
-#> The error rate of SKFLAG is 0 .
+cat("The error rate of SKFLGP is",err_skflag.torus,".\n")
+#> The error rate of SKFLGP is 0 .
 ```
 
 ``` r
-## FLAG with local anchor embedding and k-means subsampling
-cat("LKFLAG:\n")
-#> LKFLAG:
+## FLGP with local anchor embedding and k-means subsampling
+cat("LKFLGP:\n")
+#> LKFLGP:
 t3 = Sys.time()
 res_lkflag.torus = fit_lae_logit_gp_rcpp(train.data, train.label, test.data, s, r, K, models = models)
 y_lkflag.torus = res_lkflag.torus$Y_pred
 t4 = Sys.time()
 print(t4-t3)
-#> Time difference of 0.2339399 secs
+#> Time difference of 3.973193 secs
 err_lkflag.torus = sum((test.label-y_lkflag.torus$test)^2)/(n-m)
-cat("The error rate of LKFLAG is",err_lkflag.torus,".\n")
-#> The error rate of LKFLAG is 0.02702128 .
+cat("The error rate of LKFLGP is",err_lkflag.torus,".\n")
+#> The error rate of LKFLGP is 0.02702128 .
 ```
 
 ### Gaussian process regression(GPR)
@@ -145,15 +145,15 @@ Y_pred_skflag = res_pred_skflag$Y_pred
 
 ``` r
 rmse_skflag.spiral = sqrt(sum((Y.test-Y_pred_skflag$test)^2)/(n-m))
-cat("The RMSE of SKFLAG is",rmse_skflag.spiral,".\n")
-#> The RMSE of SKFLAG is 0.5032034 .
+cat("The RMSE of SKFLGP is",rmse_skflag.spiral,".\n")
+#> The RMSE of SKFLGP is 0.5032034 .
 ```
 
 ``` r
 ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_skflag$test)) +
   scale_color_gradientn(colours = rainbow(10)) +
   theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
-  ggtitle("SKFLAG in Regression")
+  ggtitle("SKFLGP in Regression")
 ```
 
 <img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
@@ -165,15 +165,15 @@ Y_pred_lkflag = res_pred_lkflag$Y_pred
 
 ``` r
 rmse_lkflag.spiral = sqrt(sum((Y.test-Y_pred_lkflag$test)^2)/(n-m))
-cat("The RMSE of LKFLAG is",rmse_lkflag.spiral,".\n")
-#> The RMSE of LKFLAG is 0.4582096 .
+cat("The RMSE of LKFLGP is",rmse_lkflag.spiral,".\n")
+#> The RMSE of LKFLGP is 0.4582096 .
 ```
 
 ``` r
 ggplot() + geom_point(aes(X.test[,1],X.test[,2],color=Y_pred_lkflag$test)) +
   scale_color_gradientn(colours = rainbow(10)) +
   theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
-  ggtitle("LKFLAG in Regression")
+  ggtitle("LKFLGP in Regression")
 ```
 
 <img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
