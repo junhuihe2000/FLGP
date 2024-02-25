@@ -1331,7 +1331,7 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
     int r = std::max((int)std::round(threshold*n),3); // r will be greater than 3.
     Rcpp::List res_knn = KNN_cpp(X_all, X_all, r, "Euclidean", true);
     distances_sp = res_knn["distances_sp"];
-    distances_mean = distances_sp.coeffs().sum()/(n*r) * r;
+    distances_mean = distances_sp.coeffs().sum()/(n*r);
   } else {
     distances = ((-2.0*X_all*X_all.transpose()).colwise() + X_all.rowwise().squaredNorm()).rowwise() + X_all.rowwise().squaredNorm().transpose();
     distances_mean = distances.array().mean();
@@ -1485,7 +1485,7 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
     int r = std::max((int)std::round(threshold*n),3); // r will be greater than 3.
     Rcpp::List res_knn = KNN_cpp(X_all, X_all, r, "Euclidean", true);
     distances_sp = res_knn["distances_sp"];
-    distances_mean = distances_sp.coeffs().sum()/(n*r) * r;
+    distances_mean = distances_sp.coeffs().sum()/(n*r);
   } else {
     distances = ((-2.0*X_all*X_all.transpose()).colwise() + X_all.rowwise().squaredNorm()).rowwise() + X_all.rowwise().squaredNorm().transpose();
     distances_mean = distances.array().mean();

@@ -2,55 +2,55 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 fit_rbf_regression_gp_cpp <- function(X_train, Y_train, X_test, s, sigma, approach, noise, sample, output_cov, nstart) {
-    .Call(`_FLAG_fit_rbf_regression_gp_cpp`, X_train, Y_train, X_test, s, sigma, approach, noise, sample, output_cov, nstart)
+    .Call(`_FLGP_fit_rbf_regression_gp_cpp`, X_train, Y_train, X_test, s, sigma, approach, noise, sample, output_cov, nstart)
 }
 
 fit_lae_regression_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, sigma, approach, noise, models, output_cov, nstart) {
-    .Call(`_FLAG_fit_lae_regression_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, approach, noise, models, output_cov, nstart)
+    .Call(`_FLGP_fit_lae_regression_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, approach, noise, models, output_cov, nstart)
 }
 
 fit_se_regression_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, noise, models, output_cov, nstart) {
-    .Call(`_FLAG_fit_se_regression_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, noise, models, output_cov, nstart)
+    .Call(`_FLGP_fit_se_regression_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, noise, models, output_cov, nstart)
 }
 
 fit_nystrom_regression_gp_cpp <- function(X_train, Y_train, X_test, s, K, sigma, a2s, approach, noise, models, output_cov, nstart) {
-    .Call(`_FLAG_fit_nystrom_regression_gp_cpp`, X_train, Y_train, X_test, s, K, sigma, a2s, approach, noise, models, output_cov, nstart)
+    .Call(`_FLGP_fit_nystrom_regression_gp_cpp`, X_train, Y_train, X_test, s, K, sigma, a2s, approach, noise, models, output_cov, nstart)
 }
 
 fit_gl_regression_gp_cpp <- function(X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, noise, models, output_cov) {
-    .Call(`_FLAG_fit_gl_regression_gp_cpp`, X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, noise, models, output_cov)
+    .Call(`_FLGP_fit_gl_regression_gp_cpp`, X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, noise, models, output_cov)
 }
 
 fit_lae_logit_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, N_train, sigma, approach, models, output_cov, nstart) {
-    .Call(`_FLAG_fit_lae_logit_gp_cpp`, X_train, Y_train, X_test, s, r, K, N_train, sigma, approach, models, output_cov, nstart)
+    .Call(`_FLGP_fit_lae_logit_gp_cpp`, X_train, Y_train, X_test, s, r, K, N_train, sigma, approach, models, output_cov, nstart)
 }
 
 fit_lae_logit_mult_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, sigma, approach, models, nstart) {
-    .Call(`_FLAG_fit_lae_logit_mult_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, approach, models, nstart)
+    .Call(`_FLGP_fit_lae_logit_mult_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, approach, models, nstart)
 }
 
 fit_se_logit_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, N_train, sigma, a2s, approach, models, output_cov, nstart) {
-    .Call(`_FLAG_fit_se_logit_gp_cpp`, X_train, Y_train, X_test, s, r, K, N_train, sigma, a2s, approach, models, output_cov, nstart)
+    .Call(`_FLGP_fit_se_logit_gp_cpp`, X_train, Y_train, X_test, s, r, K, N_train, sigma, a2s, approach, models, output_cov, nstart)
 }
 
 fit_se_logit_mult_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, models, nstart) {
-    .Call(`_FLAG_fit_se_logit_mult_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, models, nstart)
+    .Call(`_FLGP_fit_se_logit_mult_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, models, nstart)
 }
 
 fit_nystrom_logit_gp_cpp <- function(X_train, Y_train, X_test, s, K, N_train, sigma, a2s, approach, models, output_cov, nstart) {
-    .Call(`_FLAG_fit_nystrom_logit_gp_cpp`, X_train, Y_train, X_test, s, K, N_train, sigma, a2s, approach, models, output_cov, nstart)
+    .Call(`_FLGP_fit_nystrom_logit_gp_cpp`, X_train, Y_train, X_test, s, K, N_train, sigma, a2s, approach, models, output_cov, nstart)
 }
 
 fit_nystrom_logit_mult_gp_cpp <- function(X_train, Y_train, X_test, s, K, sigma, a2s, approach, models, nstart) {
-    .Call(`_FLAG_fit_nystrom_logit_mult_gp_cpp`, X_train, Y_train, X_test, s, K, sigma, a2s, approach, models, nstart)
+    .Call(`_FLGP_fit_nystrom_logit_mult_gp_cpp`, X_train, Y_train, X_test, s, K, sigma, a2s, approach, models, nstart)
 }
 
 fit_gl_logit_gp_cpp <- function(X_train, Y_train, X_test, K, N_train, sigma, a2s, threshold, sparse, approach, models, output_cov) {
-    .Call(`_FLAG_fit_gl_logit_gp_cpp`, X_train, Y_train, X_test, K, N_train, sigma, a2s, threshold, sparse, approach, models, output_cov)
+    .Call(`_FLGP_fit_gl_logit_gp_cpp`, X_train, Y_train, X_test, K, N_train, sigma, a2s, threshold, sparse, approach, models, output_cov)
 }
 
 fit_gl_logit_mult_gp_cpp <- function(X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, models) {
-    .Call(`_FLAG_fit_gl_logit_mult_gp_cpp`, X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, models)
+    .Call(`_FLGP_fit_gl_logit_mult_gp_cpp`, X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, models)
 }
 
 #' Predict labels on new samples with Polya-Gamma
@@ -73,7 +73,7 @@ fit_gl_logit_mult_gp_cpp <- function(X_train, Y_train, X_test, K, sigma, a2s, th
 #' Cnv <- matrix(rnorm(5*3),5,3)
 #' test_pgbinary_cpp(C, Y, Cnv)
 test_pgbinary_cpp <- function(C, Y, Cnv, N_sample = 100L, output_pi = FALSE) {
-    .Call(`_FLAG_test_pgbinary_cpp`, C, Y, Cnv, N_sample, output_pi)
+    .Call(`_FLGP_test_pgbinary_cpp`, C, Y, Cnv, N_sample, output_pi)
 }
 
 #' Predict labels on new samples in the regression
@@ -94,7 +94,7 @@ test_pgbinary_cpp <- function(C, Y, Cnv, N_sample = 100L, output_pi = FALSE) {
 #' Cnv <- matrix(rnorm(5*3),5,3)
 #' test_regression_cpp(C, Y, Cnv)
 test_regression_cpp <- function(C, Y, Cnv) {
-    .Call(`_FLAG_test_regression_cpp`, C, Y, Cnv)
+    .Call(`_FLGP_test_regression_cpp`, C, Y, Cnv)
 }
 
 #' Compute cross similarity matrix Z between X and U
@@ -121,7 +121,7 @@ test_regression_cpp <- function(C, Y, Cnv) {
 #' r <- 2
 #' cross_similarity_lae_cpp(X, U, r)
 cross_similarity_lae_cpp <- function(X, U, r = 3L, gl = "rw") {
-    .Call(`_FLAG_cross_similarity_lae_cpp`, X, U, r, gl)
+    .Call(`_FLGP_cross_similarity_lae_cpp`, X, U, r, gl)
 }
 
 #' Subsample in the domain
@@ -141,7 +141,7 @@ cross_similarity_lae_cpp <- function(X, U, r = 3L, gl = "rw") {
 #' s <- 3
 #' U = subsample_cpp(X, s, method = "kmeans")
 subsample_cpp <- function(X, s, method = "kmeans", nstart = 1L) {
-    .Call(`_FLAG_subsample_cpp`, X, s, method, nstart)
+    .Call(`_FLGP_subsample_cpp`, X, s, method, nstart)
 }
 
 #' k-nearest neighbor reference points
@@ -168,7 +168,7 @@ subsample_cpp <- function(X, s, method = "kmeans", nstart = 1L) {
 #' distance <- "Euclidean"
 #' KNN_cpp(X, U, r, distance)
 KNN_cpp <- function(X, U, r = 3L, distance = "Euclidean", output = FALSE, batch = 100L) {
-    .Call(`_FLAG_KNN_cpp`, X, U, r, distance, output, batch)
+    .Call(`_FLGP_KNN_cpp`, X, U, r, distance, output, batch)
 }
 
 #' Local anchor embedding
@@ -193,7 +193,7 @@ KNN_cpp <- function(X, U, r = 3L, distance = "Euclidean", output = FALSE, batch 
 #' U <- matrix(rnorm(5*3),5,3)
 #' LAE_cpp(X, U, r)
 LAE_cpp <- function(X, U, r = 3L) {
-    .Call(`_FLAG_LAE_cpp`, X, U, r)
+    .Call(`_FLGP_LAE_cpp`, X, U, r)
 }
 
 #' Local anchor embedding of one single point by
@@ -211,7 +211,7 @@ LAE_cpp <- function(X, U, r = 3L) {
 #' U <- matrix(rnorm(3*3),3,3)
 #' local_anchor_embedding_cpp(x,U)
 local_anchor_embedding_cpp <- function(x, U) {
-    .Call(`_FLAG_local_anchor_embedding_cpp`, x, U)
+    .Call(`_FLGP_local_anchor_embedding_cpp`, x, U)
 }
 
 #' Simplex projection into convex combination coefficients
@@ -226,7 +226,7 @@ local_anchor_embedding_cpp <- function(x, U) {
 #' v <- rnorm(3)
 #' v_to_z_cpp(v)
 v_to_z_cpp <- function(v) {
-    .Call(`_FLAG_v_to_z_cpp`, v)
+    .Call(`_FLGP_v_to_z_cpp`, v)
 }
 
 #' Mode-finding for binary Laplace GPC with logit link function
@@ -247,6 +247,6 @@ v_to_z_cpp <- function(v) {
 #' N <- rep(1,3)
 #' marginal_log_likelihood_logit_la_cpp(C, Y, N)
 marginal_log_likelihood_logit_la_cpp <- function(C, Y, N, tol = 1e-5, max_iter = 100L) {
-    .Call(`_FLAG_marginal_log_likelihood_logit_la_cpp`, C, Y, N, tol, max_iter)
+    .Call(`_FLGP_marginal_log_likelihood_logit_la_cpp`, C, Y, N, tol, max_iter)
 }
 

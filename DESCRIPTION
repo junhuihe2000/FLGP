@@ -1,16 +1,15 @@
-Package: FLAG
+Package: FLGP
 Type: Package
-Title: Fast Laplacian adaptive Gaussian process with subsampling
+Title: Fast graph Laplacian estimation for heat kernel Gaussian processes
 Version: 0.0.0.9000
 Authors@R: 
     person("Junhui", "He", , "hejh22@mails.tsinghua.edu.cn", role = c("aut", "cre"))
-Description: The underlying package "FLAG" provides algorithms to make inference
-    in large scale data by heat kernel Gaussian process. The fast computation
-    benefits from subsampling, constructing graph Laplacian through transition decomposition
-    and truncated SVD. Then the prior covariance matrix is approximated by 
-    spectral properties of heat kernel. The package also includes 
-    Gaussian process logistic binary or multinomial regression with Poyla-Gamma samplers and 
-    Gaussian regression.
+Description: The underlying package FLGP provides algorithms to make fast inference
+    in the large scale data by heat kernel GPs, which utilize the intrinsic manifold 
+    geometry. The fast computation benefits from subsampling, constructing 
+    a reduced-rank approximation of the similarity matrix and truncated SVD.
+    More details refer to the original paper. The package consists of 
+    Gaussian process classification and Gaussian process regression algorithms.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

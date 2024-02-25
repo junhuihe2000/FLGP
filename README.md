@@ -1,34 +1,33 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# FLAG
+# FLGP
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of FLAG is to provides algorithms to make inference in the
-large scale data by the approximate heat kernel Gaussian process. The
-fast computation speed benefits from subsampling, constructing graph
-Laplacian through the transition decomposition and the truncated SVD.
-Then the prior geometric covariance matrix is calculated by the spectral
-properties of heat kernels. The package also includes Gaussian process
-regression(GPR), Gaussian process logistic regression and multinomial
-logistic regression with Polya-Gamma samplers(GPC).
+The objective of FLGP is to provide algorithms to make fast inference in
+the large scale data by heat kernel GPs, which utilize the intrinsic
+manifold geometry. The fast computation benefits from subsampling,
+constructing a reduced-rank approximation of the similarity matrix and
+truncated SVD. More details refer to the original paper. The package
+consists of Gaussian process classification (GPC) and Gaussian process
+regression (GPR) algorithms.
 
 ## Installation
 
-You can install the development version of FLAG from
+You can install the development version of FLGP from
 [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("junhuihe2000/FLAG")
+devtools::install_github("junhuihe2000/FLGP")
 ```
 
 ## Example
 
-These are some basic examples which show you how to solve a common
-problem:
+These are some basic examples which show you how to solve classification
+and regression problems with FLGP:
 
 ### Gaussian process classification(GPC)
 
@@ -89,7 +88,7 @@ res_skflag.torus = fit_se_logit_gp_rcpp(train.data, train.label, test.data, s, r
 y_skflag.torus = res_skflag.torus$Y_pred
 t2 = Sys.time()
 print(t2-t1)
-#> Time difference of 20.16691 secs
+#> Time difference of 2.672746 secs
 err_skflag.torus = sum((test.label!=y_skflag.torus$test)^2)/(n-m)
 cat("The error rate of SKFLAG is",err_skflag.torus,".\n")
 #> The error rate of SKFLAG is 0 .
@@ -104,7 +103,7 @@ res_lkflag.torus = fit_lae_logit_gp_rcpp(train.data, train.label, test.data, s, 
 y_lkflag.torus = res_lkflag.torus$Y_pred
 t4 = Sys.time()
 print(t4-t3)
-#> Time difference of 3.789705 secs
+#> Time difference of 0.2339399 secs
 err_lkflag.torus = sum((test.label-y_lkflag.torus$test)^2)/(n-m)
 cat("The error rate of LKFLAG is",err_lkflag.torus,".\n")
 #> The error rate of LKFLAG is 0.02702128 .
