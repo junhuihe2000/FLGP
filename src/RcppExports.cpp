@@ -318,6 +318,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// heat_kernel_covariance_cpp
+Eigen::MatrixXd heat_kernel_covariance_cpp(const Eigen::MatrixXd& X, const Eigen::MatrixXd& X_new, int s, int r, double t, int K, Rcpp::List models, int nstart);
+RcppExport SEXP _FLGP_heat_kernel_covariance_cpp(SEXP XSEXP, SEXP X_newSEXP, SEXP sSEXP, SEXP rSEXP, SEXP tSEXP, SEXP KSEXP, SEXP modelsSEXP, SEXP nstartSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X_new(X_newSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< int >::type r(rSEXP);
+    Rcpp::traits::input_parameter< double >::type t(tSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
+    Rcpp::traits::input_parameter< int >::type nstart(nstartSEXP);
+    rcpp_result_gen = Rcpp::wrap(heat_kernel_covariance_cpp(X, X_new, s, r, t, K, models, nstart));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cross_similarity_lae_cpp
 Eigen::SparseMatrix<double,Eigen::RowMajor> cross_similarity_lae_cpp(const Eigen::MatrixXd& X, const Eigen::MatrixXd& U, int r, Rcpp::String gl);
 RcppExport SEXP _FLGP_cross_similarity_lae_cpp(SEXP XSEXP, SEXP USEXP, SEXP rSEXP, SEXP glSEXP) {
@@ -430,6 +448,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLGP_fit_gl_logit_mult_gp_cpp", (DL_FUNC) &_FLGP_fit_gl_logit_mult_gp_cpp, 10},
     {"_FLGP_test_pgbinary_cpp", (DL_FUNC) &_FLGP_test_pgbinary_cpp, 5},
     {"_FLGP_test_regression_cpp", (DL_FUNC) &_FLGP_test_regression_cpp, 3},
+    {"_FLGP_heat_kernel_covariance_cpp", (DL_FUNC) &_FLGP_heat_kernel_covariance_cpp, 8},
     {"_FLGP_cross_similarity_lae_cpp", (DL_FUNC) &_FLGP_cross_similarity_lae_cpp, 4},
     {"_FLGP_subsample_cpp", (DL_FUNC) &_FLGP_subsample_cpp, 4},
     {"_FLGP_KNN_cpp", (DL_FUNC) &_FLGP_KNN_cpp, 6},

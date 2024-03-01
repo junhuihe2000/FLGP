@@ -20,6 +20,24 @@ using namespace Eigen;
 /*-----------------------------------------------------------------*/
 
 
+Eigen::MatrixXd heat_kernel_covariance_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
+                                           int s, int r, double t, int K,
+                                           Rcpp::List models, int nstart) {
+  if (K<0) {
+    K = s;
+  }
+  EigenPair eigenpair = heat_kernel_spectrum_cpp(X, X_new, s, r, K, models, nstart);
+
+  int m = X.rows(); int m_new = X_new.rows();
+  int n = m + m_new;
+  Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(n, 0, n-1);
+  Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
+  Eigen::MatrixXd H = HK_from_spectrum_cpp(eigenpair, K, t, idx0, idx1);
+
+  return H;
+}
+
+
 
 
 EigenPair heat_kernel_spectrum_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,

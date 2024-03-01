@@ -16,8 +16,14 @@
 struct EigenPair;
 
 
+
+// [[Rcpp::export(heat_kernel_covariance_cpp)]]
+Eigen::MatrixXd heat_kernel_covariance_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
+                                           int s, int r, double t, int K,
+                                           Rcpp::List models, int nstart);
+
 /*
-//' Compute spectrum of graph Laplacian by FLAG
+//' Compute spectrum of graph Laplacian by FLGP
 //'
 //' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
 //' @param X_new Testing sample, a (n-m, d) matrix, each row indicates one point in R^d.

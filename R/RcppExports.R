@@ -97,6 +97,10 @@ test_regression_cpp <- function(C, Y, Cnv) {
     .Call(`_FLGP_test_regression_cpp`, C, Y, Cnv)
 }
 
+heat_kernel_covariance_cpp <- function(X, X_new, s, r, t, K, models, nstart) {
+    .Call(`_FLGP_heat_kernel_covariance_cpp`, X, X_new, s, r, t, K, models, nstart)
+}
+
 #' Compute cross similarity matrix Z between X and U
 #'
 #' @param X A numeric matrix with dim (n,d), original sample,

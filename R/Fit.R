@@ -882,3 +882,45 @@ fit_gl_logit_gp_rcpp <- function(X, Y, X_new, K, N=NULL, sigma=1e-3, a2s=NULL,
 
   return(res)
 }
+
+
+
+#' Construct a heat kernel covariance matrix by FLGP
+#'
+#' @param X Training sample, a (m, d) matrix, each row indicates one point in R^d.
+#' @param X_new Testing sample, a (n-m, d) matrix, each row indicates one point in R^d.
+#' @param s An integer indicating the number of the subsampling.
+#' @param r An integer, the number of the nearest neighbor points.
+#' @param t A non-negative number, the heat diffusion time.
+#' @param K An integer, the number of used eigenpairs to construct heat kernel,
+#' the defaulting value is `-1`, that is, `K=s`.
+#' @param models A list, including
+#' * `subsample` the method of subsampling, the defaulting value is `kmeans`.
+#' * `kernel` the type of kernel to compute cross similarity matrix W, the
+#' defaulting value is `lae`.
+#' * `gl` the kind of graph Laplacian L, the defaulting value is `rw`.
+#' * `root` whether to square root eigenvalues of the two steps similarity matrix W,
+#' the defaulting value is `FALSE`.
+#' @param nstart An integer, the number of random sets chosen in kmeans,
+#' the defaulting value is `1`.
+#'
+#' @return A numeric matrix with dim (n,m), the heat kernel covariance matrix estimated
+#' by FLGP.
+#'
+#' @export
+#'
+#' @examples
+#' X <- matrix(rnorm(2*2), 2, 2)
+#' X_new <- matrix(rnorm(3*2),3,2)
+#' s <- 2; r <- 2; t <- 1
+#' heat_kernel_covariance_rcpp(X, X_new, s, r, t)
+heat_kernel_covariance_rcpp <- function(X, X_new, s, r, t, K=-1,
+                            models=list(subsample="kmeans",
+                                        kernel="lae",
+                                        gl="cluster-normalized",
+                                        root=TRUE),
+                            nstart=1) {
+  H = heat_kernel_covariance_cpp(X,X_new,s,r,t,K,models,nstart)
+
+  return(H)
+}
