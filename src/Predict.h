@@ -6,10 +6,6 @@
 #include <RcppEigen.h>
 #include "train.h"
 
-/*
-using namespace Rcpp;
-using namespace Eigen;
-*/
 
 /*-----------------------------------------------------------------*/
 
@@ -24,7 +20,7 @@ using namespace Eigen;
 //' @param N_sample An integer, the length of the Gibbs sampler chain.
 //' @param output_pi Bool, whether or not to output pi_new, defaulting value is `FALSE`.
 //'
-//' @return `list(Y_pred)` if `output_pi=FALSE`, otherwise `list(Y_pred,pi_pred)`.
+//' @returns `list(Y_pred)` if `output_pi=FALSE`, otherwise `list(Y_pred,pi_pred)`.
 //' @export
 //'
 //' @examples
@@ -49,7 +45,7 @@ Rcpp::List test_pgbinary_cpp(const Eigen::MatrixXd & C,
 //' @param Cnv A numeric matrix with dim(m_new,m), cross covariance matrix
 //' between new sample and training sample.
 //'
-//' @return `Y_pred`, A numeric vector with length(m_new), the prediction labels.
+//' @returns `Y_pred`, A numeric vector with length(m_new), the prediction labels.
 //' @export
 //'
 //' @examples

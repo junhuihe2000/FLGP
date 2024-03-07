@@ -4,11 +4,6 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 
-/*
-using namespace Rcpp;
-using namespace Eigen;
-*/
-
 
 
 

@@ -29,9 +29,3 @@ the stochastic transition matrix from X to U.
 \description{
 Compute cross similarity matrix Z between X and U
 }
-\examples{
-X <- matrix(rnorm(5*2), 5, 2)
-U <- subsample(X, 2, "random")
-r <- 2
-cross_similarity_lae_cpp(X, U, r)
-}

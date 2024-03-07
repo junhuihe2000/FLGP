@@ -37,6 +37,8 @@ the defaulting value is \code{NULL}, that is, \code{K=min(n,s)}.}
 \item{sigma}{A non-negative number, the weight coefficient of ridge penalty on H,
 the defaulting value is 1e-3.}
 
+\item{a2s}{A numeric vector, the searching range for bandwidth.}
+
 \item{approach}{A character vector, taking value in c("posterior", "marginal"),
 decides which objective function to be optimized, defaulting value is \code{posterior}.}
 

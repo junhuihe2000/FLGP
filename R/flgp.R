@@ -4,11 +4,7 @@
 #' @import RcppEigen
 #' @importFrom stats kmeans
 #' @import nloptr
-#' @import RSpectra
 #' @importFrom RSpectra eigs_sym
 #' @importFrom irlba irlba
 #' @importFrom RcppParallel RcppParallelLibs
-#' @import BH
-#' @import bigmemory
-#' @importFrom biganalytics bigkmeans
 NULL

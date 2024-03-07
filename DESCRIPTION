@@ -18,10 +18,6 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports: 
-    BayesLogit,
-    Matrix,
-    methods,
-    parallel,
     pgdraw,
     Rcpp,
     RcppEigen,
@@ -29,17 +25,10 @@ Imports:
     stats,
     nloptr,
     irlba,
-    RcppParallel,
-    BH,
-    bigmemory,
-    biganalytics
+    RcppParallel
 LinkingTo: 
     Rcpp,
     RcppEigen,
-    ClusterR,
     nloptr,
-    RSpectra,
-    RcppParallel,
-    BH,
-    bigmemory
-SystemRequirements: GNU make, C++11
+    RcppParallel
+SystemRequirements: GNU make

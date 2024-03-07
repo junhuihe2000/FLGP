@@ -1,11 +1,6 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
-/*
-// [[Rcpp::depends(RcppParallel)]]
-#include <RcppParallel.h>
-*/
 
-#include <iostream>
 
 #include "train.h"
 #include "Predict.h"
@@ -19,80 +14,6 @@
 // Gaussian Process regression
 //-----------------------------------------------------------//
 
-Rcpp::List fit_rbf_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
-                                     int s,
-                                     double sigma, std::string approach, std::string noise,
-                                     std::string sample,
-                                     bool output_cov,
-                                     int nstart) {
-  std::cout << "Gaussian regression with RBF kernel:" << std::endl;
-
-  // map the matrices from R to Eigen
-  const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
-  // Map<MatrixXd> fails for Y
-  const Eigen::MatrixXd Y(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(Y_train));
-  const Eigen::Map<Eigen::MatrixXd> X_new(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_test));
-
-  int m = X.rows(); int m_new = X_new.rows();
-  int n = m + m_new; int d = X.cols();
-
-  const Eigen::MatrixXd U = subsample_cpp(X, s, sample, nstart).leftCols(d);
-  const Eigen::MatrixXd dist_UU  = ((-2*U*U.transpose()).colwise() + U.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
-  const Eigen::MatrixXd dist_XU = ((-2*X*U.transpose()).colwise() + X.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
-
-  // train model
-  std::cout << "Training..." << std::endl;
-  // empirical Bayes to optimize t
-  ReturnValueReg res;
-  if(approach=="posterior") {
-    PostDataRBF postdatareg(dist_UU, dist_XU, Y, s, sigma);
-    res = train_rbf_regression_gp_cpp(&postdatareg, approach, noise);
-  } else if(approach=="marginal") {
-    MargDataRBF margdatareg(dist_UU, dist_XU, Y, s, sigma);
-    res = train_rbf_regression_gp_cpp(&margdatareg, approach, noise);
-  } else {
-    Rcpp::stop("This model selection approach is not supported!");
-  }
-
-
-  std::cout << "By " << approach << " method, optimal epsilon = " << res.x[0] \
-            << ", the objective function is " << res.obj << std::endl;
-
-  // test model
-  std::cout << "Testing..." << std::endl;
-  // construct covariance matrix
-  // predict labels on the training set
-  Eigen::MatrixXd train_pred = predict_rbf_regression_cpp(Y, dist_UU, dist_XU, dist_XU, s, res.x, sigma, noise);
-  // predict labels on the testing set
-  Eigen::MatrixXd dist_XnewU = ((-2*X_new*U.transpose()).colwise() + X_new.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
-  Eigen::MatrixXd test_pred = predict_rbf_regression_cpp(Y, dist_UU, dist_XU, dist_XnewU, s, res.x, sigma, noise);
-
-  Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
-                                         Rcpp::Named("test")=test_pred);
-
-  std::cout << "Over" << std::endl;
-
-  if(output_cov) {
-    Eigen::MatrixXd C_ss = Eigen::exp(-dist_UU.array()/(2*res.x[0]));
-    Eigen::MatrixXd C_ms = Eigen::exp(-dist_XU.array()/(2*res.x[0]));
-    Eigen::MatrixXd C_ns = Eigen::exp(-dist_XnewU.array()/(2*res.x[0]));
-
-    Eigen::LLT<Eigen::MatrixXd> chol_C(C_ss);
-
-    Eigen::MatrixXd K(n,s);
-    K.topRows(m) = C_ms;
-    K.bottomRows(m_new) = C_ns;
-
-    Eigen::MatrixXd C = K*chol_C.solve(C_ms.transpose());
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
-                              Rcpp::Named("pars")=res.x);
-  } else {
-    return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
-                              Rcpp::Named("pars")=res.x);
-  }
-
-}
-
 
 
 
@@ -102,7 +23,7 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
                                 Rcpp::List models,
                                 bool output_cov,
                                 int nstart) {
-  std::cout << "Gaussian regression with local anchor embedding:" << std::endl;
+  Rcpp::Rcout << "Gaussian regression with local anchor embedding:\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -123,7 +44,7 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m, 0, m-1);
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training...\n";
   // empirical Bayes to optimize t
   ReturnValueReg res;
   if(approach=="posterior") {
@@ -137,11 +58,11 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   }
 
 
-  std::cout << "By " << approach << " method, optimal t = " << res.x[0] \
-            << ", the objective function is " << res.obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, optimal t = " << res.x[0] \
+            << ", the objective function is " << res.obj << "\n";
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing...\n";
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
@@ -166,7 +87,7 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over\n";
 
   if(output_cov) {
     Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, res.x[0], idx0, idx0);
@@ -191,7 +112,7 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                Rcpp::List models,
                                bool output_cov,
                                int nstart) {
-  std::cout << "Gaussian regression with square exponential kernel:" << std::endl;
+  Rcpp::Rcout << "Gaussian regression with square exponential kernel:\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -224,7 +145,7 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training...\n";
   // grid search
   double best_a2 = 0;
   std::vector<double> best_pars;
@@ -265,11 +186,11 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 
   EigenPair & eigenpair = best_eigenpair;
 
-  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_pars[0] \
-            << ", sigma = " << sqrt(best_pars[1]) << ", the objective function is " << max_obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_pars[0] \
+            << ", sigma = " << sqrt(best_pars[1]) << ", the objective function is " << max_obj << "\n";
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing...\n";
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
@@ -293,7 +214,7 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over\n";
 
   if(output_cov) {
     Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
@@ -316,7 +237,7 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
                                     Rcpp::List models,
                                     bool output_cov,
                                     int nstart) {
-  std::cout << "Gaussian regression with Nystrom extension:" << std::endl;
+  Rcpp::Rcout << "Gaussian regression with Nystrom extension:\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -344,7 +265,7 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m,0,m-1);
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training...\n";
   // grid search
   double best_a2 = 0;
   std::vector<double> best_pars;
@@ -403,11 +324,11 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
 
   }
 
-  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_pars[0] \
-            << ", sigma = " << sqrt(best_pars[1]) << ", the objective function is " << max_obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_pars[0] \
+            << ", sigma = " << sqrt(best_pars[1]) << ", the objective function is " << max_obj << "\n";
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing...\n";
   // Nystrom extension
   Eigen::MatrixXd Z_allU = Eigen::exp(-distances_allU.array()/(best_a2*distances_mean));
   Eigen::MatrixXd A_allU = (1.0/Z_allU.rowwise().sum().array()).matrix().asDiagonal()*Z_allU*(1.0/(best_Z_UU.colwise().sum().array())).matrix().asDiagonal();
@@ -437,7 +358,7 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over\n";
 
   if(output_cov) {
     Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
@@ -462,7 +383,7 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                std::string approach, std::string noise,
                                Rcpp::List models,
                                bool output_cov) {
-  std::cout << "Gaussian regression with graph Laplacian Gaussian process:" << std::endl;
+  Rcpp::Rcout << "Gaussian regression with graph Laplacian Gaussian process:\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -499,7 +420,7 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m,0,m-1);
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training..." << "\n";
   // grid search
   double best_a2 = 0;
   std::vector<double> best_pars;
@@ -565,11 +486,11 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 
   EigenPair & eigenpair = best_eigenpair;
 
-  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_pars[0] \
-            << ", sigma = " << sqrt(best_pars[1]) << ", the objective function is " << max_obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_pars[0] \
+            << ", sigma = " << sqrt(best_pars[1]) << ", the objective function is " << max_obj << "\n";
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing..." << "\n";
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
@@ -594,7 +515,7 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over" << "\n";
 
   if(output_cov) {
     Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
@@ -625,7 +546,7 @@ Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector
                                 Rcpp::List models,
                                 bool output_cov,
                                 int nstart) {
-  std::cout << "Binary classification with local anchor embedding:" << std::endl;
+  Rcpp::Rcout << "Binary classification with local anchor embedding:" << "\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -646,7 +567,7 @@ Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector
   Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m, 0, m-1);
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training..." << "\n";
   // empirical Bayes to optimize t
   ReturnValue res;
   if(approach=="posterior") {
@@ -660,11 +581,11 @@ Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector
   }
 
 
-  std::cout << "By " << approach << " method, optimal t = " << res.t \
-              << ", the objective function is " << res.obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, optimal t = " << res.t \
+              << ", the objective function is " << res.obj << "\n";
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing..." << "\n";
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
@@ -682,7 +603,7 @@ Rcpp::List fit_lae_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector
   Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over" << "\n";
 
   if(output_cov) {
     return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
@@ -701,7 +622,7 @@ Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
                                 double sigma, std::string approach,
                                 Rcpp::List models,
                                 int nstart) {
-  std::cout <<"Multinomial classification with local anchor embedding:" << std::endl;
+  Rcpp::Rcout <<"Multinomial classification with local anchor embedding:" << "\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -723,7 +644,7 @@ Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m, 0, m-1);
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training..." << "\n";
   // empirical Bayes to optimize t
   std::list<BinaryModel> multi_models = train_logit_mult_gp_cpp(eigenpair, Y, K, min, max, sigma, approach);
 
@@ -732,10 +653,10 @@ Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   for(auto it=multi_models.begin();it!=multi_models.end();it++) {
     obj += (it->res).obj;
   }
-  std::cout << "By " << approach << " method, the optimal objective function is " << obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, the optimal objective function is " << obj << "\n";
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing..." << "\n";
 
   // predict labels on new samples
   // Eigen::VectorXd Y_pred = test_logit_mult_gp_cpp(multi_models, eigenpair, m, m_new, K, min, max, sigma);
@@ -747,7 +668,7 @@ Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over" << "\n";
 
   return Y_pred;
 }
@@ -823,7 +744,7 @@ Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
                                Rcpp::List models,
                                bool output_cov,
                                int nstart) {
-  std::cout << "Binary classification with square exponential kernel:" << std::endl;
+  Rcpp::Rcout << "Binary classification with square exponential kernel:" << "\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -863,7 +784,7 @@ Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
   */
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training..." << "\n";
   // grid search
   double best_t = 0, best_a2 = 0;
   double max_obj = -std::numeric_limits<double>::infinity();
@@ -903,11 +824,11 @@ Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
 
   EigenPair & eigenpair = best_eigenpair;
 
-  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_t \
-            << ", the objective function is " << max_obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_t \
+            << ", the objective function is " << max_obj << "\n";
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing..." << "\n";
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
@@ -929,7 +850,7 @@ Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over" << "\n";
 
   if(output_cov) {
     return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
@@ -947,7 +868,7 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                double sigma, std::vector<double> a2s, std::string approach,
                                Rcpp::List models,
                                int nstart) {
-  std::cout << "Multinomial classification with square exponential kernel:" << std::endl;
+  Rcpp::Rcout << "Multinomial classification with square exponential kernel:" << "\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -981,7 +902,7 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   int l = a2s.size();
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training..." << "\n";
   // grid search
   double best_a2 = 0;
   std::list<BinaryModel> best_multi_models;
@@ -1019,11 +940,11 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   EigenPair & eigenpair = best_eigenpair;
   std::list<BinaryModel> & multi_models = best_multi_models;
 
-  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2)  \
-            << ", the objective function is " << max_obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2)  \
+            << ", the objective function is " << max_obj << "\n";
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing..." << "\n";
 
   // predict labels on all samples
   Eigen::VectorXi idx_pred = Eigen::VectorXi::LinSpaced(n, 0, n-1);
@@ -1032,7 +953,7 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over" << "\n";
 
   return Y_pred;
 }
@@ -1046,7 +967,7 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                     Rcpp::List models,
                                     bool output_cov,
                                     int nstart) {
-  std::cout << "Binary classificaiton with Nystrom extension:" << std::endl;
+  Rcpp::Rcout << "Binary classificaiton with Nystrom extension:" << "\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -1074,7 +995,7 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m,0,m-1);
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training..." << "\n";
   // grid search
   double best_t = 0, best_a2 = 0;
   double max_obj = -std::numeric_limits<double>::infinity();
@@ -1132,11 +1053,11 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 
   }
 
-  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_t \
-            << ", the objective function is " << max_obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_t \
+            << ", the objective function is " << max_obj << "\n";
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing..." << "\n";
   // Nystrom extension
   Eigen::MatrixXd Z_allU = Eigen::exp(-distances_allU.array()/(best_a2*distances_mean));
   Eigen::MatrixXd A_allU = (1.0/Z_allU.rowwise().sum().array()).matrix().asDiagonal()*Z_allU*(1.0/(best_Z_UU.colwise().sum().array())).matrix().asDiagonal();
@@ -1160,7 +1081,7 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over" << "\n";
 
   if(output_cov) {
     return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
@@ -1179,7 +1100,7 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
                                     double sigma, std::vector<double> a2s, std::string approach,
                                     Rcpp::List models,
                                     int nstart) {
-  std::cout << "Multinomial classification with Nystrom extension:" << std::endl;
+  Rcpp::Rcout << "Multinomial classification with Nystrom extension:" << "\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -1208,7 +1129,7 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   double distances_mean = distances_UU.array().sum()/(s*s);
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training..." << "\n";
   // grid search
   double best_a2 = 0;
   std::list<BinaryModel> best_multi_models;
@@ -1263,13 +1184,13 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
 
   }
 
-  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) \
-            << ", the objective function is " << max_obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) \
+            << ", the objective function is " << max_obj << "\n";
 
   std::list<BinaryModel> & multi_models = best_multi_models;
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing..." << "\n";
   // Nystrom extension
   Eigen::MatrixXd Z_allU = Eigen::exp(-distances_allU.array()/(best_a2*distances_mean));
   Eigen::MatrixXd A_allU = (1.0/Z_allU.rowwise().sum().array()).matrix().asDiagonal()*Z_allU*(1.0/(best_Z_UU.colwise().sum().array())).matrix().asDiagonal();
@@ -1284,7 +1205,7 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over" << "\n";
 
   return Y_pred;
 }
@@ -1298,7 +1219,7 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
                                 std::string approach,
                                 Rcpp::List models,
                                 bool output_cov) {
-  std::cout << "Binary classification with graph Laplacian Gaussian process:" << std::endl;
+  Rcpp::Rcout << "Binary classification with graph Laplacian Gaussian process:" << "\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -1342,7 +1263,7 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
   Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m,0,m-1);
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training..." << "\n";
   // grid search
   double best_t = 0, best_a2 = 0;
   double max_obj = -std::numeric_limits<double>::infinity();
@@ -1407,11 +1328,11 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
 
   EigenPair & eigenpair = best_eigenpair;
 
-  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_t \
-            << ", the objective function is " << max_obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) << ", t = " << best_t \
+            << ", the objective function is " << max_obj << "\n";
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing..." << "\n";
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
@@ -1429,7 +1350,7 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
   Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over" << "\n";
 
   if(output_cov) {
     return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred, Rcpp::Named("C")=C,
@@ -1450,7 +1371,7 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                double threshold, bool sparse,
                                std::string approach,
                                Rcpp::List models) {
-  std::cout << "Multinomial classification with graph Laplacian Gaussian process:" << std::endl;
+  Rcpp::Rcout << "Multinomial classification with graph Laplacian Gaussian process:" << "\n";
 
   // map the matrices from R to Eigen
   const Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_train));
@@ -1494,7 +1415,7 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m,0,m-1);
 
   // train model
-  std::cout << "Training..." << std::endl;
+  Rcpp::Rcout << "Training..." << "\n";
   // grid search
   double best_a2 = 0;
   std::list<BinaryModel> best_multi_models;
@@ -1557,11 +1478,11 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   EigenPair & eigenpair = best_eigenpair;
   std::list<BinaryModel> & multi_models = best_multi_models;
 
-  std::cout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) \
-            << ", the objective function is " << max_obj << std::endl;
+  Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) \
+            << ", the objective function is " << max_obj << "\n";
 
   // test model
-  std::cout << "Testing..." << std::endl;
+  Rcpp::Rcout << "Testing..." << "\n";
 
   // predict labels on all samples
   Eigen::VectorXi idx_pred = Eigen::VectorXi::LinSpaced(n, 0, n-1);
@@ -1570,7 +1491,7 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
-  std::cout << "Over" << std::endl;
+  Rcpp::Rcout << "Over" << "\n";
 
   return Y_pred;
 

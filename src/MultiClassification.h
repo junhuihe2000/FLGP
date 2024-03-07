@@ -37,33 +37,7 @@ struct BinaryModel{
 std::list<BinaryModel> multi_train_split(const Eigen::VectorXd & Y, int min, int max);
 
 
-/*
-//' Train Gaussian process logistic multinomial regression
-//'
-//' @description Compose J-1 binary logistic regression to implement the multinomial regression.
-//'
-//' @param eigenpair A list includes values and vectors.
-//' @param Y A numeric vector with length(m), each element indicates the label,
-//' taking value in `c(0:(J-1))`.
-//' @param K An integer, the number of used eigenpairs.
-//' @param J An integer, the number of classes.
-//' @param sigma A non-negative number, the weight coefficient of ridge penalty on H,
-//' the defaulting value is 1e-3.
-//' @param N A numeric vector with length(m), total count.
-//' @param approach A character vector, taking value in c("posterior", "marginal"),
-//' decides which objective function to be optimized, defaulting value is `posterior`.
-//' @param t0 A positive double, the initial guess for t, defaulting value `10`.
-//' @param lower the lower bound on t, defaulting value `1e-3`.
-//' @param upper the upper bound on t, defaulting value `Inf`.
-//'
-//' @return A model list with J-1 model, each model includes four components
-//' \describe{
-//' \item{Y}{the re-encoded training samples.}
-//' \item{idx}{the index of Y in original samples.}
-//' \item{t}{the optimal diffusion time.}
-//' \item{obj}{the corresponding optimal objective function value.}
-//' }
-*/
+// Train Gaussian process logistic multinomial regression
 std::list<BinaryModel> train_logit_mult_gp_cpp(const EigenPair & eigenpair,
                                                const Eigen::VectorXd & Y,
                                                int K, int min, int max,

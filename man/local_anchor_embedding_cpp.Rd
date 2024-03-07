@@ -20,8 +20,3 @@ A numeric vector with the length r, convex combination coefficients.
 Local anchor embedding of one single point by
 gradient descent projection with Nesterov's methods
 }
-\examples{
-x <- rnorm(3)
-U <- matrix(rnorm(3*3),3,3)
-local_anchor_embedding_cpp(x,U)
-}

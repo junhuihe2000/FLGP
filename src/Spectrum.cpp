@@ -1,19 +1,11 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
-/*
-// [[Rcpp::depends(RSpectra)]]
-#include <Spectra/SymEigsSolver.h>
-#include <Spectra/MatOp/SparseSymMatProd.h>
-*/
+
 
 #include "Utils.h"
 #include "lae.h"
 #include "Spectrum.h"
 
-/*
-using namespace Rcpp;
-using namespace Eigen;
-*/
 
 /*-----------------------------------------------------------------*/
 /*-----------------------------------------------------------------*/
@@ -115,15 +107,6 @@ EigenPair truncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & 
     vectors = svd.matrixU();
     values = svd.singularValues().array().square();
   } else {
-    /*
-    Rcpp::Environment irlba_pkg = Rcpp::Environment::namespace_env("irlba");
-    Rcpp::Function irlba = irlba_pkg["irlba"];
-    Rcpp::List pairs = irlba(Rcpp::Named("A")=Rcpp::wrap(Eigen::SparseMatrix<double>(Z)),
-                             Rcpp::Named("nv")=K,
-                             Rcpp::Named("work")=2*K);
-    values = Rcpp::as<Eigen::VectorXd>(pairs["d"]).array().square();
-    vectors = Rcpp::as<Eigen::MatrixXd>(pairs["u"]);
-    */
 
     Rcpp::Environment RSpectra = Rcpp::Environment::namespace_env("RSpectra");
     Rcpp::Function svds = RSpectra["svds"];
@@ -133,16 +116,6 @@ EigenPair truncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & 
                             Rcpp::Named("nv")=0);
     values = Rcpp::as<Eigen::Map<Eigen::VectorXd>>(pairs["d"]).array().square();
     vectors = Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(pairs["u"]);
-
-    /*
-    Spectra::SparseSymMatProd<double> op(Z.transpose()*Z);
-    Spectra::SymEigsSolver<double, Spectra::LARGEST_ALGE, Spectra::SparseSymMatProd<double>> eigs_sym(&op, K, 2*K);
-    eigs_sym.init();
-    eigs_sym.compute();
-    values = eigs_sym.eigenvalues();
-    vectors = eigs_sym.eigenvectors();
-    vectors = Z * (vectors * (1.0/(values.array()+1e-5).sqrt()).matrix().asDiagonal());
-    */
   }
 
   return EigenPair(values, vectors);

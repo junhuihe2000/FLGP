@@ -19,6 +19,8 @@ Eigen::VectorXd pi_to_Y(const Eigen::VectorXd & pi);
 //' @param method How to subsample, characters in c("kmeans", "random"),
 //' including kmeans and random selection, the
 //' defaulting subsampling method is kmeans.
+//' @param nstart An integer, the number of random sets chosen in kmeans,
+//' the defaulting value is `1`.
 //'
 //' @return A subsampling, a (s, d) or (s, d+1) matrix, each row indicates one point in R^d,
 //' where the d+1 column indicates the number of points in each cluster if it exists.
@@ -49,18 +51,10 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
 //' @param output Bool, whether to output the distance matrix, defaulting value is `FALSE`.
 //' @param batch Int, the batch size, defaulting value is `100`.
 //'
-//' @return If `output=FALSE`, `list(ind_knn)`, the indexes of KNN, a list with length n, each component of the list is a vector of length r,
+//' @returns If `output=FALSE`, `list(ind_knn)`, the indexes of KNN, a list with length n, each component of the list is a vector of length r,
 //'  indicating the indexes of KNN for the corresponding original point based on the chosen distance.
 //'  Otherwise `output=TRUE`, `list(ind_knn,distances_sp)`, a list with two components, the one is the indexes of KNN,
 //'  the other is the sparse distance matrix with dim(n,s).
-//' @export
-//'
-//' @examples
-//' X <- matrix(rnorm(300), nrow=100, ncol=3)
-//' U <- matrix(rnorm(30), nrow=10, ncol=3)
-//' r <- 3
-//' distance <- "Euclidean"
-//' KNN_cpp(X, U, r, distance)
 // [[Rcpp::export(KNN_cpp)]]
 Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r = 3,
                   std::string distance = "Euclidean", bool output = false, int batch=100);
@@ -103,26 +97,6 @@ mat_indexing(const Eigen::MatrixBase<ArgType>& arg, const RowIndexType& row_indi
   return MatrixType::NullaryExpr(row_indices.size(), col_indices.size(), Func(arg.derived(), row_indices, col_indices));
 }
 
-
-/*
-// rcpp interface for mini_batch_kmeans
-// [[Rcpp::export(mini_batch_kmeans)]]
-Eigen::MatrixXd mini_batch_kmeans(Eigen::MatrixXd& data, int clusters, int batch_size = 20, int max_iters = 100, int num_init = 1,
-
-                             double init_fraction = 1.0, std::string initializer = "kmeans++",
-
-                             int early_stop_iter = 10, bool verbose = false,
-
-                             Rcpp::Nullable<Rcpp::NumericMatrix> CENTROIDS = R_NilValue,
-
-                             double tol = 1e-4, double tol_optimal_init = 0.5, int seed = 1);
-
-
-// rcpp interface for Predict_mini_batch_kmeans
-// [[Rcpp::export(Predict_mini_batch_kmeans)]]
-Eigen::VectorXd Predict_mini_batch_kmeans(Eigen::MatrixXd& data, Eigen::MatrixXd& CENTROIDS,
-                                       bool fuzzy = false, bool updated_output = false);
-*/
 
 
 #endif

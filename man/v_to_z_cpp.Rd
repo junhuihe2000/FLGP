@@ -16,7 +16,3 @@ the same length of v.
 \description{
 Simplex projection into convex combination coefficients
 }
-\examples{
-v <- rnorm(3)
-v_to_z_cpp(v)
-}

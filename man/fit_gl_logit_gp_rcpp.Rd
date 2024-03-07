@@ -69,15 +69,3 @@ the label in the test data point.}
 \description{
 Fit logistic regression with GLGP
 }
-\examples{
-X0 <- matrix(rnorm(3*3), 3, 3)
-X1 <- matrix(rnorm(3*3, 5), 3, 3)
-Y <- c(1,1,1,0,0,0)
-X <- rbind(X0,X1)
-X0_new <- matrix(rnorm(10*3),10,3)
-X1_new <- matrix(rnorm(10*3, 5),10,3)
-X_new <- rbind(X0_new, X1_new)
-Y_new <- c(rep(1,10),rep(0,10))
-K <- 5
-Y_pred <- fit_gl_logit_gp_rcpp(X, Y, X_new, K)
-}

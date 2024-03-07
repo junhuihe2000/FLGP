@@ -40,6 +40,10 @@ the defaulting value is 1e-3.}
 \item{approach}{A character vector, taking value in c("posterior", "marginal"),
 decides which objective function to be optimized, defaulting value is \code{posterior}.}
 
+\item{noise}{A character vector, taking value in c("same", "different"),
+indicates whether the noise variances in different locations are different,
+defaulting value is \code{same}.}
+
 \item{models}{A list with four components
 \describe{
 \item{subsample}{the method of subsampling, the defaulting value is \code{kmeans}.}
@@ -53,8 +57,6 @@ the defaulting value is \code{TRUE}.}
 \item{output_cov}{Bool, whether to output covariance, defaulting value is \code{FALSE}.}
 
 \item{nstart}{Int, the number of random sets chosen in kmeans.}
-
-\item{N}{A numeric vector with length(m), total count.}
 }
 \value{
 \code{res} A list with two components including \code{pars} and \code{Y_pred},

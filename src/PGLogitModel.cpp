@@ -4,11 +4,6 @@
 #include "Utils.h"
 #include "PGLogitModel.h"
 
-/*
-using namespace Rcpp;
-using namespace Eigen;
-*/
-
 
 
 PGLogitModel::PGLogitModel(const Eigen::MatrixXd & _C, const Eigen::VectorXd &_Y): C(_C), Y(_Y) {

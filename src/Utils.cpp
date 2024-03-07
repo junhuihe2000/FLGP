@@ -10,10 +10,6 @@
 #include "Utils.h"
 
 
-/*
-using namespace Rcpp;
-using namespace Eigen;
-*/
 
 
 // inverse logit link function
@@ -93,24 +89,6 @@ Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r,
                    std::string distance, bool output, int batch) {
   int n = X.rows();
   int s = U.rows();
-  /*
-  Eigen::MatrixXd distances_mat;
-  try {
-    if(distance=="Euclidean") {
-      distances_mat = ((-2*X*U.transpose()).colwise() + X.rowwise().squaredNorm()).rowwise() + U.rowwise().squaredNorm().transpose();
-    } else {
-      throw std::invalid_argument("The distance method of KNN is not supported!\n");
-    }
-  }
-  catch(const std::invalid_argument& e) {
-    std::cout << e.what() << std::endl;
-  }
-
-  Eigen::MatrixXi distances_ind(n,r);
-
-  KNN_Index knn_index(distances_mat, distances_ind, r);
-  RcppParallel::parallelFor(0, n, knn_index);
-  */
 
 
   Eigen::MatrixXi distances_ind(n,r);
@@ -197,21 +175,6 @@ Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r,
     return Rcpp::List::create(Rcpp::Named("ind_knn")=distances_ind, Rcpp::Named("distances_sp")=distances_sp);
   }
 
-  /*
-  if(!output) {
-    return Rcpp::List::create(Rcpp::Named("ind_knn")=distances_ind);
-  } else {
-    Eigen::SparseMatrix<double, Eigen::RowMajor> distances_sp(n,s);
-    distances_sp.reserve(Eigen::VectorXi::Constant(n,r));
-    for(int i=0;i<n;i++) {
-      for(int j=0;j<r;j++) {
-        int indj = distances_ind(i,j);
-        distances_sp.insert(i,indj) = distances_mat(i, indj);
-      }
-    }
-    return Rcpp::List::create(Rcpp::Named("ind_knn")=distances_ind, Rcpp::Named("distances_sp")=distances_sp);
-  }
-  */
 }
 
 
@@ -234,38 +197,5 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
   Z = (1.0/Z_rowsum.array()).matrix().asDiagonal() * Z;
 }
 
-
-/*
-Eigen::MatrixXd mini_batch_kmeans(Eigen::MatrixXd& data, int clusters, int batch_size, int max_iters, int num_init,
-                                  double init_fraction, std::string initializer,
-                                  int early_stop_iter, bool verbose,
-                                  Rcpp::Nullable<Rcpp::NumericMatrix> CENTROIDS,
-                                  double tol, double tol_optimal_init, int seed) {
-  Rcpp::Environment ClusterR = Rcpp::Environment::namespace_env("ClusterR");
-  Rcpp::Function MiniBatchKmeans = ClusterR["MiniBatchKmeans"];
-  Rcpp::List res = MiniBatchKmeans(Rcpp::Named("data")=Rcpp::wrap(data),
-                                   Rcpp::Named("clusters")=clusters, Rcpp::Named("batch_size")=batch_size,
-                                   Rcpp::Named("num_init")=num_init, Rcpp::Named("max_iters")=max_iters,
-                                   Rcpp::Named("init_fraction")=init_fraction, Rcpp::Named("initializer")=initializer,
-                                   Rcpp::Named("early_stop_iter")=early_stop_iter, Rcpp::Named("verbose")=verbose,
-                                   Rcpp::Named("CENTROIDS")=CENTROIDS, Rcpp::Named("tol")=tol,
-                                   Rcpp::Named("tol_optimal_init")=tol_optimal_init, Rcpp::Named("seed")=seed);
-  Eigen::MatrixXd centroids = Rcpp::as<Eigen::MatrixXd>(res["centroids"]);
-  return centroids;
-}
-
-
-
-Eigen::VectorXd Predict_mini_batch_kmeans(Eigen::MatrixXd& data, Eigen::MatrixXd& CENTROIDS,
-                                       bool fuzzy, bool updated_output) {
-  Rcpp::Environment ClusterR = Rcpp::Environment::namespace_env("ClusterR");
-  Rcpp::Function predict_MBatchKMeans = ClusterR["predict_MBatchKMeans"];
-  Rcpp::NumericVector res = predict_MBatchKMeans(Rcpp::Named("data")=Rcpp::wrap(data), Rcpp::Named("CENTROIDS")=Rcpp::wrap(CENTROIDS),
-                                        Rcpp::Named("fuzzy")=fuzzy, Rcpp::Named("updated_output")=updated_output);
-  Eigen::VectorXd clusters = Rcpp::as<Eigen::VectorXd>(res);
-
-  return clusters;
-}
-*/
 
 

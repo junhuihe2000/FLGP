@@ -2,9 +2,7 @@
 #include <RcppEigen.h>
 // [[Rcpp::depends(nloptr)]]
 #include <nloptrAPI.h>
-// #include <nlopt.h>
 
-#include <iostream>
 #include <vector>
 
 #include "train.h"
@@ -63,7 +61,7 @@ ReturnValue train_lae_logit_gp_cpp(void *data, std::string approach,
   double t = t0;
   double obj;
   if(nlopt_optimize(opt, &t, &obj)<0) {
-    std::cout << "nlopt failed!" << std::endl;
+    Rcpp::Rcout << "nlopt failed!" << "\n";
   }
 
   nlopt_destroy(opt);
@@ -312,9 +310,9 @@ ReturnValueReg train_rbf_regression_gp_cpp(void *data, std::string approach,
   double obj;
   nlopt_result res = nlopt_optimize(opt, &(x[0]), &obj);
   if(res<0) {
-    std::cout << "nlopt failed!" << std::endl;
+    Rcpp::Rcout << "nlopt failed!" << "\n";
   }
-  std::cout << "The status is " << res << std::endl;
+  Rcpp::Rcout << "The status is " << res << "\n";
 
 
 
@@ -393,18 +391,6 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
     nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
     nmll += Eigen::MatrixXd(chol_C.matrixL()).diagonal().array().log().sum();
   } else {
-    /*
-    Eigen::VectorXd eigenvalues = 1.0 - _data->eigenpair.values.head(_data->K).array();
-    const Eigen::MatrixXd & eigenvectors = _data->eigenpair.vectors;
-    Eigen::VectorXi cols = Eigen::VectorXi::LinSpaced(_data->K,0,_data->K-1);
-
-    Eigen::MatrixXd V = mat_indexing(eigenvectors, _data->idx, cols);
-    Eigen::MatrixXd Q = V.transpose()*V;
-    Q.diagonal().array() += (x[1]+_data->sigma)*Eigen::exp(x[0]*eigenvalues.array());
-    Q.diagonal().array() += _data->sigma;
-    Eigen::LLT<Eigen::MatrixXd> chol_Q(Q);
-    Eigen::VectorXd alpha = 1.0/(x[1]+_data->sigma)*(_data->Y - V*chol_Q.solve(V.transpose()*_data->Y));
-    */
     const EigenPair & eigenpair = _data->eigenpair;
     Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(_data->K).array();
     const Eigen::MatrixXd & eigenvectors = eigenpair.vectors;
@@ -420,23 +406,12 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
     // use Equation 5.9 in GPML
 
 
-    /*
-    //--------------------------------------------------------------------
-    Eigen::MatrixXd C = HK_from_spectrum_cpp(_data->eigenpair, _data->K, x[0], _data->idx, _data->idx);
-    C.diagonal().array() += _data->sigma;
-    C.diagonal().array() += x[1];
-
-    Eigen::LLT<Eigen::MatrixXd> chol_C(C);
-    Eigen::VectorXd beta = chol_C.solve(_data->Y);
-    */
-
     if(grad) {
       Eigen::MatrixXd Q_inv = chol_Q.solve(Eigen::MatrixXd::Identity(_data->K,_data->K));
       Eigen::DiagonalMatrix<double, Eigen::Dynamic> A = ((-eigenvalues.array()*(Eigen::exp(-x[0]*eigenvalues.array())+0.0))+0.0).matrix().asDiagonal();
       Eigen::MatrixXd Vta = V.transpose()*alpha;
       grad[0] = -0.5*(Vta.array()*(A*Vta).array()).sum()/q;
-      // grad[0] = -0.5*(alpha.array()*((alpha.transpose()*V)*A*V.transpose()).transpose().array()).sum()/q;
-      // Eigen::MatrixXd VtV = V.transpose()*V;
+
       grad[0] += 0.5/(x[1]+_data->sigma)*(A*VtV).trace();
       grad[0] += -0.5/(x[1]+_data->sigma)*((Q_inv*Lambda_sqrt*VtV).array()*(A*VtV*Lambda_sqrt).transpose().array()).sum();
 
@@ -448,46 +423,6 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
       if(std::abs(grad[1])>=threshold) {
         grad[1] = grad[1]/std::abs(grad[1])*threshold;
       }
-
-      //------------------------------------------------------------------------------------------
-      /*
-
-      Eigen::MatrixXd C_inv = chol_C.solve(Eigen::MatrixXd::Identity(C.rows(),C.cols()));
-      Eigen::MatrixXd U = beta*beta.transpose() - C_inv;
-
-      Eigen::MatrixXd grad_t = mat_indexing(eigenvectors, _data->idx, cols)*(-eigenvalues.array()*Eigen::exp(-x[0]*eigenvalues.array())).matrix().asDiagonal()\
-        *mat_indexing(eigenvectors, _data->idx, cols).transpose();
-
-      double grad_0 = -0.5*(U.array()*grad_t.transpose().array()).sum();
-      double grad_1 = -0.5*U.trace();
-
-      std::cout << "Gaussian process: grad_t = " << grad_0 << ", grad_sigma = " << grad_1 << std::endl;
-      */
-      // std::cout << "Matrix inversion lemma: grad_t = " << grad[0] << ", grad_sigma = " << grad[1] << std::endl;
-
-      /*
-      Eigen::MatrixXd Q_inv = chol_Q.solve(Eigen::MatrixXd::Identity(_data->K,_data->K));
-      Eigen::DiagonalMatrix<double, Eigen::Dynamic> A = (-eigenvalues.array()*Eigen::exp(-x[0]*eigenvalues.array())).matrix().asDiagonal();
-      grad[0] = -0.5*(alpha.array()*((alpha.transpose()*V)*A*V.transpose()).transpose().array()).sum();
-      Eigen::MatrixXd VtV = V.transpose()*V;
-      grad[0] += 0.5/(x[1]+_data->sigma)*(A*VtV).trace();
-      grad[0] += -0.5/(x[1]+_data->sigma)*((Q_inv*VtV).array()*(A*VtV).transpose().array()).sum();
-
-      grad[1] = -0.5*(alpha.array()*alpha.array()).sum();
-      grad[1] += 0.5/(x[1]+_data->sigma)*(m-(Q_inv.array()*VtV.transpose().array()).sum());
-      */
-
-      /*
-      Eigen::MatrixXd Q_inv = chol_Q.solve(Eigen::MatrixXd::Identity(_data->K,_data->K));
-      Eigen::MatrixXd C_inv = 1.0/(x[1]+_data->sigma)*(Eigen::MatrixXd::Identity(m,m)-V*Q_inv*V.transpose());
-      Eigen::MatrixXd U = alpha*alpha.transpose() - C_inv;
-
-      Eigen::MatrixXd grad_t = mat_indexing(eigenvectors, _data->idx, cols)*(-eigenvalues.array()*Eigen::exp(-x[0]*eigenvalues.array())).matrix().asDiagonal()\
-        *mat_indexing(eigenvectors, _data->idx, cols).transpose();
-
-      grad[0] = -0.5*(U.array()*grad_t.transpose().array()).sum();
-      grad[1] = -0.5*U.trace();
-      */
     }
 
     // Objective function value is wrong!
@@ -495,34 +430,7 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
     nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
     nmll += (Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array()).log().sum();
     nmll += 0.5*(m-_data->K)*std::log(x[1]+_data->sigma);
-    /*
-    nmll += 0.5*(_data->Y.array()*alpha.array()).sum();
-    double logdet_K = -x[0]*eigenvalues.array().sum() + 2 * Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array().log().sum();
-    nmll += 0.5*logdet_K;
-    nmll += (m-_data->K)*std::log(x[1]+1e-5);
-    */
-    //nmll_2 = 0.5*(_data->Y.array()*beta.array()).sum() + (Eigen::MatrixXd(chol_C.matrixL()).diagonal().array()+0.0).log().sum();
   }
-
-
-  /*
-  Eigen::MatrixXd C = HK_from_spectrum_cpp(_data->eigenpair, _data->K, x[0], _data->idx, _data->idx);
-  C.diagonal().array() += _data->sigma;
-  C.diagonal().array() += x[1];
-  */
-  /*
-  double mll = marginal_log_likelihood_regression_cpp(C, _data->Y);
-  return -mll;
-  */
-
-
-  /*
-  std::cout << "The " << count << " iteration: " << " t = " << x[0] << ", sigma = " \
-            << x[1] << ", obj = " << -nmll << std::endl;
-  */
-  /*
-  std::cout << "obj = " << nmll_2 << std::endl;
-  */
 
   return nmll;
 }
@@ -543,16 +451,6 @@ double negative_log_posterior_diff_noise_regression_cpp(unsigned n, const double
     pr1 += ((_data->alpha+1)*std::log(x[i]+_data->sigma) + _data->beta/(x[i]+_data->sigma))/m;
     grad[i] += ((_data->alpha+1)/(x[i]+_data->sigma) - _data->beta/std::pow(x[i]+_data->sigma,2))/m;
   }
-
-  /*
-  // gradient clipping
-  double threshold = 10;
-  for(int i=1;i<=m;i++) {
-    if(std::abs(grad[i])>=threshold) {
-      grad[i] = grad[i]/std::abs(grad[i])*threshold;
-    }
-  }
-  */
 
 
   return (nmll+pr0+pr1);
@@ -595,13 +493,6 @@ double negative_marginal_likelihood_diff_noise_regression_cpp(unsigned n, const 
         grad[i] = -0.5*U.diagonal()[i-1];
       }
 
-      /*
-      // gradient clipping
-      double threshold = 10;
-      if(std::abs(grad[1])>=threshold) {
-        grad[1] = grad[1]/std::abs(grad[1])*threshold;
-      }
-      */
     }
     // use Algorithm 2.1 in GPML
     nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
@@ -659,7 +550,7 @@ double negative_marginal_likelihood_diff_noise_regression_cpp(unsigned n, const 
     nmll += 0.5*(Z.diagonal().array().log().sum());
   }
 
-  // std::cout << "nmll = " << nmll << std::endl;
+  // Rcpp::Rcout << "nmll = " << nmll << "\n";
   return nmll;
 }
 
@@ -726,7 +617,6 @@ ReturnValueReg train_regression_gp_cpp(void *data, std::string approach,
   }
 
   nlopt_opt opt;
-  // opt = nlopt_create(NLOPT_LN_COBYLA,2); // local derivative-free algorithm
   if(noise=="same") {
     opt = nlopt_create(NLOPT_LD_MMA, 2); // local gradient-based optimization
   } else if(noise=="different") {
@@ -734,8 +624,6 @@ ReturnValueReg train_regression_gp_cpp(void *data, std::string approach,
   }
   nlopt_set_lower_bounds(opt, &((*lb)[0]));
   nlopt_set_upper_bounds(opt, &((*ub)[0]));
-
-  // nlopt_set_param(opt, "inner_maxeval", 10);
 
   // empirical Bayes
   if(noise=="same") {
@@ -764,9 +652,9 @@ ReturnValueReg train_regression_gp_cpp(void *data, std::string approach,
   double obj;
   nlopt_result res = nlopt_optimize(opt, &(x[0]), &obj);
   if(res<0) {
-    std::cout << "nlopt failed!" << std::endl;
+    Rcpp::Rcout << "nlopt failed!" << "\n";
   }
-  std::cout << "The status is " << res << std::endl;
+  Rcpp::Rcout << "The status is " << res << "\n";
 
 
 
@@ -806,22 +694,6 @@ double marginal_log_likelihood_regression_cpp(const EigenPair & eigenpair,
     mll += -0.5*(Y.array()*alpha.array()).sum();
     mll += -Eigen::MatrixXd(chol_C.matrixL()).diagonal().array().log().sum();
   } else {
-    /*
-    Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(K).array();
-    const Eigen::MatrixXd & eigenvectors = eigenpair.vectors;
-    Eigen::VectorXi cols = Eigen::VectorXi::LinSpaced(K,0,K-1);
-
-    Eigen::MatrixXd V = mat_indexing(eigenvectors, idx, cols);
-    Eigen::MatrixXd Q = V.transpose()*V;
-    Q.diagonal().array() += (noise+sigma)*Eigen::exp(t*eigenvalues.array());
-    // Eigen::MatrixXd Q = (noise+sigma)*Eigen::exp(t*eigenvalues.array()).matrix().asDiagonal() + V.transpose()*V;
-    Eigen::LLT<Eigen::MatrixXd> chol_Q(Q);
-    Eigen::VectorXd alpha = 1.0/(noise+sigma)*(Y - V*chol_Q.solve(V.transpose()*Y));
-
-    mll += -0.5*(Y.array()*alpha.array()).sum();
-    double logdet_K = -t*eigenvalues.array().sum() + 2 * Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array().log().sum();
-    mll += -0.5*logdet_K;
-    */
     Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(K).array();
     const Eigen::MatrixXd & eigenvectors = eigenpair.vectors;
     Eigen::VectorXi cols = Eigen::VectorXi::LinSpaced(K,0,K-1);
@@ -837,15 +709,6 @@ double marginal_log_likelihood_regression_cpp(const EigenPair & eigenpair,
     mll += -(Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array()+1e-5).log().sum();
   }
 
-  /*
-  Eigen::LLT<Eigen::MatrixXd> chol_C(C);
-  Eigen::VectorXd alpha = chol_C.solve(Y);
-
-  // marginal log likelihood
-  double mll = 0;
-  mll += -0.5*(Y.array()*alpha.array()).sum();
-  mll += -Eigen::MatrixXd(chol_C.matrixL()).diagonal().array().log().sum();
-  */
   return mll;
 }
 

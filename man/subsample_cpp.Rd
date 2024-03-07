@@ -14,6 +14,9 @@ subsample_cpp(X, s, method = "kmeans", nstart = 1L)
 \item{method}{How to subsample, characters in c("kmeans", "random"),
 including kmeans and random selection, the
 defaulting subsampling method is kmeans.}
+
+\item{nstart}{An integer, the number of random sets chosen in kmeans,
+the defaulting value is \code{1}.}
 }
 \value{
 A subsampling, a (s, d) or (s, d+1) matrix, each row indicates one point in R^d,

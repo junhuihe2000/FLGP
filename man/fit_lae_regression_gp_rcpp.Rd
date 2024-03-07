@@ -40,6 +40,10 @@ the defaulting value is 1e-3.}
 \item{approach}{A character vector, taking value in c("posterior", "marginal"),
 decides which objective function to be optimized, defaulting value is \code{posterior}.}
 
+\item{noise}{A character vector, taking value in c("same", "different"),
+indicates whether the noise variances in different locations are different,
+defaulting value is \code{same}.}
+
 \item{models}{A list with four components
 \describe{
 \item{subsample}{the method of subsampling, the defaulting value is \code{kmeans}.}

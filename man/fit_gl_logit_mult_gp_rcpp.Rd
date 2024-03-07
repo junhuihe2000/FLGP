@@ -63,17 +63,3 @@ the label in the test data point.}
 \description{
 Fit Gaussian process logistic multinomial regression with GLGP
 }
-\examples{
-X0 <- matrix(rnorm(3*3), 3, 3)
-X1 <- matrix(rnorm(3*3, 5), 3, 3)
-X2 <- matrix(rnorm(3*3, -5), 3, 3)
-Y <- c(0,0,0,1,1,1,2,2,2)
-X <- rbind(X0,X1,X2)
-X0_new <- matrix(rnorm(10*3),10,3)
-X1_new <- matrix(rnorm(10*3, 5),10,3)
-X2_new <- matrix(rnorm(10*3, -5),10,3)
-X_new <- rbind(X0_new, X1_new, X2_new)
-Y_new <- c(rep(0,10),rep(1,10),rep(2,10))
-K <- 5
-Y_pred <- fit_gl_logit_mult_gp_rcpp(X, Y, X_new, K)
-}

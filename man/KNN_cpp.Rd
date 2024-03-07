@@ -30,10 +30,3 @@ the other is the sparse distance matrix with dim(n,s).
 \description{
 k-nearest neighbor reference points
 }
-\examples{
-X <- matrix(rnorm(300), nrow=100, ncol=3)
-U <- matrix(rnorm(30), nrow=10, ncol=3)
-r <- 3
-distance <- "Euclidean"
-KNN_cpp(X, U, r, distance)
-}
