@@ -14,6 +14,9 @@ PKG_LIBS += $(shell ${R_HOME}/bin/Rscript -e "RcppParallel::RcppParallelLibs()")
 
 
 ## delete before submitting to CRAN
+strippedLib: $(SHLIB)
+		if test -e "/usr/bin/strip" & test -e "/bin/uname" & [[ `uname` == "Linux" ]] ; then /usr/bin/strip --strip-debug $(SHLIB); fi
+.phony: strippedLib
 
 
 

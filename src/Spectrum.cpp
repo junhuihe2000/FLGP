@@ -93,7 +93,7 @@ Eigen::SparseMatrix<double,Eigen::RowMajor> cross_similarity_lae_cpp(
 }
 
 
-
+/*
 EigenPair truncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & Z,
                              int K) {
   if(K<0) {
@@ -120,7 +120,7 @@ EigenPair truncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & 
 
   return EigenPair(values, vectors);
 }
-
+*/
 
 
 

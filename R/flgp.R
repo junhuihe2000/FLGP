@@ -5,6 +5,6 @@
 #' @importFrom stats kmeans
 #' @import nloptr
 #' @importFrom RSpectra eigs_sym
-#' @importFrom irlba irlba
+#' @importFrom RSpectra svds
 #' @importFrom RcppParallel RcppParallelLibs
 NULL

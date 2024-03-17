@@ -24,7 +24,6 @@ Imports:
     RSpectra,
     stats,
     nloptr,
-    irlba,
     RcppParallel
 LinkingTo: 
     Rcpp,
