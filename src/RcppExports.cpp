@@ -298,6 +298,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// lae_eigenmap
+Rcpp::List lae_eigenmap(const Eigen::MatrixXd& X, int s, int r, int ndim, std::string subsample, std::string norm, int nstart);
+RcppExport SEXP _FLGP_lae_eigenmap(SEXP XSEXP, SEXP sSEXP, SEXP rSEXP, SEXP ndimSEXP, SEXP subsampleSEXP, SEXP normSEXP, SEXP nstartSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< int >::type r(rSEXP);
+    Rcpp::traits::input_parameter< int >::type ndim(ndimSEXP);
+    Rcpp::traits::input_parameter< std::string >::type subsample(subsampleSEXP);
+    Rcpp::traits::input_parameter< std::string >::type norm(normSEXP);
+    Rcpp::traits::input_parameter< int >::type nstart(nstartSEXP);
+    rcpp_result_gen = Rcpp::wrap(lae_eigenmap(X, s, r, ndim, subsample, norm, nstart));
+    return rcpp_result_gen;
+END_RCPP
+}
 // heat_kernel_covariance_cpp
 Eigen::MatrixXd heat_kernel_covariance_cpp(const Eigen::MatrixXd& X, const Eigen::MatrixXd& X_new, int s, int r, double t, int K, Rcpp::List models, int nstart);
 RcppExport SEXP _FLGP_heat_kernel_covariance_cpp(SEXP XSEXP, SEXP X_newSEXP, SEXP sSEXP, SEXP rSEXP, SEXP tSEXP, SEXP KSEXP, SEXP modelsSEXP, SEXP nstartSEXP) {
@@ -427,6 +444,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLGP_fit_gl_logit_mult_gp_cpp", (DL_FUNC) &_FLGP_fit_gl_logit_mult_gp_cpp, 10},
     {"_FLGP_test_pgbinary_cpp", (DL_FUNC) &_FLGP_test_pgbinary_cpp, 5},
     {"_FLGP_test_regression_cpp", (DL_FUNC) &_FLGP_test_regression_cpp, 3},
+    {"_FLGP_lae_eigenmap", (DL_FUNC) &_FLGP_lae_eigenmap, 7},
     {"_FLGP_heat_kernel_covariance_cpp", (DL_FUNC) &_FLGP_heat_kernel_covariance_cpp, 8},
     {"_FLGP_cross_similarity_lae_cpp", (DL_FUNC) &_FLGP_cross_similarity_lae_cpp, 4},
     {"_FLGP_subsample_cpp", (DL_FUNC) &_FLGP_subsample_cpp, 4},

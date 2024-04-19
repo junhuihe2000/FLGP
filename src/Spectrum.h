@@ -16,6 +16,33 @@
 struct EigenPair;
 
 
+//' Compute the Laplacian eigenmap by local anchor embedding
+//'
+//' @param X A numeric matrix with dim (n,d),
+//' each row indicates one point in R^d.
+//' @param s An integer, the number of the induced points.
+//' @param r An integer, the number of the nearest neighbor points, defaulting `3`.
+//' @param ndim An integer, the dimension of the manifold projection, defaulting `2`.
+//' @param subsample A character vector in c("kmeans", "random"), indicates the method
+//' of subsampling, defaulting "kmeans".
+//' @param norm A character vector in c("rw", "normalized", "cluster-normalized"),
+//' indicates how to construct the stochastic transition matrix. "rw" means random walk,
+//' "normalized" means normalized random walk, "cluster-normalized" means
+//' normalized random walk with cluster membership re-balance. The defaulting gl
+//' is "cluster-normalized".
+//' @param nstart An integer, the number of random sets chosen in kmeans, defaulting `1`.
+//'
+//' @returns List of two component,
+//' \describe{
+//' \item{eigenvalues}{A numeric vector with length(ndim), the eigenvalues of the graph Laplacian.}
+//' \item{eigenvectors}{A numeric matrix with dim(n,ndim), the eigenvector of the graph Laplacian.
+//' Each row indicates the embedding coordinate representation of one point.}
+//' }
+//' @export
+// [[Rcpp::export(lae_eigenmap)]]
+Rcpp::List lae_eigenmap(const Eigen::MatrixXd & X,
+                        int s, int r = 3, int ndim = 2, std::string subsample = "kmeans", std::string norm = "cluster-normalized", int nstart = 1);
+
 
 // [[Rcpp::export(heat_kernel_covariance_cpp)]]
 Eigen::MatrixXd heat_kernel_covariance_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
@@ -57,6 +84,7 @@ Eigen::MatrixXd HK_from_spectrum_cpp(const EigenPair & eigenpair, int K, double 
 //'
 //' @returns `Z` A numeric sparse dgr matrix with dim (n,s),
 //' the stochastic transition matrix from X to U.
+//' @export
 // [[Rcpp::export(cross_similarity_lae_cpp)]]
 Eigen::SparseMatrix<double,Eigen::RowMajor> cross_similarity_lae_cpp(
     const Eigen::MatrixXd & X,

@@ -93,6 +93,33 @@ test_regression_cpp <- function(C, Y, Cnv) {
     .Call(`_FLGP_test_regression_cpp`, C, Y, Cnv)
 }
 
+#' Compute the Laplacian eigenmap by local anchor embedding
+#'
+#' @param X A numeric matrix with dim (n,d),
+#' each row indicates one point in R^d.
+#' @param s An integer, the number of the induced points.
+#' @param r An integer, the number of the nearest neighbor points, defaulting `3`.
+#' @param ndim An integer, the dimension of the manifold projection, defaulting `2`.
+#' @param subsample A character vector in c("kmeans", "random"), indicates the method
+#' of subsampling, defaulting "kmeans".
+#' @param norm A character vector in c("rw", "normalized", "cluster-normalized"),
+#' indicates how to construct the stochastic transition matrix. "rw" means random walk,
+#' "normalized" means normalized random walk, "cluster-normalized" means
+#' normalized random walk with cluster membership re-balance. The defaulting gl
+#' is "rw".
+#' @param nstart An integer, the number of random sets chosen in kmeans, defaulting `1`.
+#'
+#' @returns List of two component,
+#' \describe{
+#' \item{eigenvalues}{A numeric vector with length(ndim), the eigenvalues of the graph Laplacian.}
+#' \item{eigenvectors}{A numeric matrix with dim(n,ndim), the eigenvector of the graph Laplacian.
+#' Each row indicates the embedding coordinate representation of one point.}
+#' }
+#' @export
+lae_eigenmap <- function(X, s, r = 3L, ndim = 2L, subsample = "kmeans", norm = "cluster-normalized", nstart = 1L) {
+    .Call(`_FLGP_lae_eigenmap`, X, s, r, ndim, subsample, norm, nstart)
+}
+
 heat_kernel_covariance_cpp <- function(X, X_new, s, r, t, K, models, nstart) {
     .Call(`_FLGP_heat_kernel_covariance_cpp`, X, X_new, s, r, t, K, models, nstart)
 }
@@ -113,6 +140,7 @@ heat_kernel_covariance_cpp <- function(X, X_new, s, r, t, K, models, nstart) {
 #'
 #' @returns `Z` A numeric sparse dgr matrix with dim (n,s),
 #' the stochastic transition matrix from X to U.
+#' @export
 cross_similarity_lae_cpp <- function(X, U, r = 3L, gl = "rw") {
     .Call(`_FLGP_cross_similarity_lae_cpp`, X, U, r, gl)
 }

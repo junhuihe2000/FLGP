@@ -12,6 +12,17 @@
 /*-----------------------------------------------------------------*/
 
 
+Rcpp::List lae_eigenmap(const Eigen::MatrixXd & X,
+                        int s, int r, int ndim, std::string subsample, std::string norm, int nstart) {
+  Eigen::MatrixXd U = subsample_cpp(X, s, subsample, nstart);
+  Eigen::SparseMatrix<double, Eigen::RowMajor> Z = cross_similarity_lae_cpp(X, U, r, norm);
+  EigenPair eigenpair = spectrum_from_Z_cpp(Z, ndim, true);
+
+  return Rcpp::List::create(Rcpp::Named("eigenvalues") = 1-eigenpair.values.array(),
+                            Rcpp::Named("eigenvectors") = eigenpair.vectors);
+}
+
+
 Eigen::MatrixXd heat_kernel_covariance_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
                                            int s, int r, double t, int K,
                                            Rcpp::List models, int nstart) {
