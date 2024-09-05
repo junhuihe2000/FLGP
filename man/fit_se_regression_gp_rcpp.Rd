@@ -62,7 +62,7 @@ the defaulting value is \code{TRUE}.}
 \item{nstart}{Int, the number of random sets chosen in kmeans.}
 }
 \value{
-\code{res} A list with two components including \code{pars} and \code{Y_pred},
+\code{res} A list with three components including \code{pars}, \code{posterior} and \code{Y_pred},
 where \code{Y_pred} is also a list with two components, that is,
 \describe{
 \item{train}{A numeric vector with length(m), each element indicates

@@ -35,7 +35,7 @@
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' @return `res` A list with three components including `pars`, `posterior` and `Y_pred`,
 #' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
@@ -98,7 +98,7 @@ fit_lae_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-5,
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' @return `res` A list with three components including `pars`, `posterior` and `Y_pred`,
 #' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
@@ -164,7 +164,7 @@ fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-5, a2s=N
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' @return `res` A list with three components including `pars`, `posterior` and `Y_pred`,
 #' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
@@ -235,7 +235,7 @@ fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-5, a2s
 #' }
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #'
-#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' @return `res` A list with three components including `pars`, `posterior` and `Y_pred`,
 #' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
@@ -295,7 +295,8 @@ fit_gl_regression_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-5, a2s=NULL,
 #' }
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A list with two components, that is,
+#' @return A list with two components including `posterior` and `Y_pred`,
+#' where `Y_pred` A list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
 #' the label in the train data point.}
@@ -318,7 +319,7 @@ fit_gl_regression_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-5, a2s=NULL,
 #' Y_new <- c(rep(0,10),rep(1,10),rep(2,10))
 #' s <- 6; r <- 3
 #' K <- 5
-#' Y_pred <- fit_lae_logit_mult_gp_rcpp(X, Y, X_new, s, r, K)
+#' res <- fit_lae_logit_mult_gp_rcpp(X, Y, X_new, s, r, K)
 fit_lae_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
                                        approach="posterior",
                                        models=list(subsample="kmeans",
@@ -361,7 +362,8 @@ fit_lae_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
 #' }
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A list with two components, that is,
+#' @return A list with two components including `posterior` and `Y_pred`,
+#' where `Y_pred` A list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
 #' the label in the train data point.}
@@ -383,7 +385,7 @@ fit_lae_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
 #' Y_new <- c(rep(0,10),rep(1,10),rep(2,10))
 #' s <- 6; r <- 3
 #' K <- 5
-#' Y_pred <- fit_se_logit_mult_gp_rcpp(X, Y, X_new, s, r, K)
+#' res <- fit_se_logit_mult_gp_rcpp(X, Y, X_new, s, r, K)
 fit_se_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=NULL,
                                        approach="posterior",
                                       models=list(subsample="kmeans",
@@ -427,7 +429,8 @@ fit_se_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
 #' }
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `Y_pred` A list with two components, that is,
+#' @return A list with two components including `posterior` and `Y_pred`,
+#' where `Y_pred` A list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
 #' the label in the train data point.}
@@ -449,7 +452,7 @@ fit_se_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
 #' Y_new <- c(rep(0,10),rep(1,10),rep(2,10))
 #' s <- 6
 #' K <- 5
-#' Y_pred <- fit_nystrom_logit_mult_gp_rcpp(X, Y, X_new, s, K)
+#' res <- fit_nystrom_logit_mult_gp_rcpp(X, Y, X_new, s, K)
 fit_nystrom_logit_mult_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s=NULL,
                                       approach="posterior",
                                       models=list(subsample="kmeans",
@@ -492,7 +495,8 @@ fit_nystrom_logit_mult_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s
 #' the defaulting value is `TRUE`.}
 #' }
 #'
-#' @return `Y_pred` A list with two components, that is,
+#' @return A list with two components including `posterior` and `Y_pred`,
+#' where `Y_pred` A list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
 #' the label in the train data point.}
@@ -547,7 +551,7 @@ fit_gl_logit_mult_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-3, a2s=NULL,
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' @return `res` A list with three components including `pars`, `posterior` and `Y_pred`,
 #' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
@@ -617,7 +621,7 @@ fit_lae_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3,
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' @return `res` A list with two components including `pars`, `posterior` and `Y_pred`,
 #' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
@@ -688,7 +692,7 @@ fit_se_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3, a2
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
-#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' @return `res` A list with two components including `pars`, `posterior` and `Y_pred`,
 #' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
@@ -764,7 +768,7 @@ fit_nystrom_logit_gp_rcpp <- function(X, Y, X_new, s, K=-1, N=NULL, sigma=1e-3, 
 #' }
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #'
-#' @return `res` A list with two components including `pars` and `Y_pred`,
+#' @return `res` A list with two components including `pars`, `posterior` and `Y_pred`,
 #' where `Y_pred` is also a list with two components, that is,
 #' \describe{
 #' \item{train}{A numeric vector with length(m), each element indicates
@@ -830,8 +834,9 @@ heat_kernel_covariance_rcpp <- function(X, X_new, s, r, t, K=-1,
                                         kernel="lae",
                                         gl="cluster-normalized",
                                         root=TRUE),
+                            epsilon=0.1,
                             nstart=1) {
-  H = heat_kernel_covariance_cpp(X,X_new,s,r,t,K,models,nstart)
+  H = heat_kernel_covariance_cpp(X,X_new,s,r,t,K,models,nstart,epsilon)
 
   return(H)
 }

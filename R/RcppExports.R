@@ -106,7 +106,7 @@ test_regression_cpp <- function(C, Y, Cnv) {
 #' indicates how to construct the stochastic transition matrix. "rw" means random walk,
 #' "normalized" means normalized random walk, "cluster-normalized" means
 #' normalized random walk with cluster membership re-balance. The defaulting gl
-#' is "rw".
+#' is "cluster-normalized".
 #' @param nstart An integer, the number of random sets chosen in kmeans, defaulting `1`.
 #'
 #' @returns List of two component,
@@ -120,11 +120,11 @@ lae_eigenmap <- function(X, s, r = 3L, ndim = 2L, subsample = "kmeans", norm = "
     .Call(`_FLGP_lae_eigenmap`, X, s, r, ndim, subsample, norm, nstart)
 }
 
-heat_kernel_covariance_cpp <- function(X, X_new, s, r, t, K, models, nstart) {
-    .Call(`_FLGP_heat_kernel_covariance_cpp`, X, X_new, s, r, t, K, models, nstart)
+heat_kernel_covariance_cpp <- function(X, X_new, s, r, t, K, models, nstart, epsilon) {
+    .Call(`_FLGP_heat_kernel_covariance_cpp`, X, X_new, s, r, t, K, models, nstart, epsilon)
 }
 
-#' Compute cross similarity matrix Z between X and U
+#' Compute cross similarity matrix Z between X and U by local anchor embedding
 #'
 #' @param X A numeric matrix with dim (n,d), original sample,
 #' each row indicates one original point in R^d.
@@ -184,6 +184,32 @@ subsample_cpp <- function(X, s, method = "kmeans", nstart = 1L) {
 #'  the other is the sparse distance matrix with dim(n,s).
 KNN_cpp <- function(X, U, r = 3L, distance = "Euclidean", output = FALSE, batch = 100L) {
     .Call(`_FLGP_KNN_cpp`, X, U, r, distance, output, batch)
+}
+
+#' compute the posterior distribution of test data in GPC
+#' @param C11 Prior covariance matrix on training data.
+#' @param C21 Prior covariance matrix between test data and training data.
+#' @param C22 Prior covariance matrix on test data.
+#' @param Y Training labels.
+#'
+#' @export
+#'
+posterior_distribution_classification <- function(C11, C21, C22, Y, tol = 1e-5, max_iter = 100L) {
+    .Call(`_FLGP_posterior_distribution_classification`, C11, C21, C22, Y, tol, max_iter)
+}
+
+#' compute the negative log likelihood of test data
+#'
+#' @param mean Posterior mean.
+#' @param cov Posterior covariance.
+#' @param target Targeted labels.
+#' @param type The task type, `regression`, `binary` or `multinomial`.
+#'
+#' @return negative log likelihood.
+#' @export
+#'
+negative_log_likelihood <- function(mean, cov, target, type) {
+    .Call(`_FLGP_negative_log_likelihood`, mean, cov, target, type)
 }
 
 #' Local anchor embedding

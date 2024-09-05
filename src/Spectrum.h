@@ -47,7 +47,7 @@ Rcpp::List lae_eigenmap(const Eigen::MatrixXd & X,
 // [[Rcpp::export(heat_kernel_covariance_cpp)]]
 Eigen::MatrixXd heat_kernel_covariance_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
                                            int s, int r, double t, int K,
-                                           Rcpp::List models, int nstart);
+                                           Rcpp::List models, int nstart, double epsilon);
 
 // Compute spectrum of graph Laplacian by FLGP
 EigenPair heat_kernel_spectrum_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
@@ -56,7 +56,7 @@ EigenPair heat_kernel_spectrum_cpp(const Eigen::MatrixXd & X, const Eigen::Matri
                                                         Rcpp::Named("kernel")="lae",
                                                         Rcpp::Named("gl")="rw",
                                                         Rcpp::Named("root")=false),
-                                   int nstart = 1);
+                                   int nstart = 1, double epsilon = 0.1);
 
 
 // Construct heat kernel covariance matrix from the spectrum of W
@@ -68,7 +68,7 @@ Eigen::MatrixXd HK_from_spectrum_cpp(const EigenPair & eigenpair, int K, double 
 
 
 
-//' Compute cross similarity matrix Z between X and U
+//' Compute cross similarity matrix Z between X and U by local anchor embedding
 //'
 //' @param X A numeric matrix with dim (n,d), original sample,
 //' each row indicates one original point in R^d.
@@ -91,6 +91,15 @@ Eigen::SparseMatrix<double,Eigen::RowMajor> cross_similarity_lae_cpp(
     const Eigen::MatrixXd & U,
     int r = 3,
     Rcpp::String gl = "rw");
+
+
+// Compute the cross similarity matrix between X and U by squared exponential kernels
+Eigen::SparseMatrix<double,Eigen::RowMajor> cross_similarity_se_cpp(
+    const Eigen::MatrixXd & X,
+    const Eigen::MatrixXd & U,
+    int r,
+    Rcpp::String gl, double epsilon);
+
 
 
 // Truncated SVD, compute the non-trivial spectrums of A%\*%t(A) by calculating the spectrums

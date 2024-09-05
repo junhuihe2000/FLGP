@@ -18,5 +18,9 @@ strippedLib: $(SHLIB)
 		if test -e "/usr/bin/strip" & test -e "/bin/uname" & [[ `uname` == "Linux" ]] ; then /usr/bin/strip --strip-debug $(SHLIB); fi
 .phony: strippedLib
 
+## delete before submitting to CRAN
+PKG_CXXFLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
+PKG_CXX11FLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
+PKG_CXX14FLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
 
 

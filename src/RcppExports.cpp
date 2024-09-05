@@ -316,8 +316,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // heat_kernel_covariance_cpp
-Eigen::MatrixXd heat_kernel_covariance_cpp(const Eigen::MatrixXd& X, const Eigen::MatrixXd& X_new, int s, int r, double t, int K, Rcpp::List models, int nstart);
-RcppExport SEXP _FLGP_heat_kernel_covariance_cpp(SEXP XSEXP, SEXP X_newSEXP, SEXP sSEXP, SEXP rSEXP, SEXP tSEXP, SEXP KSEXP, SEXP modelsSEXP, SEXP nstartSEXP) {
+Eigen::MatrixXd heat_kernel_covariance_cpp(const Eigen::MatrixXd& X, const Eigen::MatrixXd& X_new, int s, int r, double t, int K, Rcpp::List models, int nstart, double epsilon);
+RcppExport SEXP _FLGP_heat_kernel_covariance_cpp(SEXP XSEXP, SEXP X_newSEXP, SEXP sSEXP, SEXP rSEXP, SEXP tSEXP, SEXP KSEXP, SEXP modelsSEXP, SEXP nstartSEXP, SEXP epsilonSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -329,7 +329,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type models(modelsSEXP);
     Rcpp::traits::input_parameter< int >::type nstart(nstartSEXP);
-    rcpp_result_gen = Rcpp::wrap(heat_kernel_covariance_cpp(X, X_new, s, r, t, K, models, nstart));
+    Rcpp::traits::input_parameter< double >::type epsilon(epsilonSEXP);
+    rcpp_result_gen = Rcpp::wrap(heat_kernel_covariance_cpp(X, X_new, s, r, t, K, models, nstart, epsilon));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -374,6 +375,36 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type output(outputSEXP);
     Rcpp::traits::input_parameter< int >::type batch(batchSEXP);
     rcpp_result_gen = Rcpp::wrap(KNN_cpp(X, U, r, distance, output, batch));
+    return rcpp_result_gen;
+END_RCPP
+}
+// posterior_distribution_classification
+Rcpp::List posterior_distribution_classification(const Eigen::MatrixXd& C11, const Eigen::MatrixXd& C21, const Eigen::VectorXd& C22, const Eigen::VectorXd& Y, double tol, int max_iter);
+RcppExport SEXP _FLGP_posterior_distribution_classification(SEXP C11SEXP, SEXP C21SEXP, SEXP C22SEXP, SEXP YSEXP, SEXP tolSEXP, SEXP max_iterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type C11(C11SEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type C21(C21SEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type C22(C22SEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(posterior_distribution_classification(C11, C21, C22, Y, tol, max_iter));
+    return rcpp_result_gen;
+END_RCPP
+}
+// negative_log_likelihood
+double negative_log_likelihood(const Eigen::MatrixXd& mean, const Eigen::MatrixXd& cov, const Eigen::VectorXd& target, std::string type);
+RcppExport SEXP _FLGP_negative_log_likelihood(SEXP meanSEXP, SEXP covSEXP, SEXP targetSEXP, SEXP typeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type cov(covSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(negative_log_likelihood(mean, cov, target, type));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -445,10 +476,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLGP_test_pgbinary_cpp", (DL_FUNC) &_FLGP_test_pgbinary_cpp, 5},
     {"_FLGP_test_regression_cpp", (DL_FUNC) &_FLGP_test_regression_cpp, 3},
     {"_FLGP_lae_eigenmap", (DL_FUNC) &_FLGP_lae_eigenmap, 7},
-    {"_FLGP_heat_kernel_covariance_cpp", (DL_FUNC) &_FLGP_heat_kernel_covariance_cpp, 8},
+    {"_FLGP_heat_kernel_covariance_cpp", (DL_FUNC) &_FLGP_heat_kernel_covariance_cpp, 9},
     {"_FLGP_cross_similarity_lae_cpp", (DL_FUNC) &_FLGP_cross_similarity_lae_cpp, 4},
     {"_FLGP_subsample_cpp", (DL_FUNC) &_FLGP_subsample_cpp, 4},
     {"_FLGP_KNN_cpp", (DL_FUNC) &_FLGP_KNN_cpp, 6},
+    {"_FLGP_posterior_distribution_classification", (DL_FUNC) &_FLGP_posterior_distribution_classification, 6},
+    {"_FLGP_negative_log_likelihood", (DL_FUNC) &_FLGP_negative_log_likelihood, 4},
     {"_FLGP_LAE_cpp", (DL_FUNC) &_FLGP_LAE_cpp, 3},
     {"_FLGP_local_anchor_embedding_cpp", (DL_FUNC) &_FLGP_local_anchor_embedding_cpp, 2},
     {"_FLGP_v_to_z_cpp", (DL_FUNC) &_FLGP_v_to_z_cpp, 1},

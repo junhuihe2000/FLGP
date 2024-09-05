@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{cross_similarity_lae_cpp}
 \alias{cross_similarity_lae_cpp}
-\title{Compute cross similarity matrix Z between X and U}
+\title{Compute cross similarity matrix Z between X and U by local anchor embedding}
 \usage{
 cross_similarity_lae_cpp(X, U, r = 3L, gl = "rw")
 }
@@ -27,5 +27,5 @@ is "rw".}
 the stochastic transition matrix from X to U.
 }
 \description{
-Compute cross similarity matrix Z between X and U
+Compute cross similarity matrix Z between X and U by local anchor embedding
 }

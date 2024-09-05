@@ -6,6 +6,8 @@
 #include "lae.h"
 #include "Spectrum.h"
 
+#include <iostream>
+
 
 /*-----------------------------------------------------------------*/
 /*-----------------------------------------------------------------*/
@@ -25,11 +27,11 @@ Rcpp::List lae_eigenmap(const Eigen::MatrixXd & X,
 
 Eigen::MatrixXd heat_kernel_covariance_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
                                            int s, int r, double t, int K,
-                                           Rcpp::List models, int nstart) {
+                                           Rcpp::List models, int nstart, double epsilon) {
   if (K<0) {
     K = s;
   }
-  EigenPair eigenpair = heat_kernel_spectrum_cpp(X, X_new, s, r, K, models, nstart);
+  EigenPair eigenpair = heat_kernel_spectrum_cpp(X, X_new, s, r, K, models, nstart, epsilon);
 
   int m = X.rows(); int m_new = X_new.rows();
   int n = m + m_new;
@@ -44,14 +46,25 @@ Eigen::MatrixXd heat_kernel_covariance_cpp(const Eigen::MatrixXd & X, const Eige
 
 
 EigenPair heat_kernel_spectrum_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & X_new,
-                                   int s, int r, int K, const Rcpp::List & models, int nstart) {
+                                   int s, int r, int K, const Rcpp::List & models, int nstart, double epsilon) {
   int m = X.rows(); int m_new = X_new.rows();
   Eigen::MatrixXd X_all(m+m_new, X.cols());
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
 
   Eigen::MatrixXd U = subsample_cpp(X_all, s, Rcpp::as<std::string>(models["subsample"]), nstart);
-  Eigen::SparseMatrix<double, Eigen::RowMajor> Z = cross_similarity_lae_cpp(X_all, U, r, Rcpp::as<std::string>(models["gl"]));
+  // Eigen::SparseMatrix<double, Eigen::RowMajor> Z = cross_similarity_lae_cpp(X_all, U, r, Rcpp::as<std::string>(models["gl"]));
+
+
+  Eigen::SparseMatrix<double, Eigen::RowMajor> Z;
+  std::string kernel_type = Rcpp::as<std::string>(models["kernel"]);
+  if(kernel_type=="lae") {
+    Z = cross_similarity_lae_cpp(X_all, U, r, Rcpp::as<std::string>(models["gl"]));
+  } else if(kernel_type=="se") {
+    Z = cross_similarity_se_cpp(X_all, U, r, Rcpp::as<std::string>(models["gl"]), epsilon);
+  } else {
+    Rcpp::Rcout << "The kernel type is not supported!\n";
+  }
 
   if(K<0) {
     K = s;
@@ -104,6 +117,31 @@ Eigen::SparseMatrix<double,Eigen::RowMajor> cross_similarity_lae_cpp(
 }
 
 
+Eigen::SparseMatrix<double,Eigen::RowMajor> cross_similarity_se_cpp(
+    const Eigen::MatrixXd & X,
+    const Eigen::MatrixXd & U,
+    int r,
+    Rcpp::String gl, double epsilon) {
+  int d = X.cols();
+  Rcpp::List res_knn = KNN_cpp(X, U.leftCols(d), r, "Euclidean", true);
+  const Eigen::MatrixXi& ind_knn = res_knn["ind_knn"];
+  const Eigen::SparseMatrix<double, Eigen::RowMajor> & distances_sp = res_knn["distances_sp"];
+
+  Eigen::SparseMatrix<double, Eigen::RowMajor> Z = distances_sp;
+
+  Z.coeffs() = Eigen::exp(-distances_sp.coeffs()/(4*epsilon*epsilon));
+
+  Eigen::VectorXd num_class;
+  if(gl=="cluster-normalized") {
+    num_class = U.col(d);
+  }
+
+  graphLaplacian_cpp(Z, gl, num_class);
+
+  return Z;
+}
+
+
 /*
 EigenPair truncated_SVD_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> & Z,
                              int K) {
@@ -139,7 +177,7 @@ EigenPair spectrum_from_Z_cpp(const Eigen::SparseMatrix<double,Eigen::RowMajor> 
                                int K,
                                bool root) {
   Eigen::VectorXd Z_colsum = Eigen::RowVectorXd::Ones(Z.rows()) * Z;
-  Eigen::SparseMatrix<double,Eigen::RowMajor> A = Z*(1.0/(Z_colsum.array().abs()+1e-5).sqrt()).matrix().asDiagonal();
+  Eigen::SparseMatrix<double,Eigen::RowMajor> A = Z*(1.0/(Z_colsum.array().abs()+1e-9).sqrt()).matrix().asDiagonal();
   EigenPair pairs = truncated_SVD_cpp(A, K);
 
   if(root) {

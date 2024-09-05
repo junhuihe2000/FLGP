@@ -13,6 +13,7 @@ heat_kernel_covariance_rcpp(
   K = -1,
   models = list(subsample = "kmeans", kernel = "lae", gl = "cluster-normalized", root =
     TRUE),
+  epsilon = 0.1,
   nstart = 1
 )
 }

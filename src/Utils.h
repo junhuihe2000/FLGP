@@ -5,9 +5,13 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 
+#include <list>
+
+#include "Spectrum.h"
+#include "MultiClassification.h"
 
 
-Eigen::VectorXd f_to_pi(const Eigen::VectorXd & f);
+Eigen::MatrixXd f_to_pi(const Eigen::MatrixXd & f);
 double ilogit(double x);
 Eigen::VectorXd pi_to_Y(const Eigen::VectorXd & pi);
 
@@ -59,7 +63,43 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
 Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r = 3,
                   std::string distance = "Euclidean", bool output = false, int batch=100);
 
+// compute the posterior covariance of test data in GPR
+Eigen::VectorXd posterior_covariance_regression(const EigenPair & eigenpair,
+                                     const Eigen::VectorXi & idx0, const Eigen::VectorXi & idx1,
+                                     int K, const std::vector<double> & pars, double sigma);
 
+//' compute the posterior distribution of test data in GPC
+//' @param C11 Prior covariance matrix on training data.
+//' @param C21 Prior covariance matrix between test data and training data.
+//' @param C22 Prior covariance matrix on test data.
+//' @param Y Training labels.
+//'
+//' @export
+//'
+// [[Rcpp::export(posterior_distribution_classification)]]
+Rcpp::List posterior_distribution_classification(const Eigen::MatrixXd & C11, const Eigen::MatrixXd & C21, const Eigen::VectorXd & C22,
+                                                 const Eigen::VectorXd & Y,
+                                                 double tol=1e-5, int max_iter=100);
+
+// compute the posterior distribution of test data in GPC
+Rcpp::List posterior_distribution_multiclassification(const EigenPair & eigenpair, const std::list<BinaryModel> & models,
+                                                      int m, int m_new, int K, double sigma);
+
+//' compute the negative log likelihood of test data
+//'
+//' @param mean Posterior mean.
+//' @param cov Posterior covariance.
+//' @param target Targeted labels.
+//' @param type The task type, `regression`, `binary` or `multinomial`.
+//'
+//' @return negative log likelihood.
+//' @export
+//'
+// [[Rcpp::export(negative_log_likelihood)]]
+double negative_log_likelihood(const Eigen::MatrixXd & mean, const Eigen::MatrixXd & cov, const Eigen::VectorXd & target, std::string type);
+
+// compute the negative log likelihood of test data in binary classification
+double nll_classification(const Eigen::VectorXd & mean, const Eigen::VectorXd & cov, const Eigen::VectorXd & target, int n_samples=100);
 
 /*
  * Matrix indexing rows and columns
@@ -96,7 +136,6 @@ mat_indexing(const Eigen::MatrixBase<ArgType>& arg, const RowIndexType& row_indi
   typedef typename Func::MatrixType MatrixType;
   return MatrixType::NullaryExpr(row_indices.size(), col_indices.size(), Func(arg.derived(), row_indices, col_indices));
 }
-
 
 
 #endif

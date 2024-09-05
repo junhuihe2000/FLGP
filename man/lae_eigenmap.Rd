@@ -31,7 +31,7 @@ of subsampling, defaulting "kmeans".}
 indicates how to construct the stochastic transition matrix. "rw" means random walk,
 "normalized" means normalized random walk, "cluster-normalized" means
 normalized random walk with cluster membership re-balance. The defaulting gl
-is "rw".}
+is "cluster-normalized".}
 
 \item{nstart}{An integer, the number of random sets chosen in kmeans, defaulting \code{1}.}
 }

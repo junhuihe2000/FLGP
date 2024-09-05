@@ -18,8 +18,8 @@ double ilogit(double x) {
 }
 
 // Stick breaking transform from f to pi
-Eigen::VectorXd f_to_pi(const Eigen::VectorXd & f) {
-  Eigen::VectorXd pi = 1/(1+Eigen::exp(-f.array()));
+Eigen::MatrixXd f_to_pi(const Eigen::MatrixXd & f) {
+  Eigen::MatrixXd pi = 1/(1+Eigen::exp(-f.array()));
   return pi;
 }
 
@@ -184,10 +184,10 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
   if(gl=="rw") {}
   else if(gl=="normalized") {
     Eigen::VectorXd Z_colsum = Eigen::RowVectorXd::Ones(Z.rows()) * Z;
-    Z = Z * (1.0/Z_colsum.array()).matrix().asDiagonal();
+    Z = Z * (1.0/(Z_colsum.array()+1e-9)).matrix().asDiagonal();
   } else if(gl=="cluster-normalized") {
     Eigen::VectorXd Z_colsum = Eigen::RowVectorXd::Ones(Z.rows()) * Z;
-    Z = Z * (1.0/Z_colsum.array()).matrix().asDiagonal();
+    Z = Z * (1.0/(Z_colsum.array()+1e-9)).matrix().asDiagonal();
     Z = Z * num_class.asDiagonal();
   } else {
     Rcpp::stop("Error: the type of graph Laplacian is not supported!");
@@ -196,6 +196,170 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
   Eigen::VectorXd Z_rowsum = Z * Eigen::VectorXd::Ones(Z.cols());
   Z = (1.0/Z_rowsum.array()).matrix().asDiagonal() * Z;
 }
+
+
+Eigen::VectorXd posterior_covariance_regression(const EigenPair & eigenpair,
+                                     const Eigen::VectorXi & idx0, const Eigen::VectorXi & idx1,
+                                     int K, const std::vector<double> & pars, double sigma) {
+  int m = idx0.rows();
+  double t = pars[0];
+  double var = pars[1];
+  Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(K).array();
+  const Eigen::MatrixXd & eigenvectors = eigenpair.vectors;
+  Eigen::VectorXi cols = Eigen::VectorXi::LinSpaced(K,0,K-1);
+  Eigen::MatrixXd V2 = mat_indexing(eigenvectors, idx1, cols);
+  Eigen::DiagonalMatrix<double, Eigen::Dynamic> Lambda = (Eigen::exp(-t*eigenvalues.array())).matrix().asDiagonal();
+  Eigen::VectorXd beta;
+
+  if(m<=K) {
+    Eigen::MatrixXd C11 = HK_from_spectrum_cpp(eigenpair, K, t, idx0, idx0);
+    Eigen::MatrixXd K11 = C11;
+    K11.diagonal().array() += var + sigma;
+    Eigen::MatrixXd C21 = HK_from_spectrum_cpp(eigenpair, K, t, idx1, idx0);
+
+    Eigen::LLT<Eigen::MatrixXd> chol_K(K11);
+    Eigen::MatrixXd alpha = C21*chol_K.solve(Eigen::MatrixXd::Identity(m,m));
+    beta = (C21.array()*alpha.array()).rowwise().sum();
+  } else {
+    Eigen::MatrixXd V1 = mat_indexing(eigenvectors, idx0, cols);
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> Lambda_sqrt = (Eigen::exp(-0.5*t*eigenvalues.array())+0.0).matrix().asDiagonal();
+    Eigen::MatrixXd Q = Lambda_sqrt*V1.transpose()*V1*Lambda_sqrt;
+    Q.diagonal().array() += var + sigma;
+    Eigen::LLT<Eigen::MatrixXd> chol_Q(Q);
+    Eigen::MatrixXd alpha = 1.0/(var+sigma)*Lambda*V1.transpose()*(V1 - V1*Lambda_sqrt*chol_Q.solve(Lambda_sqrt*(V1.transpose()*V1)))*Lambda;
+    beta = (V2.array()*(V2*alpha).array()).rowwise().sum();
+  }
+
+  Eigen::VectorXd cov = ((V2*Lambda).array()*V2.array()).rowwise().sum() + var + sigma - beta.array();
+  return cov;
+}
+
+
+Rcpp::List posterior_distribution_classification(const Eigen::MatrixXd & C11, const Eigen::MatrixXd & C21, const Eigen::VectorXd & C22,
+                                                 const Eigen::VectorXd & Y,
+                                                 double tol, int max_iter) {
+  int m = Y.rows();
+
+  // initialize f
+  Eigen::VectorXd f = Eigen::VectorXd::Constant(m, 0);
+
+  Eigen::VectorXd pi, W, b, a, f_new;
+  Eigen::DiagonalMatrix<double, Eigen::Dynamic> sqrt_W;
+  Eigen::MatrixXd B;
+  Eigen::LLT<Eigen::MatrixXd> chol_B;
+
+
+  // Newton method
+  // locate posterior mode by Algorithm 3.1 in GPML
+  for(int iter=0;iter<max_iter;iter++) {
+    pi = f_to_pi(f);
+    W = pi.array()*(1-pi.array());
+    sqrt_W = W.array().sqrt().matrix().asDiagonal();
+    B = sqrt_W*C11*sqrt_W;
+    B.diagonal().array() += 1;
+    chol_B = B.llt();
+    b = W.array()*f.array() + (Y.array()-pi.array());
+    a = b - sqrt_W*chol_B.solve(sqrt_W*(C11*b));
+    f_new = C11*a;
+
+    if((f-f_new).lpNorm<1>()<tol) {
+      f = f_new;
+      break;
+    } else {
+      f = f_new;
+    }
+  }
+
+  // compute posterior mean and covariance by Algorithm 3.2 in GPML
+  pi = f_to_pi(f);
+  W = pi.array()*(1-pi.array());
+  sqrt_W = W.array().sqrt().matrix().asDiagonal();
+  B = sqrt_W*C11*sqrt_W;
+  B.diagonal().array() += 1;
+  chol_B = B.llt();
+
+  Eigen::VectorXd mean = C21*(Y-pi);
+  Eigen::VectorXd beta = sqrt_W*chol_B.solve(Eigen::MatrixXd::Identity(m,m))*sqrt_W;
+  Eigen::VectorXd cov = C22.array() - ((C21*beta).array()*C21.array()).rowwise().sum();
+  return Rcpp::List::create(Rcpp::Named("mean")=mean, Rcpp::Named("cov")=cov);
+}
+
+
+double negative_log_likelihood(const Eigen::MatrixXd & mean, const Eigen::MatrixXd & cov, const Eigen::VectorXd & target, std::string type) {
+  double nll = 0;
+
+  if(type=="regression") {
+    nll = (((target-mean).array().square()/cov.array() + cov.array().log()).mean() + std::log(2*3.1415926))/2;
+  } else if(type=="binary") {
+    nll = nll_classification(mean, cov, target);
+  } else if(type=="multinomial") {
+    // split test data
+    std::list<BinaryModel> models = multi_train_split(target, target.minCoeff(), target.maxCoeff());
+    int n = 0; int j = 0;
+    for(auto it=models.begin();it!=models.end();it++) {
+      n += (it->idx).size();
+      nll += (it->idx).size()*nll_classification(mat_indexing(mean, it->idx, Eigen::VectorXi::Constant(1,j)),
+                                                 mat_indexing(cov, it->idx, Eigen::VectorXi::Constant(1,j)),
+                                                 it->Y);
+      j++;
+    }
+    nll /= n;
+  }
+
+  return nll;
+}
+
+
+double nll_classification(const Eigen::VectorXd & mean, const Eigen::VectorXd & cov, const Eigen::VectorXd & target, int n_samples) {
+  int n = mean.rows();
+  // random sampling
+  Eigen::MatrixXd rand_mat = Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(Rcpp::rnorm(n*n_samples));
+  rand_mat.resize(n,n_samples);
+  Eigen::MatrixXd f_samples = rand_mat.array().colwise()*cov.array().sqrt();
+  f_samples.colwise() += mean;
+
+  // MC integral
+  Eigen::MatrixXd pi_samples = f_to_pi(f_samples);
+  Eigen::MatrixXd like_samples = pi_samples.array().colwise()*target.array() + (1.0-pi_samples.array()).colwise()*(1.0-target.array());
+  Eigen::VectorXd like = like_samples.array().rowwise().mean();
+  double nll = -like.array().log().mean();
+
+  return nll;
+}
+
+
+Rcpp::List posterior_distribution_multiclassification(const EigenPair & eigenpair, const std::list<BinaryModel> & models,
+                                                      int m, int m_new, int K, double sigma) {
+  int J = models.size();
+  Eigen::VectorXi idx_new = Eigen::VectorXi::LinSpaced(m_new, m, m+m_new-1);
+  Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(K).array();
+  const Eigen::MatrixXd & eigenvectors = eigenpair.vectors;
+  Eigen::VectorXi cols = Eigen::VectorXi::LinSpaced(K,0,K-1);
+  Eigen::MatrixXd V2 = mat_indexing(eigenvectors, idx_new, cols);
+
+  Eigen::MatrixXd mean(m_new,J);
+  Eigen::MatrixXd cov(m_new,J);
+
+  int j = 0;
+  for(auto it=models.begin();it!=models.end();it++) {
+    const ReturnValue & res = it->res;
+    Eigen::MatrixXd C11 = HK_from_spectrum_cpp(eigenpair, K, res.t, it->idx, it->idx);
+    Eigen::MatrixXd C21 = HK_from_spectrum_cpp(eigenpair, K, res.t, idx_new, it->idx);
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> Lambda = (Eigen::exp(-res.t*eigenvalues.array())).matrix().asDiagonal();
+    Eigen::VectorXd C22 = ((V2*Lambda).array()*V2.array()).rowwise().sum() + sigma;
+
+    Rcpp::List post = posterior_distribution_classification(C11, C21, C22, it->Y);
+    mean.col(j) = Rcpp::as<Eigen::VectorXd>(post["mean"]);
+    cov.col(j) = Rcpp::as<Eigen::VectorXd>(post["cov"]);
+    j++;
+  }
+
+  return Rcpp::List::create(Rcpp::Named("mean")=mean,
+                            Rcpp::Named("cov")=cov);
+}
+
+
+
 
 
 

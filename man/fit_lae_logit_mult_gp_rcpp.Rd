@@ -52,7 +52,8 @@ the defaulting value is \code{TRUE}.}
 \item{nstart}{Int, the number of random sets chosen in kmeans.}
 }
 \value{
-\code{Y_pred} A list with two components, that is,
+A list with two components including \code{posterior} and \code{Y_pred},
+where \code{Y_pred} A list with two components, that is,
 \describe{
 \item{train}{A numeric vector with length(m), each element indicates
 the label in the train data point.}
@@ -76,5 +77,5 @@ X_new <- rbind(X0_new, X1_new, X2_new)
 Y_new <- c(rep(0,10),rep(1,10),rep(2,10))
 s <- 6; r <- 3
 K <- 5
-Y_pred <- fit_lae_logit_mult_gp_rcpp(X, Y, X_new, s, r, K)
+res <- fit_lae_logit_mult_gp_rcpp(X, Y, X_new, s, r, K)
 }

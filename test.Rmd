@@ -1,0 +1,72 @@
+---
+title: "test"
+author: "He Junhui"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(microbenchmark)
+```
+
+
+```{Rcpp}
+// [[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+#include <iostream>
+
+template<class ArgType, class RowIndexType, class ColIndexType>
+class indexing_functor {
+  const ArgType &m_arg;
+  const RowIndexType &m_rowIndices;
+  const ColIndexType &m_colIndices;
+public:
+  typedef Eigen::Matrix<typename ArgType::Scalar,
+                        RowIndexType::SizeAtCompileTime,
+                        ColIndexType::SizeAtCompileTime,
+                        ArgType::Flags&Eigen::RowMajorBit?Eigen::RowMajor:Eigen::ColMajor,
+                        RowIndexType::MaxSizeAtCompileTime,
+                        ColIndexType::MaxSizeAtCompileTime> MatrixType;
+
+  indexing_functor(const ArgType& arg, const RowIndexType& row_indices, const ColIndexType& col_indices)
+    : m_arg(arg), m_rowIndices(row_indices), m_colIndices(col_indices)
+  {}
+
+  const typename ArgType::Scalar& operator() (Eigen::Index row, Eigen::Index col) const {
+    return m_arg(m_rowIndices[row], m_colIndices[col]);
+  }
+};
+
+
+// indexing rows and columns
+template <class ArgType, class RowIndexType, class ColIndexType>
+Eigen::CwiseNullaryOp<indexing_functor<ArgType,RowIndexType,ColIndexType>, typename indexing_functor<ArgType,RowIndexType,ColIndexType>::MatrixType>
+mat_indexing(const Eigen::MatrixBase<ArgType>& arg, const RowIndexType& row_indices, const ColIndexType& col_indices)
+{
+  typedef indexing_functor<ArgType,RowIndexType,ColIndexType> Func;
+  typedef typename Func::MatrixType MatrixType;
+  return MatrixType::NullaryExpr(row_indices.size(), col_indices.size(), Func(arg.derived(), row_indices, col_indices));
+}
+
+// [[Rcpp::export(test)]]
+void test() {
+  Eigen::MatrixXd I = Eigen::MatrixXd::Identity(4,4);
+  Eigen::VectorXi rows = Eigen::VectorXi::LinSpaced(3,0,2);
+  Eigen::Index i = 0;
+  std::cout << mat_indexing(I, rows, Eigen::VectorXi::Constant(2,0)) << std::endl;
+}
+
+
+// [[Rcpp::export(test_random)]]
+void test_random() {
+  Rcpp::List l;
+  std::cout << l.length() << std::endl;
+  l.push_back(10);
+  std::cout << l.length() << std::endl;
+}
+```
+
