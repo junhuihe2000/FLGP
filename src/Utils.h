@@ -5,8 +5,6 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 
-#include <list>
-
 #include "Spectrum.h"
 #include "MultiClassification.h"
 
@@ -82,8 +80,9 @@ Rcpp::List posterior_distribution_classification(const Eigen::MatrixXd & C11, co
                                                  double tol=1e-5, int max_iter=100);
 
 // compute the posterior distribution of test data in GPC
-Rcpp::List posterior_distribution_multiclassification(const EigenPair & eigenpair, const std::list<BinaryModel> & models,
-                                                      int m, int m_new, int K, double sigma);
+Rcpp::List posterior_distribution_multiclassification(const EigenPair & eigenpair, const MultiClassifier & multiclassifier,
+                                                      const Eigen::VectorXi & idx, const Eigen::VectorXi & idx_new,
+                                                      int K, double sigma);
 
 //' compute the negative log likelihood of test data
 //'

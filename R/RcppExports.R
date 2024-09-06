@@ -49,6 +49,17 @@ fit_gl_logit_mult_gp_cpp <- function(X_train, Y_train, X_test, K, sigma, a2s, th
     .Call(`_FLGP_fit_gl_logit_mult_gp_cpp`, X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, models)
 }
 
+#' split one multi-classes data set into n_classes binary-classes data set
+#' The multi-class labels should be continuous integers starting from `0`, such as "0,1,2,...,9".
+#' @param Y A numeric vector with length(m), indicating the labels of multi-classes.
+#'
+#' @return A numeric matrix with dim(m,n_classes).
+#'
+#' @export
+multi_train_split_cpp <- function(Y) {
+    .Call(`_FLGP_multi_train_split`, Y)
+}
+
 #' Predict labels on new samples with Polya-Gamma
 #'
 #' @param C A numeric matrix with dim(m,m), the self covariance matrix

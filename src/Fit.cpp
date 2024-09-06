@@ -66,18 +66,6 @@ Rcpp::List fit_lae_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
-  /*
-  Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, res.x[0], idx0, idx0);
-  Eigen::MatrixXd C_noisy = Cvv;
-  C_noisy.diagonal().array() += sigma;
-  C_noisy.diagonal().array() += res.x[1];
-  Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, res.x[0], idx1, idx0);
-
-  // predict labels on the training set
-  Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
-  // predict labels on the testing set
-  Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
-  */
 
   // predict labels on the training set
   Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, res.x, sigma, noise);
@@ -199,17 +187,6 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
-  /*
-  Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
-  Eigen::MatrixXd C_noisy = Cvv;
-  C_noisy.diagonal().array() += sigma + best_pars[1];
-  Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
-
-  // predict labels on the training set
-  Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
-  // predict labels on the testing set
-  Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
-  */
 
   // predict labels on the training set
   Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars, sigma, noise);
@@ -291,9 +268,9 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
     double a2 = a2s[i];
 
     Eigen::MatrixXd Z_UU = Eigen::exp(-distances_UU.array()/(a2*distances_mean));
-    Eigen::VectorXd Z_UU_rowsums = Z_UU.rowwise().sum().array()+1e-5;
+    Eigen::VectorXd Z_UU_rowsums = Z_UU.rowwise().sum().array()+1e-9;
     Eigen::MatrixXd A_UU = (1.0/Z_UU_rowsums.array()).matrix().asDiagonal()*Z_UU*(1.0/Z_UU_rowsums.array()).matrix().asDiagonal();
-    Eigen::DiagonalMatrix<double, Eigen::Dynamic> sqrt_D_inv = (1.0/(A_UU.rowwise().sum().array()+1e-5).sqrt()).matrix().asDiagonal();
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> sqrt_D_inv = (1.0/(A_UU.rowwise().sum().array()+1e-9).sqrt()).matrix().asDiagonal();
     Eigen::MatrixXd W_UU = sqrt_D_inv*A_UU*sqrt_D_inv;
 
 
@@ -304,16 +281,16 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
     // eigenpair_UU.vectors = std::sqrt(s)*sqrt_D_inv*eigenpair_UU.vectors;
     eigenpair_UU.vectors = sqrt_D_inv*eigenpair_UU.vectors;
     Eigen::ArrayXd colnorms = eigenpair_UU.vectors.colwise().norm();
-    eigenpair_UU.vectors = std::sqrt(s)*eigenpair_UU.vectors*(1.0/colnorms).matrix().asDiagonal();
+    eigenpair_UU.vectors = std::sqrt(s)*eigenpair_UU.vectors*(1.0/(colnorms+1e-9)).matrix().asDiagonal();
 
     // Nystrom extension formula
     Eigen::MatrixXd Z_XU = Eigen::exp(-distances_XU.array()/(a2*distances_mean));
-    Eigen::VectorXd Z_XU_rowsums = Z_XU.rowwise().sum().array()+1e-5;
+    Eigen::VectorXd Z_XU_rowsums = Z_XU.rowwise().sum().array()+1e-9;
     Eigen::MatrixXd A_XU = (1.0/Z_XU_rowsums.array()).matrix().asDiagonal()*Z_XU*(1.0/Z_UU_rowsums.array()).matrix().asDiagonal();
-    Eigen::DiagonalMatrix<double, Eigen::Dynamic> D_inv = (1.0/(A_XU.rowwise().sum().array()+1e-5)).matrix().asDiagonal();
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> D_inv = (1.0/(A_XU.rowwise().sum().array()+1e-9)).matrix().asDiagonal();
     Eigen::MatrixXd W_XU = D_inv*A_XU;
     EigenPair eigenpair = eigenpair_UU;
-    eigenpair.vectors = W_XU*eigenpair.vectors*(1.0/eigenpair.values.array()).matrix().asDiagonal();
+    eigenpair.vectors = W_XU*eigenpair.vectors*(1.0/(eigenpair.values.array().abs()+1e-9)).matrix().asDiagonal();
 
     // empirical Bayes to optimize t
     ReturnValueReg res;
@@ -344,24 +321,13 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   Rcpp::Rcout << "Testing...\n";
   // Nystrom extension
   Eigen::MatrixXd Z_allU = Eigen::exp(-distances_allU.array()/(best_a2*distances_mean));
-  Eigen::MatrixXd A_allU = (1.0/Z_allU.rowwise().sum().array()).matrix().asDiagonal()*Z_allU*(1.0/(best_Z_UU.colwise().sum().array())).matrix().asDiagonal();
-  Eigen::MatrixXd W_allU = (1.0/A_allU.rowwise().sum().array()).matrix().asDiagonal()*A_allU;
+  Eigen::MatrixXd A_allU = (1.0/(Z_allU.rowwise().sum().array()+1e-9)).matrix().asDiagonal()*Z_allU*(1.0/(best_Z_UU.colwise().sum().array()+1e-9)).matrix().asDiagonal();
+  Eigen::MatrixXd W_allU = (1.0/(A_allU.rowwise().sum().array()+1e-9)).matrix().asDiagonal()*A_allU;
   EigenPair & eigenpair = best_eigenpair;
-  eigenpair.vectors = W_allU*eigenpair.vectors*(1.0/eigenpair.values.array()).matrix().asDiagonal();
+  eigenpair.vectors = W_allU*eigenpair.vectors*(1.0/(eigenpair.values.array().abs()+1e-9)).matrix().asDiagonal();
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
-  /*
-  Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
-  Eigen::MatrixXd C_noisy = Cvv;
-  C_noisy.diagonal().array() += sigma + best_pars[1];
-  Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
-
-  // predict labels on the training set
-  Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
-  // predict labels on the testing set
-  Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
-  */
 
   // predict labels on the training set
   Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars, sigma, noise);
@@ -457,8 +423,8 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
       Z.coeffs() = Eigen::exp(-Z.coeffs()/(a2*distances_mean));
       Z = (Z + Eigen::SparseMatrix<double>(Z.transpose()))/2.0;
       Eigen::VectorXd Z_rowsum = Z*Eigen::VectorXd::Ones(n);
-      Eigen::SparseMatrix<double> A = (1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal();
-      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-5).sqrt();
+      Eigen::SparseMatrix<double> A = (1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal();
+      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-9).sqrt();
       Eigen::SparseMatrix<double> W = sqrt_D_inv.asDiagonal()*A*sqrt_D_inv.asDiagonal();
 
       Rcpp::List res_eigs = eigs_sym(Rcpp::Named("A")=W,
@@ -468,13 +434,13 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
       // eigenpair.vectors = std::sqrt(n)*sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       eigenpair.vectors = sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       Eigen::ArrayXd colnorms = eigenpair.vectors.colwise().norm();
-      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/colnorms).matrix().asDiagonal();
+      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/(colnorms+1e-9)).matrix().asDiagonal();
     } else {
       Eigen::MatrixXd Z = Eigen::exp(-distances.array()/(a2*distances_mean));
 
       Eigen::VectorXd Z_rowsum = Z*Eigen::VectorXd::Ones(n);
-      Eigen::MatrixXd A = (1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal();
-      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-5).sqrt();
+      Eigen::MatrixXd A = (1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal();
+      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-9).sqrt();
       Eigen::MatrixXd W = sqrt_D_inv.asDiagonal()*A*sqrt_D_inv.asDiagonal();
 
       Rcpp::List res_eigs = eigs_sym(Rcpp::Named("A")=W,
@@ -484,7 +450,7 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
       // eigenpair.vectors = std::sqrt(n)*sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       eigenpair.vectors = sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       Eigen::ArrayXd colnorms = eigenpair.vectors.colwise().norm();
-      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/colnorms).matrix().asDiagonal();
+      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/(colnorms+1e-9)).matrix().asDiagonal();
     }
 
     // empirical Bayes to optimize t
@@ -518,18 +484,6 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
-  /*
-  Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx0, idx0);
-  Eigen::MatrixXd C_noisy = Cvv;
-  C_noisy.diagonal().array() += sigma + best_pars[1];
-  Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, best_pars[0], idx1, idx0);
-
-
-  // predict labels on the training set
-  Eigen::VectorXd train_pred = test_regression_cpp(C_noisy, Y, Cvv);
-  // predict labels on the testing set
-  Eigen::VectorXd test_pred = test_regression_cpp(C_noisy, Y, Cnv);
-  */
 
   // predict labels on the training set
   Eigen::MatrixXd train_pred = predict_regression_cpp(eigenpair, Y, idx0, idx0, K, best_pars, sigma, noise);
@@ -676,9 +630,6 @@ Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
     K = s;
   }
 
-  int min, max;
-  min = Y.minCoeff(); max = Y.maxCoeff();
-
   EigenPair eigenpair = heat_kernel_spectrum_cpp(X, X_new, s, r, K, models, nstart);
 
   Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m, 0, m-1);
@@ -686,31 +637,28 @@ Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   // train model
   Rcpp::Rcout << "Training..." << "\n";
   // empirical Bayes to optimize t
-  std::list<BinaryModel> multi_models = train_logit_mult_gp_cpp(eigenpair, Y, K, min, max, sigma, approach);
-
+  MultiClassifier multiclassifier = train_logit_mult_gp_cpp(eigenpair, Y, idx, K, sigma, approach);
 
   double obj = 0;
-  for(auto it=multi_models.begin();it!=multi_models.end();it++) {
-    obj += (it->res).obj;
+  const std::vector<ReturnValue> & res_vec = multiclassifier.res_vec;
+  for(auto res : res_vec) {
+    obj += res.obj;
   }
+
   Rcpp::Rcout << "By " << approach << " method, the optimal objective function is " << obj << "\n";
 
   // test model
   Rcpp::Rcout << "Testing..." << "\n";
 
-  // predict labels on new samples
-  // Eigen::VectorXd Y_pred = test_logit_mult_gp_cpp(multi_models, eigenpair, m, m_new, K, min, max, sigma);
-
   // predict labels on all samples
   Eigen::VectorXi idx_pred = Eigen::VectorXi::LinSpaced(n, 0, n-1);
-  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multi_models, eigenpair, idx_pred, K, min, max, sigma);
+  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multiclassifier, eigenpair, idx, idx_pred, K, sigma);
   Eigen::VectorXd train_pred = label_pred.topRows(m);
   Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multi_models, m, m_new, K, sigma);
-
+  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_pred, K, sigma);
   Rcpp::Rcout << "Over" << "\n";
 
   return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
@@ -719,66 +667,6 @@ Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
 
 
 
-
-/* RcppParallel often fails with RSpectra, so we choose sequential computing finally
-// parallel square exponential kernel
-struct SEKPAR : public RcppParallel::Worker {
-  // input data
-  const Eigen::VectorXd & Y, N;
-  const Eigen::MatrixXd & U;
-  const Eigen::VectorXi & idx;
-  const Eigen::SparseMatrix<double, Eigen::RowMajor> & distances_sp;
-  std::string gl, approach;
-  bool root;
-  double distances_mean, sigma;
-  int K;
-  // parameters
-  const std::vector<double>& a2s;
-
-  // output data
-  std::vector<ReturnValue> & rvs;
-
-  // initialize from Rcpp input and output matrixces (the RMatrix class
-  // can be automatically converted to from the Rcpp matrix type)
-  SEKPAR(const Eigen::VectorXd & Y, const Eigen::VectorXd & N, const Eigen::MatrixXd& U, const Eigen::VectorXi & idx, const Eigen::SparseMatrix<double, Eigen::RowMajor> & distances_sp,
-      std::string& gl, std::string& approach, bool root, double distances_mean, double sigma, int K,
-      const std::vector<double>& a2s, std::vector<ReturnValue> & rvs) : Y(Y), N(N), U(U), idx(idx), distances_sp(distances_sp), gl(gl),\
-      approach(approach), root(root), distances_mean(distances_mean), sigma(sigma), K(K), a2s(a2s), rvs(rvs) {}
-
-  // function call operator that work for the specified range (begin/end)
-  void operator()(std::size_t begin, std::size_t end) {
-
-    for(std::size_t i=begin;i<end;i++) {
-      double a2 = a2s[i];
-
-      Eigen::SparseMatrix<double, Eigen::RowMajor> Z = distances_sp;
-      Z.coeffs() = Eigen::exp(-Z.coeffs()/(a2*distances_mean));
-
-      if(gl=="cluster-normalized") {
-        graphLaplacian_cpp(Z, gl, U.rightCols(1));
-      } else {
-        graphLaplacian_cpp(Z, gl);
-      }
-
-      EigenPair eigenpair = spectrum_from_Z_cpp(Z, K, root);
-
-      // empirical Bayes to optimize t
-      ReturnValue res;
-      if(approach=="posterior") {
-        PostOFData postdata(eigenpair, Y, N, idx, K, sigma);
-        res = train_lae_logit_gp_cpp(&postdata, approach);
-      } else if(approach=="marginal") {
-        MargOFData margdata(eigenpair, Y, N, idx, K, sigma);
-        res = train_lae_logit_gp_cpp(&margdata, approach);
-      } else {
-        Rcpp::stop("This model selection approach is not supported!");
-      }
-
-      rvs[i] = res;
-    }
-  }
-};
-*/
 
 
 
@@ -818,14 +706,6 @@ Rcpp::List fit_se_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
   bool root = models["root"];
   Eigen::SparseMatrix<double, Eigen::RowMajor> Z = distances_sp;
   int l = a2s.size();
-
-  /* parallel leads to stack imbalance and rstudio restarts
-  std::vector<ReturnValue> rvs(l);
-  SEKPAR sekpar(Y, N, U, idx, distances_sp, gl, approach, root, distances_mean, sigma,
-                K, a2s, rvs);
-
-  RcppParallel::parallelFor(0, l, sekpar);
-  */
 
   // train model
   Rcpp::Rcout << "Training..." << "\n";
@@ -937,9 +817,6 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
     K = s;
   }
 
-  int min = Y.minCoeff();
-  int max = Y.maxCoeff();
-
   Eigen::MatrixXd X_all(n, d);
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
@@ -960,7 +837,7 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Rcpp::Rcout << "Training..." << "\n";
   // grid search
   double best_a2 = 0;
-  std::list<BinaryModel> best_multi_models;
+  MultiClassifier best_multiclassifier;
   double max_obj = -std::numeric_limits<double>::infinity();
   EigenPair best_eigenpair;
   for(int i=0;i<l;i++) {
@@ -977,23 +854,24 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
     EigenPair eigenpair = spectrum_from_Z_cpp(Z, K, root);
 
     // empirical Bayes to optimize t
-    std::list<BinaryModel> multi_models = train_logit_mult_gp_cpp(eigenpair, Y, K, min, max, sigma, approach);
+    MultiClassifier multiclassifier = train_logit_mult_gp_cpp(eigenpair, Y, idx, K, sigma, approach);
 
     double obj = 0;
-    for(auto it=multi_models.begin();it!=multi_models.end();it++) {
-      obj += (it->res).obj;
+    const std::vector<ReturnValue> & res_vec = multiclassifier.res_vec;
+    for(auto res : res_vec) {
+      obj += res.obj;
     }
 
     if(obj>max_obj) {
       max_obj = obj;
-      best_multi_models = multi_models;
+      best_multiclassifier = multiclassifier;
       best_a2 = a2s[i];
       best_eigenpair = eigenpair;
     }
   }
 
   EigenPair & eigenpair = best_eigenpair;
-  std::list<BinaryModel> & multi_models = best_multi_models;
+  MultiClassifier & multiclassifier = best_multiclassifier;
 
   Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2)  \
             << ", the objective function is " << max_obj << "\n";
@@ -1003,14 +881,13 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 
   // predict labels on all samples
   Eigen::VectorXi idx_pred = Eigen::VectorXi::LinSpaced(n, 0, n-1);
-  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multi_models, eigenpair, idx_pred, K, min, max, sigma);
+  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multiclassifier, eigenpair, idx, idx_pred, K, sigma);
   Eigen::VectorXd train_pred = label_pred.topRows(m);
   Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multi_models, m, m_new, K, sigma);
-
+  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_pred, K, sigma);
   Rcpp::Rcout << "Over" << "\n";
 
   return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
@@ -1069,9 +946,9 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
     double a2 = a2s[i];
 
     Eigen::MatrixXd Z_UU = Eigen::exp(-distances_UU.array()/(a2*distances_mean));
-    Eigen::VectorXd Z_UU_rowsums = Z_UU.rowwise().sum().array()+1e-5;
+    Eigen::VectorXd Z_UU_rowsums = Z_UU.rowwise().sum().array()+1e-9;
     Eigen::MatrixXd A_UU = (1.0/Z_UU_rowsums.array()).matrix().asDiagonal()*Z_UU*(1.0/Z_UU_rowsums.array()).matrix().asDiagonal();
-    Eigen::DiagonalMatrix<double, Eigen::Dynamic> sqrt_D_inv = (1.0/(A_UU.rowwise().sum().array()+1e-5).sqrt()).matrix().asDiagonal();
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> sqrt_D_inv = (1.0/(A_UU.rowwise().sum().array()+1e-9).sqrt()).matrix().asDiagonal();
     Eigen::MatrixXd W_UU = sqrt_D_inv*A_UU*sqrt_D_inv;
 
 
@@ -1082,16 +959,16 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
     // eigenpair_UU.vectors = std::sqrt(s)*sqrt_D_inv*eigenpair_UU.vectors;
     eigenpair_UU.vectors = sqrt_D_inv*eigenpair_UU.vectors;
     Eigen::ArrayXd colnorms = eigenpair_UU.vectors.colwise().norm();
-    eigenpair_UU.vectors = std::sqrt(s)*eigenpair_UU.vectors*(1.0/colnorms).matrix().asDiagonal();
+    eigenpair_UU.vectors = std::sqrt(s)*eigenpair_UU.vectors*(1.0/(colnorms+1e-9)).matrix().asDiagonal();
 
     // Nystrom extension formula
     Eigen::MatrixXd Z_XU = Eigen::exp(-distances_XU.array()/(a2*distances_mean));
-    Eigen::VectorXd Z_XU_rowsums = Z_XU.rowwise().sum().array()+1e-5;
+    Eigen::VectorXd Z_XU_rowsums = Z_XU.rowwise().sum().array()+1e-9;
     Eigen::MatrixXd A_XU = (1.0/Z_XU_rowsums.array()).matrix().asDiagonal()*Z_XU*(1.0/Z_UU_rowsums.array()).matrix().asDiagonal();
-    Eigen::DiagonalMatrix<double, Eigen::Dynamic> D_inv = (1.0/(A_XU.rowwise().sum().array()+1e-5)).matrix().asDiagonal();
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> D_inv = (1.0/(A_XU.rowwise().sum().array()+1e-9)).matrix().asDiagonal();
     Eigen::MatrixXd W_XU = D_inv*A_XU;
     EigenPair eigenpair = eigenpair_UU;
-    eigenpair.vectors = W_XU*eigenpair.vectors*(1.0/eigenpair.values.array()).matrix().asDiagonal();
+    eigenpair.vectors = W_XU*eigenpair.vectors*(1.0/(eigenpair.values.array().abs()+1e-9)).matrix().asDiagonal();
 
     // empirical Bayes to optimize t
     ReturnValue res;
@@ -1122,10 +999,10 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Rcpp::Rcout << "Testing..." << "\n";
   // Nystrom extension
   Eigen::MatrixXd Z_allU = Eigen::exp(-distances_allU.array()/(best_a2*distances_mean));
-  Eigen::MatrixXd A_allU = (1.0/Z_allU.rowwise().sum().array()).matrix().asDiagonal()*Z_allU*(1.0/(best_Z_UU.colwise().sum().array())).matrix().asDiagonal();
-  Eigen::MatrixXd W_allU = (1.0/A_allU.rowwise().sum().array()).matrix().asDiagonal()*A_allU;
+  Eigen::MatrixXd A_allU = (1.0/(Z_allU.rowwise().sum().array()+1e-9)).matrix().asDiagonal()*Z_allU*(1.0/(best_Z_UU.colwise().sum().array()+1e-9)).matrix().asDiagonal();
+  Eigen::MatrixXd W_allU = (1.0/(A_allU.rowwise().sum().array()+1e-9)).matrix().asDiagonal()*A_allU;
   EigenPair & eigenpair = best_eigenpair;
-  eigenpair.vectors = W_allU*eigenpair.vectors*(1.0/eigenpair.values.array()).matrix().asDiagonal();
+  eigenpair.vectors = W_allU*eigenpair.vectors*(1.0/(eigenpair.values.array().abs()+1e-9)).matrix().asDiagonal();
   // construct covariance matrix
   Eigen::VectorXi idx0 = Eigen::VectorXi::LinSpaced(m, 0, m-1);
   Eigen::VectorXi idx1 = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
@@ -1183,9 +1060,6 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   int m = X.rows(); int m_new = X_new.rows(); int n = m + m_new;
   int d = X.cols();
 
-  int min = Y.minCoeff();
-  int max = Y.maxCoeff();
-
   Eigen::MatrixXd X_all(n,d);
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
@@ -1201,11 +1075,12 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
 
   double distances_mean = distances_UU.array().sum()/(s*s);
 
+  Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m,0,m-1);
   // train model
   Rcpp::Rcout << "Training..." << "\n";
   // grid search
   double best_a2 = 0;
-  std::list<BinaryModel> best_multi_models;
+  MultiClassifier best_multiclassifier;
   double max_obj = -std::numeric_limits<double>::infinity();
   EigenPair best_eigenpair;
   Eigen::MatrixXd best_Z_UU;
@@ -1218,9 +1093,9 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
     double a2 = a2s[i];
 
     Eigen::MatrixXd Z_UU = Eigen::exp(-distances_UU.array()/(a2*distances_mean));
-    Eigen::VectorXd Z_UU_rowsums = Z_UU.rowwise().sum().array()+1e-5;
+    Eigen::VectorXd Z_UU_rowsums = Z_UU.rowwise().sum().array()+1e-9;
     Eigen::MatrixXd A_UU = (1.0/Z_UU_rowsums.array()).matrix().asDiagonal()*Z_UU*(1.0/Z_UU_rowsums.array()).matrix().asDiagonal();
-    Eigen::DiagonalMatrix<double, Eigen::Dynamic> sqrt_D_inv = (1.0/(A_UU.rowwise().sum().array()+1e-5).sqrt()).matrix().asDiagonal();
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> sqrt_D_inv = (1.0/(A_UU.rowwise().sum().array()+1e-9).sqrt()).matrix().asDiagonal();
     Eigen::MatrixXd W_UU = sqrt_D_inv*A_UU*sqrt_D_inv;
 
 
@@ -1231,28 +1106,29 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
     // eigenpair_UU.vectors = std::sqrt(s)*sqrt_D_inv*eigenpair_UU.vectors;
     eigenpair_UU.vectors = sqrt_D_inv*eigenpair_UU.vectors;
     Eigen::ArrayXd colnorms = eigenpair_UU.vectors.colwise().norm();
-    eigenpair_UU.vectors = std::sqrt(s)*eigenpair_UU.vectors*(1.0/colnorms).matrix().asDiagonal();
+    eigenpair_UU.vectors = std::sqrt(s)*eigenpair_UU.vectors*(1.0/(colnorms+1e-9)).matrix().asDiagonal();
 
     // Nystrom extension formula
     Eigen::MatrixXd Z_XU = Eigen::exp(-distances_XU.array()/(a2*distances_mean));
-    Eigen::VectorXd Z_XU_rowsums = Z_XU.rowwise().sum().array()+1e-5;
+    Eigen::VectorXd Z_XU_rowsums = Z_XU.rowwise().sum().array()+1e-9;
     Eigen::MatrixXd A_XU = (1.0/Z_XU_rowsums.array()).matrix().asDiagonal()*Z_XU*(1.0/Z_UU_rowsums.array()).matrix().asDiagonal();
-    Eigen::DiagonalMatrix<double, Eigen::Dynamic> D_inv = (1.0/(A_XU.rowwise().sum().array()+1e-5)).matrix().asDiagonal();
+    Eigen::DiagonalMatrix<double, Eigen::Dynamic> D_inv = (1.0/(A_XU.rowwise().sum().array()+1e-9)).matrix().asDiagonal();
     Eigen::MatrixXd W_XU = D_inv*A_XU;
     EigenPair eigenpair = eigenpair_UU;
-    eigenpair.vectors = W_XU*eigenpair.vectors*(1.0/eigenpair.values.array()).matrix().asDiagonal();
+    eigenpair.vectors = W_XU*eigenpair.vectors*(1.0/(eigenpair.values.array().abs()+1e-9)).matrix().asDiagonal();
 
     // empirical Bayes to optimize t
-    std::list<BinaryModel> multi_models = train_logit_mult_gp_cpp(eigenpair, Y, K, min, max, sigma, approach);
+    MultiClassifier multiclassifier = train_logit_mult_gp_cpp(eigenpair, Y, idx, K, sigma, approach);
 
     double obj = 0;
-    for(auto it=multi_models.begin();it!=multi_models.end();it++) {
-      obj += (it->res).obj;
+    const std::vector<ReturnValue> & res_vec = multiclassifier.res_vec;
+    for(auto res : res_vec) {
+      obj += res.obj;
     }
 
     if(obj>max_obj) {
       max_obj = obj;
-      best_multi_models = multi_models;
+      best_multiclassifier = multiclassifier;
       best_a2 = a2s[i];
       best_eigenpair = eigenpair_UU;
       best_Z_UU = Z_UU;
@@ -1263,27 +1139,26 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) \
             << ", the objective function is " << max_obj << "\n";
 
-  std::list<BinaryModel> & multi_models = best_multi_models;
+  MultiClassifier & multiclassifier = best_multiclassifier;
 
   // test model
   Rcpp::Rcout << "Testing..." << "\n";
   // Nystrom extension
   Eigen::MatrixXd Z_allU = Eigen::exp(-distances_allU.array()/(best_a2*distances_mean));
-  Eigen::MatrixXd A_allU = (1.0/Z_allU.rowwise().sum().array()).matrix().asDiagonal()*Z_allU*(1.0/(best_Z_UU.colwise().sum().array())).matrix().asDiagonal();
-  Eigen::MatrixXd W_allU = (1.0/A_allU.rowwise().sum().array()).matrix().asDiagonal()*A_allU;
+  Eigen::MatrixXd A_allU = (1.0/(Z_allU.rowwise().sum().array()+1e-9)).matrix().asDiagonal()*Z_allU*(1.0/(best_Z_UU.colwise().sum().array()+1e-9)).matrix().asDiagonal();
+  Eigen::MatrixXd W_allU = (1.0/(A_allU.rowwise().sum().array()+1e-9)).matrix().asDiagonal()*A_allU;
   EigenPair & eigenpair = best_eigenpair;
-  eigenpair.vectors = W_allU*eigenpair.vectors*(1.0/eigenpair.values.array()).matrix().asDiagonal();
+  eigenpair.vectors = W_allU*eigenpair.vectors*(1.0/(eigenpair.values.array().abs()+1e-9)).matrix().asDiagonal();
 
   // predict labels on all samples
   Eigen::VectorXi idx_pred = Eigen::VectorXi::LinSpaced(n, 0, n-1);
-  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multi_models, eigenpair, idx_pred, K, min, max, sigma);
+  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multiclassifier, eigenpair, idx, idx_pred, K, sigma);
   Eigen::VectorXd train_pred = label_pred.topRows(m);
   Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multi_models, m, m_new, K, sigma);
-
+  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_pred, K, sigma);
   Rcpp::Rcout << "Over" << "\n";
 
   return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
@@ -1361,8 +1236,8 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
       Z.coeffs() = Eigen::exp(-Z.coeffs()/(a2*distances_mean));
       Z = (Z + Eigen::SparseMatrix<double>(Z.transpose()))/2.0;
       Eigen::VectorXd Z_rowsum = Z*Eigen::VectorXd::Ones(n);
-      Eigen::SparseMatrix<double> A = (1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal();
-      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-5).sqrt();
+      Eigen::SparseMatrix<double> A = (1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal();
+      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-9).sqrt();
       Eigen::SparseMatrix<double> W = sqrt_D_inv.asDiagonal()*A*sqrt_D_inv.asDiagonal();
 
       Rcpp::List res_eigs = eigs_sym(Rcpp::Named("A")=W,
@@ -1372,13 +1247,13 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
       // eigenpair.vectors = std::sqrt(n)*sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       eigenpair.vectors = sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       Eigen::ArrayXd colnorms = eigenpair.vectors.colwise().norm();
-      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/colnorms).matrix().asDiagonal();
+      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/(colnorms+1e-9)).matrix().asDiagonal();
     } else {
       Eigen::MatrixXd Z = Eigen::exp(-distances.array()/(a2*distances_mean));
 
       Eigen::VectorXd Z_rowsum = Z*Eigen::VectorXd::Ones(n);
-      Eigen::MatrixXd A = (1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal();
-      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-5).sqrt();
+      Eigen::MatrixXd A = (1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal();
+      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-9).sqrt();
       Eigen::MatrixXd W = sqrt_D_inv.asDiagonal()*A*sqrt_D_inv.asDiagonal();
 
       Rcpp::List res_eigs = eigs_sym(Rcpp::Named("A")=W,
@@ -1388,7 +1263,7 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
       // eigenpair.vectors = std::sqrt(n)*sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       eigenpair.vectors = sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       Eigen::ArrayXd colnorms = eigenpair.vectors.colwise().norm();
-      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/colnorms).matrix().asDiagonal();
+      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/(colnorms+1e-9)).matrix().asDiagonal();
     }
 
     // empirical Bayes to optimize t
@@ -1478,22 +1353,12 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   int m = X.rows(); int m_new = X_new.rows(); int n = m + m_new;
   int d = X.cols();
 
-  int min = Y.minCoeff();
-  int max = Y.maxCoeff();
-
   Eigen::MatrixXd X_all(n,d);
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
 
   const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
 
-  /*
-  const Eigen::MatrixXd distances  = ((-2.0*X_all*X_all.transpose()).colwise() + X_all.rowwise().squaredNorm()).rowwise() + X_all.rowwise().squaredNorm().transpose();
-  double distances_mean = distances.array().sum()/(n*n);
-  int r = std::max((int)std::round(threshold*n),3); // r will be greater than 3.
-  Rcpp::List res_knn = KNN_cpp(X_all, X_all, r, "Euclidean", true);
-  const Eigen::SparseMatrix<double, Eigen::RowMajor>& distances_sp = res_knn["distances_sp"];
-  */
 
   Eigen::MatrixXd distances;
   double distances_mean;
@@ -1515,7 +1380,7 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Rcpp::Rcout << "Training..." << "\n";
   // grid search
   double best_a2 = 0;
-  std::list<BinaryModel> best_multi_models;
+  MultiClassifier best_multiclassifier;
   double max_obj = -std::numeric_limits<double>::infinity();
   EigenPair best_eigenpair;
   int l = a2s.size();
@@ -1531,8 +1396,8 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
       Z.coeffs() = Eigen::exp(-Z.coeffs()/(a2*distances_mean));
       Z = (Z + Eigen::SparseMatrix<double>(Z.transpose()))/2.0;
       Eigen::VectorXd Z_rowsum = Z*Eigen::VectorXd::Ones(n);
-      Eigen::SparseMatrix<double> A = (1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal();
-      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-5).sqrt();
+      Eigen::SparseMatrix<double> A = (1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal();
+      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-9).sqrt();
       Eigen::SparseMatrix<double> W = sqrt_D_inv.asDiagonal()*A*sqrt_D_inv.asDiagonal();
 
       Rcpp::List res_eigs = eigs_sym(Rcpp::Named("A")=W,
@@ -1542,13 +1407,13 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
       // eigenpair.vectors = std::sqrt(n)*sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       eigenpair.vectors = sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       Eigen::ArrayXd colnorms = eigenpair.vectors.colwise().norm();
-      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/colnorms).matrix().asDiagonal();
+      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/(colnorms+1e-9)).matrix().asDiagonal();
     } else {
       Eigen::MatrixXd Z = Eigen::exp(-distances.array()/(a2*distances_mean));
 
       Eigen::VectorXd Z_rowsum = Z*Eigen::VectorXd::Ones(n);
-      Eigen::MatrixXd A = (1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-5)).matrix().asDiagonal();
-      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-5).sqrt();
+      Eigen::MatrixXd A = (1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal()*Z*(1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal();
+      Eigen::VectorXd sqrt_D_inv = 1.0/((A*Eigen::VectorXd::Ones(n)).array()+1e-9).sqrt();
       Eigen::MatrixXd W = sqrt_D_inv.asDiagonal()*A*sqrt_D_inv.asDiagonal();
 
       Rcpp::List res_eigs = eigs_sym(Rcpp::Named("A")=W,
@@ -1558,20 +1423,21 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
       // eigenpair.vectors = std::sqrt(n)*sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       eigenpair.vectors = sqrt_D_inv.asDiagonal()*eigenpair.vectors;
       Eigen::ArrayXd colnorms = eigenpair.vectors.colwise().norm();
-      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/colnorms).matrix().asDiagonal();
+      eigenpair.vectors = std::sqrt(n)*eigenpair.vectors*(1.0/(colnorms+1e-9)).matrix().asDiagonal();
     }
 
     // empirical Bayes to optimize t
-    std::list<BinaryModel> multi_models = train_logit_mult_gp_cpp(eigenpair, Y, K, min, max, sigma, approach);
+    MultiClassifier multiclassifier = train_logit_mult_gp_cpp(eigenpair, Y, idx, K, sigma, approach);
 
     double obj = 0;
-    for(auto it=multi_models.begin();it!=multi_models.end();it++) {
-      obj += (it->res).obj;
+    const std::vector<ReturnValue> & res_vec = multiclassifier.res_vec;
+    for(auto res : res_vec) {
+      obj += res.obj;
     }
 
     if(obj>max_obj) {
       max_obj = obj;
-      best_multi_models = multi_models;
+      best_multiclassifier = multiclassifier;
       best_a2 = a2s[i];
       best_eigenpair = eigenpair;
     }
@@ -1579,7 +1445,7 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   }
 
   EigenPair & eigenpair = best_eigenpair;
-  std::list<BinaryModel> & multi_models = best_multi_models;
+  MultiClassifier & multiclassifier = best_multiclassifier;
 
   Rcpp::Rcout << "By " << approach << " method, optimal epsilon = " << std::sqrt(best_a2) \
             << ", the objective function is " << max_obj << "\n";
@@ -1589,14 +1455,13 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 
   // predict labels on all samples
   Eigen::VectorXi idx_pred = Eigen::VectorXi::LinSpaced(n, 0, n-1);
-  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multi_models, eigenpair, idx_pred, K, min, max, sigma);
+  Eigen::VectorXd label_pred = predict_logit_mult_gp_cpp(multiclassifier, eigenpair, idx, idx_pred, K, sigma);
   Eigen::VectorXd train_pred = label_pred.topRows(m);
   Eigen::VectorXd test_pred = label_pred.bottomRows(m_new);
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multi_models, m, m_new, K, sigma);
-
+  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_pred, K, sigma);
   Rcpp::Rcout << "Over" << "\n";
 
   return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,

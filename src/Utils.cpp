@@ -194,7 +194,7 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
   }
 
   Eigen::VectorXd Z_rowsum = Z * Eigen::VectorXd::Ones(Z.cols());
-  Z = (1.0/Z_rowsum.array()).matrix().asDiagonal() * Z;
+  Z = (1.0/(Z_rowsum.array()+1e-9)).matrix().asDiagonal() * Z;
 }
 
 
@@ -289,21 +289,15 @@ double negative_log_likelihood(const Eigen::MatrixXd & mean, const Eigen::Matrix
   double nll = 0;
 
   if(type=="regression") {
-    nll = (((target-mean).array().square()/cov.array() + cov.array().log()).mean() + std::log(2*3.1415926))/2;
+    nll = (((target-mean).array().square()/cov.array() + (cov.array()+1e-9).log()).mean() + std::log(2*3.1415926))/2;
   } else if(type=="binary") {
     nll = nll_classification(mean, cov, target);
   } else if(type=="multinomial") {
     // split test data
-    std::list<BinaryModel> models = multi_train_split(target, target.minCoeff(), target.maxCoeff());
-    int n = 0; int j = 0;
-    for(auto it=models.begin();it!=models.end();it++) {
-      n += (it->idx).size();
-      nll += (it->idx).size()*nll_classification(mat_indexing(mean, it->idx, Eigen::VectorXi::Constant(1,j)),
-                                                 mat_indexing(cov, it->idx, Eigen::VectorXi::Constant(1,j)),
-                                                 it->Y);
-      j++;
+    Eigen::MatrixXd aug_y = multi_train_split(target);
+    for(int j=0;j<aug_y.cols();j++) {
+      nll += nll_classification(mean.col(j), cov.col(j), aug_y.col(j));
     }
-    nll /= n;
   }
 
   return nll;
@@ -322,42 +316,43 @@ double nll_classification(const Eigen::VectorXd & mean, const Eigen::VectorXd & 
   Eigen::MatrixXd pi_samples = f_to_pi(f_samples);
   Eigen::MatrixXd like_samples = pi_samples.array().colwise()*target.array() + (1.0-pi_samples.array()).colwise()*(1.0-target.array());
   Eigen::VectorXd like = like_samples.array().rowwise().mean();
-  double nll = -like.array().log().mean();
+  double nll = -(like.array()+1e-9).log().mean();
 
   return nll;
 }
 
 
-Rcpp::List posterior_distribution_multiclassification(const EigenPair & eigenpair, const std::list<BinaryModel> & models,
-                                                      int m, int m_new, int K, double sigma) {
-  int J = models.size();
-  Eigen::VectorXi idx_new = Eigen::VectorXi::LinSpaced(m_new, m, m+m_new-1);
+Rcpp::List posterior_distribution_multiclassification(const EigenPair & eigenpair, const MultiClassifier & multiclassifier,
+                                                      const Eigen::VectorXi & idx, const Eigen::VectorXi & idx_new,
+                                                      int K, double sigma) {
+  const Eigen::MatrixXd & aug_y = multiclassifier.aug_y;
+  const std::vector<ReturnValue> & res_vec = multiclassifier.res_vec;
+  int J = aug_y.cols();
+
   Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(K).array();
   const Eigen::MatrixXd & eigenvectors = eigenpair.vectors;
   Eigen::VectorXi cols = Eigen::VectorXi::LinSpaced(K,0,K-1);
   Eigen::MatrixXd V2 = mat_indexing(eigenvectors, idx_new, cols);
 
+  int m_new = idx_new.rows();
   Eigen::MatrixXd mean(m_new,J);
   Eigen::MatrixXd cov(m_new,J);
 
-  int j = 0;
-  for(auto it=models.begin();it!=models.end();it++) {
-    const ReturnValue & res = it->res;
-    Eigen::MatrixXd C11 = HK_from_spectrum_cpp(eigenpair, K, res.t, it->idx, it->idx);
-    Eigen::MatrixXd C21 = HK_from_spectrum_cpp(eigenpair, K, res.t, idx_new, it->idx);
+  for(int j=0;j<J;j++) {
+    const ReturnValue & res = res_vec[j];
+    Eigen::MatrixXd C11 = HK_from_spectrum_cpp(eigenpair, K, res.t, idx, idx);
+    Eigen::MatrixXd C21 = HK_from_spectrum_cpp(eigenpair, K, res.t, idx_new, idx);
     Eigen::DiagonalMatrix<double, Eigen::Dynamic> Lambda = (Eigen::exp(-res.t*eigenvalues.array())).matrix().asDiagonal();
     Eigen::VectorXd C22 = ((V2*Lambda).array()*V2.array()).rowwise().sum() + sigma;
 
-    Rcpp::List post = posterior_distribution_classification(C11, C21, C22, it->Y);
+    Rcpp::List post = posterior_distribution_classification(C11, C21, C22, aug_y.col(j));
     mean.col(j) = Rcpp::as<Eigen::VectorXd>(post["mean"]);
     cov.col(j) = Rcpp::as<Eigen::VectorXd>(post["cov"]);
-    j++;
   }
 
   return Rcpp::List::create(Rcpp::Named("mean")=mean,
                             Rcpp::Named("cov")=cov);
 }
-
 
 
 

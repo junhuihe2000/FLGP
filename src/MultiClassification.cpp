@@ -2,7 +2,6 @@
 #include <RcppEigen.h>
 
 #include <vector>
-#include <list>
 
 #include "MultiClassification.h"
 #include "Utils.h"
@@ -11,135 +10,79 @@
 #include "Predict.h"
 
 
-// split one multi-classes data set into multiple binary-classes data set
-// The multi-classes should be continuous integers, such as "0,1,2,...,9".
-std::list<BinaryModel> multi_train_split(const Eigen::VectorXd & Y, int min, int max) {
+
+Eigen::MatrixXd multi_train_split(const Eigen::VectorXd & Y) {
   int m = Y.size();
+  int J = Y.maxCoeff() + 1;
+  Eigen::MatrixXd aug_y = Eigen::MatrixXd::Zero(m,J);
 
-  std::list<BinaryModel> models;
-
-  Eigen::VectorXi idx;
-  Eigen::VectorXd Yj;
-  for(int j=min; j<max; j++) {
-    std::vector<int> idx_vec;
-    std::vector<double> Yj_vec;
-    for(int i=0; i<m; i++) {
-      if(Y(i)>=j) {
-        idx_vec.push_back(i);
-        (Y(i)==j) ? Yj_vec.push_back(1) : Yj_vec.push_back(0);
-      }
+  for(int j=0;j<J;j++) {
+    for(int i=0;i<m;i++) {
+      if(Y(i)==j) {aug_y(i,j)=1;}
     }
-
-    idx = Eigen::Map<Eigen::VectorXi>(idx_vec.data(), idx_vec.size());
-    Yj =  Eigen::Map<Eigen::VectorXd>(Yj_vec.data(), Yj_vec.size());
-    models.push_back(BinaryModel(idx, Yj));
   }
 
-  return models;
+  return aug_y;
 }
 
 
-std::list<BinaryModel> train_logit_mult_gp_cpp(const EigenPair & eigenpair,
+MultiClassifier train_logit_mult_gp_cpp(const EigenPair & eigenpair,
                                                const Eigen::VectorXd & Y,
-                                               int K, int min, int max,
+                                               const Eigen::VectorXi & idx,
+                                               int K,
                                                double sigma, std::string approach) {
   // split train set
-  std::list<BinaryModel> models = multi_train_split(Y, min, max);
-
+  Eigen::MatrixXd aug_y = multi_train_split(Y);
+  Eigen::VectorXd N = Eigen::VectorXd::Constant(Y.size(), 1);
+  int J = Y.maxCoeff() + 1;
+  std::vector<ReturnValue> res_vec;
   // train all binary classification models
-  for(auto it=models.begin();it!=models.end();it++) {
+  for(int j=0;j<J;j++) {
     if(approach=="posterior") {
-      PostOFData postdata(eigenpair, it->Y, it->N, it->idx, K, sigma);
-      it->res = train_lae_logit_gp_cpp(&postdata, approach);
+      PostOFData postdata(eigenpair, aug_y.col(j), N, idx, K, sigma);
+      res_vec.push_back(train_lae_logit_gp_cpp(&postdata, approach));
     } else if(approach=="marginal") {
-      MargOFData margdata(eigenpair, it->Y, it->N, it->idx, K, sigma);
-      it->res = train_lae_logit_gp_cpp(&margdata, approach);
+      MargOFData margdata(eigenpair, aug_y.col(j), N, idx, K, sigma);
+      res_vec.push_back(train_lae_logit_gp_cpp(&margdata, approach));
     } else {
       Rcpp::stop("This model selection approach is not supported!");
     }
   }
 
-  return models;
+  return MultiClassifier(aug_y, res_vec);
 }
 
 
-Eigen::VectorXd test_logit_mult_gp_cpp(const std::list<BinaryModel> & models,
-                              const EigenPair & eigenpair,
-                              int m, int m_new,
-                              int K, int min, int max,
-                              double sigma) {
-  Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(m_new, 0, m_new-1);
-  Eigen::VectorXd Y_pred = Eigen::VectorXd::Constant(m_new, max);
-  int j = min;
-  for(auto it=models.begin();it!=models.end();it++) {
+
+Eigen::VectorXd predict_logit_mult_gp_cpp(const MultiClassifier & multiclassifier,
+                                             const EigenPair & eigenpair,
+                                             const Eigen::VectorXi & idx,
+                                          const Eigen::VectorXi & idx_new,
+                                          int K,
+                                          double sigma) {
+  const Eigen::MatrixXd & aug_y = multiclassifier.aug_y;
+  const std::vector<ReturnValue> & res_vec = multiclassifier.res_vec;
+  int J = aug_y.cols();
+  int m_new = idx_new.rows();
+  Eigen::MatrixXd probs(m_new, J);
+
+  for(int j=0;j<J;j++) {
     // construct covariance matrix
-    const ReturnValue & res = it->res;
-    Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, res.t, it->idx, it->idx);
+    const ReturnValue & res = res_vec[j];
+    Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, res.t, idx, idx);
     Cvv.diagonal().array() += sigma;
-    Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, res.t, idx.array()+m, it->idx);
+    Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, res.t, idx_new, idx);
 
-    // predict binary labels on new samples
-    Eigen::VectorXd Yj_pred = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, it->Y, Cnv)["Y_pred"]);
-
-    // compute the corresponding multi-labels
-    std::vector<int> idx_vec;
-    int mj_new = idx.size();
-    for(int i=0;i<mj_new;i++) {
-      if(Yj_pred(i)==1) {
-        Y_pred(idx(i)) = j;
-      } else {
-        idx_vec.push_back(idx(i));
-      }
-    }
-    idx = Eigen::Map<Eigen::VectorXi>(idx_vec.data(), idx_vec.size());
-
-    j++;
+    // predict binary probabilities on new samples
+    probs.col(j) = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, aug_y.col(j), Cnv, 100, true)["pi_pred"]);
   }
-  if(j!=max) {
-    Rcpp::stop("The number of splitted binary models is wrong!");
+
+  Eigen::VectorXd y_pred(m_new);
+  int loc;
+  for(int i=0;i<m_new;i++) {
+    probs.row(i).maxCoeff(&loc);
+    y_pred(i) = loc;
   }
-  return Y_pred;
+
+  return y_pred;
 }
-
-
-Eigen::VectorXd predict_logit_mult_gp_cpp(const std::list<BinaryModel> & models,
-                                       const EigenPair & eigenpair,
-                                       const Eigen::VectorXi & idx_pred,
-                                       int K, int min, int max,
-                                       double sigma) {
-  Eigen::VectorXi idx = idx_pred;
-  int n = idx.rows();
-  Eigen::VectorXd Y_pred = Eigen::VectorXd::Constant(n, max);
-  int j = min;
-  for(auto it=models.begin();it!=models.end();it++) {
-    // construct covariance matrix
-    const ReturnValue & res = it->res;
-    Eigen::MatrixXd Cvv = HK_from_spectrum_cpp(eigenpair, K, res.t, it->idx, it->idx);
-    Cvv.diagonal().array() += sigma;
-    Eigen::MatrixXd Cnv = HK_from_spectrum_cpp(eigenpair, K, res.t, idx, it->idx);
-
-    // predict binary labels on new samples
-    Eigen::VectorXd Yj_pred = Rcpp::as<Eigen::VectorXd>(test_pgbinary_cpp(Cvv, it->Y, Cnv)["Y_pred"]);
-
-    // compute the corresponding multi-labels
-    std::vector<int> idx_vec;
-    int mj_new = idx.size();
-    for(int i=0;i<mj_new;i++) {
-      if(Yj_pred(i)==1) {
-        Y_pred(idx(i)) = j;
-      } else {
-        idx_vec.push_back(idx(i));
-      }
-    }
-    idx = Eigen::Map<Eigen::VectorXi>(idx_vec.data(), idx_vec.size());
-
-    j++;
-  }
-  if(j!=max) {
-    Rcpp::stop("The number of splitted binary models is wrong!");
-  }
-  return Y_pred;
-}
-
-
-

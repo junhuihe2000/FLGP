@@ -4,6 +4,8 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 
+#include <vector>
+
 #include "train.h"
 
 
@@ -11,52 +13,42 @@
  * -----------------------------------
  * -----------------------------------*/
 
-// The multi-classification model consists of multiple binary classification models.
-// The basic unit of binary models.
-struct BinaryModel{
-  Eigen::VectorXi idx;
-  Eigen::VectorXd Y;
-  Eigen::VectorXd N;
-  ReturnValue res;
+// The multiclass classification model using one-versus-rest strategies.
+struct MultiClassifier{
+  Eigen::MatrixXd aug_y;
+  std::vector<ReturnValue> res_vec;
 
-  BinaryModel(const Eigen::VectorXi & _idx, const Eigen::VectorXd & _Y) : idx(_idx), Y(_Y) {
-    N = Eigen::VectorXd::Constant(Y.size(), 1);
-  }
-  BinaryModel(const Eigen::VectorXi & _idx, const Eigen::VectorXd & _Y, const ReturnValue & _res) : idx(_idx), Y(_Y), res(_res) {
-    N = Eigen::VectorXd::Constant(Y.size(), 1);
-  }
+  MultiClassifier(const Eigen::MatrixXd & _aug_y,
+                  const std::vector<ReturnValue> & _res_vec) : aug_y(_aug_y), res_vec(_res_vec) {}
 
+  MultiClassifier() {}
 };
 
-// split one multi-classes data set into multiple binary-classes data set
-// The multi-classes should be continuous integers, such as "0,1,2,...,9".
-// @param Y A numeric vector with length(m), indicating the labels of multi-classes,
-// `Y` should be continuous integers, such as 0,1,2,...,9.
-// @param min An integer, indicating the minimum of Y.
-// @param max An integer, indicating the maximum of Y.
-std::list<BinaryModel> multi_train_split(const Eigen::VectorXd & Y, int min, int max);
+//' split one multi-classes data set into n_classes binary-classes data set using one-versus-rest strategies.
+//' The multi-class labels should be continuous integers starting from `0`, such as "0,1,2,...,9".
+//' @param Y A numeric vector with length(m), indicating the labels of multi-classes.
+//'
+//' @return A numeric matrix with dim(m,n_classes).
+//'
+//' @export
+//'
+// [[Rcpp::export(multi_train_split)]]
+Eigen::MatrixXd multi_train_split(const Eigen::VectorXd & Y);
 
-
-// Train Gaussian process logistic multinomial regression
-std::list<BinaryModel> train_logit_mult_gp_cpp(const EigenPair & eigenpair,
-                                               const Eigen::VectorXd & Y,
-                                               int K, int min, int max,
-                                               double sigma, std::string approach);
-
-
-
-// Test Gaussian process logistic multinomial regression
-Eigen::VectorXd test_logit_mult_gp_cpp(const std::list<BinaryModel> & models,
-                              const EigenPair & eigenpair,
-                              int m, int m_new,
-                              int K, int min, int max,
-                              double sigma);
+// Train Gaussian process logistic multinomial regression using one-versus-rest strategies.
+MultiClassifier train_logit_mult_gp_cpp(const EigenPair & eigenpair,
+                                        const Eigen::VectorXd & Y,
+                                        const Eigen::VectorXi & idx,
+                                        int K,
+                                        double sigma, std::string approach);
 
 // Predict Gaussian process logistic multinomial regression
-Eigen::VectorXd predict_logit_mult_gp_cpp(const std::list<BinaryModel> & models,
+Eigen::VectorXd predict_logit_mult_gp_cpp(const MultiClassifier & multiclassifier,
                                           const EigenPair & eigenpair,
                                           const Eigen::VectorXi & idx,
-                                          int K, int min, int max,
+                                          const Eigen::VectorXi & idx_new,
+                                          int K,
                                           double sigma);
+
 
 #endif

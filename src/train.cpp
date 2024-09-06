@@ -19,7 +19,7 @@ double negative_log_posterior_logit_cpp(unsigned n, const double *x, double *gra
   double mll = marginal_log_likelihood_logit_la_cpp(C, _data->Y, _data->N);
 
   // prior
-  double pr = _data->p*std::log(x[0]+1e-5) + std::pow(x[0]/_data->tau,-_data->q);
+  double pr = _data->p*std::log(x[0]+1e-9) + std::pow(x[0]/_data->tau,-_data->q);
 
   return (-mll+pr);
 }
@@ -338,10 +338,10 @@ double negative_log_posterior_regression_cpp(unsigned n, const double *x, double
   double nmll = negative_marginal_likelihood_regression_cpp(n, x, grad, _data);
 
   // prior
-  double pr0 = _data->p*std::log(x[0]+1e-5) + std::pow(x[0]/_data->tau,-_data->q);
+  double pr0 = _data->p*std::log(x[0]+1e-9) + std::pow(x[0]/_data->tau,-_data->q);
   double pr1 = (_data->alpha+1)*std::log(x[1]+_data->sigma) + _data->beta/(x[1]+_data->sigma);
 
-  grad[0] += _data->p/(x[0]+1e-5) - (_data->q/_data->tau)*std::pow(x[0]/_data->tau, -_data->q-1);
+  grad[0] += _data->p/(x[0]+1e-9) - (_data->q/_data->tau)*std::pow(x[0]/_data->tau, -_data->q-1);
   grad[1] += (_data->alpha+1)/(x[1]+_data->sigma) - _data->beta/std::pow(x[1]+_data->sigma,2);
 
   return (nmll+pr0+pr1);
@@ -389,7 +389,7 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
     }
     // use Algorithm 2.1 in GPML
     nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
-    nmll += Eigen::MatrixXd(chol_C.matrixL()).diagonal().array().log().sum();
+    nmll += (Eigen::MatrixXd(chol_C.matrixL()).diagonal().array()+1e-9).log().sum();
   } else {
     const EigenPair & eigenpair = _data->eigenpair;
     Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(_data->K).array();
@@ -428,7 +428,7 @@ double negative_marginal_likelihood_regression_cpp(unsigned n, const double *x, 
     // Objective function value is wrong!
     // use Algorithm 2.1 in GPML
     nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
-    nmll += (Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array()).log().sum();
+    nmll += (Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array()+1e-9).log().sum();
     nmll += 0.5*(m-_data->K)*std::log(x[1]+_data->sigma);
   }
 
@@ -444,8 +444,8 @@ double negative_log_posterior_diff_noise_regression_cpp(unsigned n, const double
   double nmll = negative_marginal_likelihood_diff_noise_regression_cpp(n, x, grad, _data);
 
   // prior
-  double pr0 = _data->p*std::log(x[0]+1e-5) + std::pow(x[0]/_data->tau,-_data->q);
-  grad[0] += _data->p/(x[0]+1e-5) - (_data->q/_data->tau)*std::pow(x[0]/_data->tau, -_data->q-1);
+  double pr0 = _data->p*std::log(x[0]+1e-9) + std::pow(x[0]/_data->tau,-_data->q);
+  grad[0] += _data->p/(x[0]+1e-9) - (_data->q/_data->tau)*std::pow(x[0]/_data->tau, -_data->q-1);
   double pr1 = 0.0;
   for(int i=1;i<=m;i++) {
     pr1 += ((_data->alpha+1)*std::log(x[i]+_data->sigma) + _data->beta/(x[i]+_data->sigma))/m;
@@ -496,7 +496,7 @@ double negative_marginal_likelihood_diff_noise_regression_cpp(unsigned n, const 
     }
     // use Algorithm 2.1 in GPML
     nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
-    nmll += Eigen::MatrixXd(chol_C.matrixL()).diagonal().array().log().sum();
+    nmll += (Eigen::MatrixXd(chol_C.matrixL()).diagonal().array()+1e-9).log().sum();
   } else {
     const EigenPair & eigenpair = _data->eigenpair;
     Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(_data->K).array();
@@ -546,8 +546,8 @@ double negative_marginal_likelihood_diff_noise_regression_cpp(unsigned n, const 
     // Objective function value is wrong!
     // use Algorithm 2.1 in GPML
     nmll += 0.5*(_data->Y.array()*alpha.array()).sum()/q;
-    nmll += (Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array()).log().sum();
-    nmll += 0.5*(Z.diagonal().array().log().sum());
+    nmll += (Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array()+1e-9).log().sum();
+    nmll += 0.5*((Z.diagonal().array()+1e-9).log().sum());
   }
 
   // Rcpp::Rcout << "nmll = " << nmll << "\n";
@@ -658,7 +658,7 @@ ReturnValueReg train_regression_gp_cpp(void *data, std::string approach,
 
 
 
-  std::printf("found minimum after %d evaluations\n", count);
+  // std::printf("found minimum after %d evaluations\n", count);
 
   nlopt_destroy(opt);
 
@@ -692,7 +692,7 @@ double marginal_log_likelihood_regression_cpp(const EigenPair & eigenpair,
     Eigen::VectorXd alpha = chol_C.solve(Y);
 
     mll += -0.5*(Y.array()*alpha.array()).sum();
-    mll += -Eigen::MatrixXd(chol_C.matrixL()).diagonal().array().log().sum();
+    mll += -(Eigen::MatrixXd(chol_C.matrixL()).diagonal().array()+1e-9).log().sum();
   } else {
     Eigen::VectorXd eigenvalues = 1 - eigenpair.values.head(K).array();
     const Eigen::MatrixXd & eigenvectors = eigenpair.vectors;
@@ -706,7 +706,7 @@ double marginal_log_likelihood_regression_cpp(const EigenPair & eigenpair,
     Eigen::VectorXd alpha = 1.0/(noise+sigma)*(Y - V*Lambda_sqrt*chol_Q.solve(Lambda_sqrt*(V.transpose()*Y)));
 
     mll += -0.5*(Y.array()*alpha.array()).sum();
-    mll += -(Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array()+1e-5).log().sum();
+    mll += -(Eigen::MatrixXd(chol_Q.matrixL()).diagonal().array()+1e-9).log().sum();
   }
 
   return mll;
@@ -754,7 +754,7 @@ double marginal_log_likelihood_logit_la_cpp(const Eigen::MatrixXd & C,
   // approximate marginal log likelihood
   double amll = -0.5*(a.array()*f.array()).sum();
   amll += (Y.array()*pi.array().log()).sum() + ((N-Y).array()*(1-pi.array()).log()).sum();
-  amll -= Eigen::MatrixXd(chol_B.matrixL()).diagonal().array().log().sum();
+  amll -= (Eigen::MatrixXd(chol_B.matrixL()).diagonal().array()+1e-9).log().sum();
 
   return amll;
 }

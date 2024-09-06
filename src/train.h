@@ -91,7 +91,7 @@ double nmll_rbf_diff_noise_regression_cpp(unsigned n, const double *x, double *g
 // marginal likelihood objective function data in the binary classification
 struct MargOFData {
   const EigenPair & eigenpair;
-  const Eigen::VectorXd & Y;
+  const Eigen::VectorXd Y;
   const Eigen::VectorXd & N;
   const Eigen::VectorXi & idx;
   const int K;
@@ -128,7 +128,7 @@ struct MargDataRBF {
 // posterior objective function data in the binary classification
 struct PostOFData {
   const EigenPair & eigenpair;
-  const Eigen::VectorXd & Y;
+  const Eigen::VectorXd Y;
   const Eigen::VectorXd & N;
   const Eigen::VectorXi & idx;
   const int K;

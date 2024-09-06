@@ -270,6 +270,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// multi_train_split
+Eigen::MatrixXd multi_train_split(const Eigen::VectorXd& Y);
+RcppExport SEXP _FLGP_multi_train_split(SEXP YSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type Y(YSEXP);
+    rcpp_result_gen = Rcpp::wrap(multi_train_split(Y));
+    return rcpp_result_gen;
+END_RCPP
+}
 // test_pgbinary_cpp
 Rcpp::List test_pgbinary_cpp(const Eigen::MatrixXd& C, const Eigen::VectorXd& Y, const Eigen::MatrixXd& Cnv, int N_sample, bool output_pi);
 RcppExport SEXP _FLGP_test_pgbinary_cpp(SEXP CSEXP, SEXP YSEXP, SEXP CnvSEXP, SEXP N_sampleSEXP, SEXP output_piSEXP) {
@@ -473,6 +484,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLGP_fit_nystrom_logit_mult_gp_cpp", (DL_FUNC) &_FLGP_fit_nystrom_logit_mult_gp_cpp, 10},
     {"_FLGP_fit_gl_logit_gp_cpp", (DL_FUNC) &_FLGP_fit_gl_logit_gp_cpp, 12},
     {"_FLGP_fit_gl_logit_mult_gp_cpp", (DL_FUNC) &_FLGP_fit_gl_logit_mult_gp_cpp, 10},
+    {"_FLGP_multi_train_split", (DL_FUNC) &_FLGP_multi_train_split, 1},
     {"_FLGP_test_pgbinary_cpp", (DL_FUNC) &_FLGP_test_pgbinary_cpp, 5},
     {"_FLGP_test_regression_cpp", (DL_FUNC) &_FLGP_test_regression_cpp, 3},
     {"_FLGP_lae_eigenmap", (DL_FUNC) &_FLGP_lae_eigenmap, 7},
