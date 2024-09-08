@@ -221,7 +221,7 @@ Rcpp::List fit_se_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                     int s, int K,
                                     double sigma, std::vector<double> a2s, std::string approach, std::string noise,
-                                    Rcpp::List models,
+                                    std::string subsample,
                                     bool output_cov,
                                     int nstart) {
   Rcpp::Rcout << "Gaussian regression with Nystrom extension:\n";
@@ -238,8 +238,6 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   Eigen::MatrixXd X_all(n,d);
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
-
-  const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
 
   const Eigen::MatrixXd U = subsample_cpp(X_all, s, subsample, nstart).leftCols(d);
 
@@ -365,7 +363,6 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                double sigma, std::vector<double> a2s,
                                double threshold, bool sparse,
                                std::string approach, std::string noise,
-                               Rcpp::List models,
                                bool output_cov) {
   Rcpp::Rcout << "Gaussian regression with graph Laplacian Gaussian process:\n";
 
@@ -382,8 +379,6 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
 
-  const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
-
 
   Eigen::MatrixXd distances;
   double distances_mean;
@@ -393,7 +388,7 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
     int r = std::max((int)std::round(threshold*n),3); // r will be greater than 3.
     Rcpp::List res_knn = KNN_cpp(X_all, X_all, r, "Euclidean", true);
     distances_sp = res_knn["distances_sp"];
-    distances_mean = distances_sp.coeffs().sum()/(n*r) * r;
+    distances_mean = distances_sp.coeffs().mean();
   } else {
     distances = ((-2.0*X_all*X_all.transpose()).colwise() + X_all.rowwise().squaredNorm()).rowwise() + X_all.rowwise().squaredNorm().transpose();
     distances_mean = distances.array().mean();
@@ -658,7 +653,8 @@ Rcpp::List fit_lae_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericV
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_pred, K, sigma);
+  Eigen::VectorXi idx_new = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_new, K, sigma);
   Rcpp::Rcout << "Over" << "\n";
 
   return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
@@ -887,7 +883,8 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_pred, K, sigma);
+  Eigen::VectorXi idx_new = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_new, K, sigma);
   Rcpp::Rcout << "Over" << "\n";
 
   return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
@@ -900,7 +897,7 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                     int s, int K, Rcpp::NumericVector N_train,
                                     double sigma, std::vector<double> a2s, std::string approach,
-                                    Rcpp::List models,
+                                    std::string subsample,
                                     bool output_cov,
                                     int nstart) {
   Rcpp::Rcout << "Binary classificaiton with Nystrom extension:" << "\n";
@@ -918,7 +915,7 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
 
-  const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
+  // const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
 
   const Eigen::MatrixXd U = subsample_cpp(X_all, s, subsample, nstart).leftCols(d);
 
@@ -1048,7 +1045,7 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                     int s, int K,
                                     double sigma, std::vector<double> a2s, std::string approach,
-                                    Rcpp::List models,
+                                    std::string subsample,
                                     int nstart) {
   Rcpp::Rcout << "Multinomial classification with Nystrom extension:" << "\n";
 
@@ -1063,8 +1060,6 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   Eigen::MatrixXd X_all(n,d);
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
-
-  const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
 
   const Eigen::MatrixXd U = subsample_cpp(X_all, s, subsample, nstart).leftCols(d);
 
@@ -1158,7 +1153,8 @@ Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_pred, K, sigma);
+  Eigen::VectorXi idx_new = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_new, K, sigma);
   Rcpp::Rcout << "Over" << "\n";
 
   return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,
@@ -1172,7 +1168,6 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
                                 double sigma, std::vector<double> a2s,
                                 double threshold, bool sparse,
                                 std::string approach,
-                                Rcpp::List models,
                                 bool output_cov) {
   Rcpp::Rcout << "Binary classification with graph Laplacian Gaussian process:" << "\n";
 
@@ -1188,8 +1183,6 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
   Eigen::MatrixXd X_all(n,d);
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
-
-  const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
 
   /*
   const Eigen::MatrixXd distances  = ((-2.0*X_all*X_all.transpose()).colwise() + X_all.rowwise().squaredNorm()).rowwise() + X_all.rowwise().squaredNorm().transpose();
@@ -1207,7 +1200,7 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
     int r = std::max((int)std::round(threshold*n),3); // r will be greater than 3.
     Rcpp::List res_knn = KNN_cpp(X_all, X_all, r, "Euclidean", true);
     distances_sp = res_knn["distances_sp"];
-    distances_mean = distances_sp.coeffs().sum()/(n*r);
+    distances_mean = distances_sp.coeffs().mean();
   } else {
     distances = ((-2.0*X_all*X_all.transpose()).colwise() + X_all.rowwise().squaredNorm()).rowwise() + X_all.rowwise().squaredNorm().transpose();
     distances_mean = distances.array().mean();
@@ -1341,8 +1334,7 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                int K,
                                double sigma, std::vector<double> a2s,
                                double threshold, bool sparse,
-                               std::string approach,
-                               Rcpp::List models) {
+                               std::string approach) {
   Rcpp::Rcout << "Multinomial classification with graph Laplacian Gaussian process:" << "\n";
 
   // map the matrices from R to Eigen
@@ -1357,8 +1349,6 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   X_all.topRows(m) = X;
   X_all.bottomRows(m_new) = X_new;
 
-  const std::string subsample = Rcpp::as<std::string>(models["subsample"]);
-
 
   Eigen::MatrixXd distances;
   double distances_mean;
@@ -1368,7 +1358,7 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
     int r = std::max((int)std::round(threshold*n),3); // r will be greater than 3.
     Rcpp::List res_knn = KNN_cpp(X_all, X_all, r, "Euclidean", true);
     distances_sp = res_knn["distances_sp"];
-    distances_mean = distances_sp.coeffs().sum()/(n*r);
+    distances_mean = distances_sp.coeffs().mean();
   } else {
     distances = ((-2.0*X_all*X_all.transpose()).colwise() + X_all.rowwise().squaredNorm()).rowwise() + X_all.rowwise().squaredNorm().transpose();
     distances_mean = distances.array().mean();
@@ -1461,7 +1451,8 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
   Rcpp::List Y_pred = Rcpp::List::create(Rcpp::Named("train")=train_pred,
                                          Rcpp::Named("test")=test_pred);
 
-  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_pred, K, sigma);
+  Eigen::VectorXi idx_new = Eigen::VectorXi::LinSpaced(m_new, m, n-1);
+  Rcpp::List post = posterior_distribution_multiclassification(eigenpair, multiclassifier, idx, idx_new, K, sigma);
   Rcpp::Rcout << "Over" << "\n";
 
   return Rcpp::List::create(Rcpp::Named("Y_pred")=Y_pred,

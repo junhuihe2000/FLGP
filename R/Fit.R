@@ -152,15 +152,7 @@ fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-5, a2s=N
 #' @param noise A character vector, taking value in c("same", "different"),
 #' indicates whether the noise variances in different locations are different,
 #' defaulting value is `same`.
-#' @param models A list with four components
-#' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
-#' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
-#' defaulting value is `lae`.}
-#' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
-#' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
-#' the defaulting value is `TRUE`.}
-#' }
+#' @param subsample The method of subsampling, the defaulting value is `kmeans`.
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
@@ -184,10 +176,7 @@ fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-5, a2s=N
 #' nystrom <- fit_nystrom_regression_gp_rcpp(X, Y, X_new, s, K)
 fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-5, a2s=NULL,
                                       approach="posterior", noise="same",
-                                      models=list(subsample="kmeans",
-                                                  kernel="lae",
-                                                  gl="cluster-normalized",
-                                                  root=TRUE),
+                                      subsample="kmeans",
                                       output_cov=FALSE,
                                       nstart=1) {
 
@@ -199,7 +188,7 @@ fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-5, a2s
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_nystrom_regression_gp_cpp(X,Y,X_new,s,K,sigma,a2s,approach,noise,models,output_cov,nstart)
+  res = fit_nystrom_regression_gp_cpp(X,Y,X_new,s,K,sigma,a2s,approach,noise,subsample,output_cov,nstart)
 
   return(res)
 
@@ -224,15 +213,6 @@ fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-5, a2s
 #' @param noise A character vector, taking value in c("same", "different"),
 #' indicates whether the noise variances in different locations are different,
 #' defaulting value is `same`.
-#' @param models A list with four components
-#' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
-#' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
-#' defaulting value is `lae`.}
-#' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
-#' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
-#' the defaulting value is `TRUE`.}
-#' }
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #'
 #' @return `res` A list with three components including `pars`, `posterior` and `Y_pred`,
@@ -247,17 +227,13 @@ fit_nystrom_regression_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-5, a2s
 fit_gl_regression_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-5, a2s=NULL,
                                  threshold=0.01, sparse=TRUE,
                                  approach ="posterior", noise="same",
-                                 models=list(subsample="kmeans",
-                                             kernel="lae",
-                                             gl="cluster-normalized",
-                                             root=TRUE),
                                  output_cov=FALSE) {
 
   if(is.null(a2s)) {
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_gl_regression_gp_cpp(X,Y,X_new,K,sigma,a2s,threshold,sparse,approach,noise,models,output_cov)
+  res = fit_gl_regression_gp_cpp(X,Y,X_new,K,sigma,a2s,threshold,sparse,approach,noise,output_cov)
 
   return(res)
 
@@ -418,6 +394,7 @@ fit_se_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
 #' @param a2s A numeric vector, the searching range for bandwidth.
 #' @param approach A character vector, taking value in c("posterior", "marginal"),
 #' decides which objective function to be optimized, defaulting value is `posterior`.
+#' @param subsample The method of subsampling, the defaulting value is `kmeans`.
 #' @param models A list with four components
 #' \describe{
 #' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
@@ -455,16 +432,13 @@ fit_se_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
 #' res <- fit_nystrom_logit_mult_gp_rcpp(X, Y, X_new, s, K)
 fit_nystrom_logit_mult_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s=NULL,
                                       approach="posterior",
-                                      models=list(subsample="kmeans",
-                                                  kernel="lae",
-                                                  gl="cluster-normalized",
-                                                  root=TRUE),
+                                      subsample="kmeans",
                                       nstart=1) {
   if(is.null(a2s)) {
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  Y_pred = fit_nystrom_logit_mult_gp_cpp(X,Y,X_new,s,K,sigma,a2s,approach,models,nstart)
+  Y_pred = fit_nystrom_logit_mult_gp_cpp(X,Y,X_new,s,K,sigma,a2s,approach,subsample,nstart)
 
   return(Y_pred)
 }
@@ -485,15 +459,6 @@ fit_nystrom_logit_mult_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s
 #' @param sparse bool, sparse GLGP or not, defaulting value is `TRUE`.
 #' @param approach A character vector, taking value in c("posterior", "marginal"),
 #' decides which objective function to be optimized, defaulting value is `posterior`.
-#' @param models A list with four components
-#' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
-#' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
-#' defaulting value is `lae`.}
-#' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
-#' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
-#' the defaulting value is `TRUE`.}
-#' }
 #'
 #' @return A list with two components including `posterior` and `Y_pred`,
 #' where `Y_pred` A list with two components, that is,
@@ -506,16 +471,12 @@ fit_nystrom_logit_mult_gp_rcpp <- function(X, Y, X_new, s, K=-1, sigma=1e-3, a2s
 #' @export
 fit_gl_logit_mult_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-3, a2s=NULL,
                                      threshold=0.01, sparse=TRUE,
-                                     approach ="posterior",
-                                     models=list(subsample="kmeans",
-                                                 kernel="lae",
-                                                 gl="cluster-normalized",
-                                                 root=TRUE)) {
+                                     approach ="posterior") {
   if(is.null(a2s)) {
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  Y_pred = fit_gl_logit_mult_gp_cpp(X,Y,X_new,K,sigma,a2s,threshold,sparse,approach,models)
+  Y_pred = fit_gl_logit_mult_gp_cpp(X,Y,X_new,K,sigma,a2s,threshold,sparse,approach)
 
   return(Y_pred)
 }
@@ -680,15 +641,7 @@ fit_se_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3, a2
 #' @param a2s A numeric vector, the searching range for bandwidth.
 #' @param approach A character vector, taking value in c("posterior", "marginal"),
 #' decides which objective function to be optimized, defaulting value is `posterior`.
-#' @param models A list with four components
-#' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
-#' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
-#' defaulting value is `lae`.}
-#' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
-#' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
-#' the defaulting value is `TRUE`.}
-#' }
+#' @param subsample The method of subsampling, the defaulting value is `kmeans`.
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
@@ -716,10 +669,7 @@ fit_se_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3, a2
 #' Y_pred <- fit_nystrom_logit_gp_rcpp(X, Y, X_new, s, K)
 fit_nystrom_logit_gp_rcpp <- function(X, Y, X_new, s, K=-1, N=NULL, sigma=1e-3, a2s=NULL,
                                       approach="posterior",
-                                      models=list(subsample="kmeans",
-                                                  kernel="lae",
-                                                  gl="cluster-normalized",
-                                                  root=TRUE),
+                                      subsample="kmeans",
                                       output_cov=FALSE,
                                       nstart=1) {
 
@@ -735,7 +685,7 @@ fit_nystrom_logit_gp_rcpp <- function(X, Y, X_new, s, K=-1, N=NULL, sigma=1e-3, 
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_nystrom_logit_gp_cpp(X,Y,X_new,s,K,N,sigma,a2s,approach,models,output_cov,nstart)
+  res = fit_nystrom_logit_gp_cpp(X,Y,X_new,s,K,N,sigma,a2s,approach,subsample,output_cov,nstart)
 
   return(res)
 }
@@ -757,15 +707,6 @@ fit_nystrom_logit_gp_rcpp <- function(X, Y, X_new, s, K=-1, N=NULL, sigma=1e-3, 
 #' @param sparse bool, sparse GLGP or not, defaulting value is `TRUE`.
 #' @param approach A character vector, taking value in c("posterior", "marginal"),
 #' decides which objective function to be optimized, defaulting value is `posterior`.
-#' @param models A list with four components
-#' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
-#' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
-#' defaulting value is `lae`.}
-#' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
-#' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
-#' the defaulting value is `TRUE`.}
-#' }
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #'
 #' @return `res` A list with two components including `pars`, `posterior` and `Y_pred`,
@@ -780,10 +721,6 @@ fit_nystrom_logit_gp_rcpp <- function(X, Y, X_new, s, K=-1, N=NULL, sigma=1e-3, 
 fit_gl_logit_gp_rcpp <- function(X, Y, X_new, K, N=NULL, sigma=1e-3, a2s=NULL,
                             threshold=0.01, sparse=TRUE,
                             approach ="posterior",
-                            models=list(subsample="kmeans",
-                                        kernel="lae",
-                                        gl="cluster-normalized",
-                                        root=TRUE),
                             output_cov=FALSE) {
   if(is.null(N)) {
     N = rep(1,nrow(X))
@@ -793,7 +730,7 @@ fit_gl_logit_gp_rcpp <- function(X, Y, X_new, K, N=NULL, sigma=1e-3, a2s=NULL,
     a2s = exp(seq(log(0.1),log(10),length.out=10))
   }
 
-  res = fit_gl_logit_gp_cpp(X,Y,X_new,K,N,sigma,a2s,threshold,sparse,approach,models,output_cov)
+  res = fit_gl_logit_gp_cpp(X,Y,X_new,K,N,sigma,a2s,threshold,sparse,approach,output_cov)
 
   return(res)
 }

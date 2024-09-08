@@ -9,12 +9,12 @@ fit_se_regression_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, sigma, a
     .Call(`_FLGP_fit_se_regression_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, noise, models, output_cov, nstart)
 }
 
-fit_nystrom_regression_gp_cpp <- function(X_train, Y_train, X_test, s, K, sigma, a2s, approach, noise, models, output_cov, nstart) {
-    .Call(`_FLGP_fit_nystrom_regression_gp_cpp`, X_train, Y_train, X_test, s, K, sigma, a2s, approach, noise, models, output_cov, nstart)
+fit_nystrom_regression_gp_cpp <- function(X_train, Y_train, X_test, s, K, sigma, a2s, approach, noise, subsample, output_cov, nstart) {
+    .Call(`_FLGP_fit_nystrom_regression_gp_cpp`, X_train, Y_train, X_test, s, K, sigma, a2s, approach, noise, subsample, output_cov, nstart)
 }
 
-fit_gl_regression_gp_cpp <- function(X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, noise, models, output_cov) {
-    .Call(`_FLGP_fit_gl_regression_gp_cpp`, X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, noise, models, output_cov)
+fit_gl_regression_gp_cpp <- function(X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, noise, output_cov) {
+    .Call(`_FLGP_fit_gl_regression_gp_cpp`, X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, noise, output_cov)
 }
 
 fit_lae_logit_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, N_train, sigma, approach, models, output_cov, nstart) {
@@ -33,30 +33,31 @@ fit_se_logit_mult_gp_cpp <- function(X_train, Y_train, X_test, s, r, K, sigma, a
     .Call(`_FLGP_fit_se_logit_mult_gp_cpp`, X_train, Y_train, X_test, s, r, K, sigma, a2s, approach, models, nstart)
 }
 
-fit_nystrom_logit_gp_cpp <- function(X_train, Y_train, X_test, s, K, N_train, sigma, a2s, approach, models, output_cov, nstart) {
-    .Call(`_FLGP_fit_nystrom_logit_gp_cpp`, X_train, Y_train, X_test, s, K, N_train, sigma, a2s, approach, models, output_cov, nstart)
+fit_nystrom_logit_gp_cpp <- function(X_train, Y_train, X_test, s, K, N_train, sigma, a2s, approach, subsample, output_cov, nstart) {
+    .Call(`_FLGP_fit_nystrom_logit_gp_cpp`, X_train, Y_train, X_test, s, K, N_train, sigma, a2s, approach, subsample, output_cov, nstart)
 }
 
-fit_nystrom_logit_mult_gp_cpp <- function(X_train, Y_train, X_test, s, K, sigma, a2s, approach, models, nstart) {
-    .Call(`_FLGP_fit_nystrom_logit_mult_gp_cpp`, X_train, Y_train, X_test, s, K, sigma, a2s, approach, models, nstart)
+fit_nystrom_logit_mult_gp_cpp <- function(X_train, Y_train, X_test, s, K, sigma, a2s, approach, subsample, nstart) {
+    .Call(`_FLGP_fit_nystrom_logit_mult_gp_cpp`, X_train, Y_train, X_test, s, K, sigma, a2s, approach, subsample, nstart)
 }
 
-fit_gl_logit_gp_cpp <- function(X_train, Y_train, X_test, K, N_train, sigma, a2s, threshold, sparse, approach, models, output_cov) {
-    .Call(`_FLGP_fit_gl_logit_gp_cpp`, X_train, Y_train, X_test, K, N_train, sigma, a2s, threshold, sparse, approach, models, output_cov)
+fit_gl_logit_gp_cpp <- function(X_train, Y_train, X_test, K, N_train, sigma, a2s, threshold, sparse, approach, output_cov) {
+    .Call(`_FLGP_fit_gl_logit_gp_cpp`, X_train, Y_train, X_test, K, N_train, sigma, a2s, threshold, sparse, approach, output_cov)
 }
 
-fit_gl_logit_mult_gp_cpp <- function(X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, models) {
-    .Call(`_FLGP_fit_gl_logit_mult_gp_cpp`, X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach, models)
+fit_gl_logit_mult_gp_cpp <- function(X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach) {
+    .Call(`_FLGP_fit_gl_logit_mult_gp_cpp`, X_train, Y_train, X_test, K, sigma, a2s, threshold, sparse, approach)
 }
 
-#' split one multi-classes data set into n_classes binary-classes data set
+#' split one multi-classes data set into n_classes binary-classes data set using one-versus-rest strategies.
 #' The multi-class labels should be continuous integers starting from `0`, such as "0,1,2,...,9".
 #' @param Y A numeric vector with length(m), indicating the labels of multi-classes.
 #'
 #' @return A numeric matrix with dim(m,n_classes).
 #'
 #' @export
-multi_train_split_cpp <- function(Y) {
+#'
+multi_train_split <- function(Y) {
     .Call(`_FLGP_multi_train_split`, Y)
 }
 

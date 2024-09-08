@@ -19,7 +19,7 @@ double ilogit(double x) {
 
 // Stick breaking transform from f to pi
 Eigen::MatrixXd f_to_pi(const Eigen::MatrixXd & f) {
-  Eigen::MatrixXd pi = 1/(1+Eigen::exp(-f.array()));
+  Eigen::MatrixXd pi = 1.0/(1.0+Eigen::exp(-f.array()));
   return pi;
 }
 
@@ -316,7 +316,7 @@ double nll_classification(const Eigen::VectorXd & mean, const Eigen::VectorXd & 
   Eigen::MatrixXd pi_samples = f_to_pi(f_samples);
   Eigen::MatrixXd like_samples = pi_samples.array().colwise()*target.array() + (1.0-pi_samples.array()).colwise()*(1.0-target.array());
   Eigen::VectorXd like = like_samples.array().rowwise().mean();
-  double nll = -(like.array()+1e-9).log().mean();
+  double nll = -(like.array()+1e-2).log().mean();
 
   return nll;
 }

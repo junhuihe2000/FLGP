@@ -13,9 +13,7 @@ fit_gl_logit_mult_gp_rcpp(
   a2s = NULL,
   threshold = 0.01,
   sparse = TRUE,
-  approach = "posterior",
-  models = list(subsample = "kmeans", kernel = "lae", gl = "cluster-normalized", root =
-    TRUE)
+  approach = "posterior"
 )
 }
 \arguments{
@@ -40,16 +38,6 @@ the defaulting value is 1e-3.}
 
 \item{approach}{A character vector, taking value in c("posterior", "marginal"),
 decides which objective function to be optimized, defaulting value is \code{posterior}.}
-
-\item{models}{A list with four components
-\describe{
-\item{subsample}{the method of subsampling, the defaulting value is \code{kmeans}.}
-\item{kernel}{the type of kernel to compute cross similarity matrix W, the
-defaulting value is \code{lae}.}
-\item{gl}{the kind of graph Laplacian L, the defaulting value is \code{cluster-normalized}.}
-\item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
-the defaulting value is \code{TRUE}.}
-}}
 }
 \value{
 A list with two components including \code{posterior} and \code{Y_pred},

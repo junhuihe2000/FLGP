@@ -31,7 +31,7 @@ Rcpp::List fit_nystrom_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::Nume
                                          int s, int K,
                                          double sigma, std::vector<double> a2s, std::string approach,
                                          std::string noise,
-                                         Rcpp::List models,
+                                         std::string subsample,
                                          bool output_cov,
                                          int nstart);
 
@@ -42,7 +42,6 @@ Rcpp::List fit_gl_regression_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                     double sigma, std::vector<double> a2s,
                                     double threshold, bool sparse,
                                     std::string approach, std::string noise,
-                                    Rcpp::List models,
                                     bool output_cov);
 
 // Fit Gaussian process logistic regression with local anchor embedding kernels
@@ -88,7 +87,7 @@ Rcpp::List fit_se_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                     int s, int K, Rcpp::NumericVector N_train,
                                     double sigma, std::vector<double> a2s, std::string approach,
-                                    Rcpp::List models,
+                                    std::string subsample,
                                     bool output_cov,
                                     int nstart);
 
@@ -97,7 +96,7 @@ Rcpp::List fit_nystrom_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
 Rcpp::List fit_nystrom_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector Y_train, Rcpp::NumericMatrix X_test,
                                          int s, int K,
                                          double sigma, std::vector<double> a2s, std::string approach,
-                                         Rcpp::List models,
+                                         std::string subsample,
                                          int nstart);
 
 // Fit logistic regression with GLGP
@@ -107,7 +106,6 @@ Rcpp::List fit_gl_logit_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVector 
                                double sigma, std::vector<double> a2s,
                                double threshold, bool sparse,
                                std::string approach,
-                               Rcpp::List models,
                                bool output_cov);
 
 // Fit logistic multinomial regression with GLGP
@@ -116,7 +114,6 @@ Rcpp::List fit_gl_logit_mult_gp_cpp(Rcpp::NumericMatrix X_train, Rcpp::NumericVe
                                     int K,
                                     double sigma, std::vector<double> a2s,
                                     double threshold, bool sparse,
-                                    std::string approach,
-                                    Rcpp::List models);
+                                    std::string approach);
 
 #endif

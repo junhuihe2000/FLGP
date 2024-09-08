@@ -13,8 +13,7 @@ fit_nystrom_logit_mult_gp_rcpp(
   sigma = 0.001,
   a2s = NULL,
   approach = "posterior",
-  models = list(subsample = "kmeans", kernel = "lae", gl = "cluster-normalized", root =
-    TRUE),
+  subsample = "kmeans",
   nstart = 1
 )
 }
@@ -39,6 +38,10 @@ the defaulting value is 1e-3.}
 \item{approach}{A character vector, taking value in c("posterior", "marginal"),
 decides which objective function to be optimized, defaulting value is \code{posterior}.}
 
+\item{subsample}{The method of subsampling, the defaulting value is \code{kmeans}.}
+
+\item{nstart}{Int, the number of random sets chosen in kmeans.}
+
 \item{models}{A list with four components
 \describe{
 \item{subsample}{the method of subsampling, the defaulting value is \code{kmeans}.}
@@ -48,8 +51,6 @@ defaulting value is \code{lae}.}
 \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
 the defaulting value is \code{TRUE}.}
 }}
-
-\item{nstart}{Int, the number of random sets chosen in kmeans.}
 }
 \value{
 A list with two components including \code{posterior} and \code{Y_pred},
