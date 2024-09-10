@@ -41,7 +41,7 @@ the defaulting value is 1e-3.}
 \item{approach}{A character vector, taking value in c("posterior", "marginal"),
 decides which objective function to be optimized, defaulting value is \code{posterior}.}
 
-\item{subsample}{The method of subsampling, the defaulting value is \code{kmeans}.}
+\item{subsample}{The method of subsampling in c(\code{kmeans}, \code{random}, \code{minibatchkmeans}), the defaulting value is \code{kmeans}.}
 
 \item{output_cov}{Bool, whether to output covariance, defaulting value is \code{FALSE}.}
 

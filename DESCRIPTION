@@ -23,6 +23,7 @@ Imports:
     RcppEigen,
     RSpectra,
     stats,
+    ClusterR,
     nloptr,
     RcppParallel
 LinkingTo: 

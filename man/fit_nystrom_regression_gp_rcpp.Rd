@@ -43,7 +43,7 @@ decides which objective function to be optimized, defaulting value is \code{post
 indicates whether the noise variances in different locations are different,
 defaulting value is \code{same}.}
 
-\item{subsample}{The method of subsampling, the defaulting value is \code{kmeans}.}
+\item{subsample}{The method of subsampling in c(\code{kmeans}, \code{random}, \code{minibatchkmeans}), the defaulting value is \code{kmeans}.}
 
 \item{output_cov}{Bool, whether to output covariance, defaulting value is \code{FALSE}.}
 

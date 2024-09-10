@@ -25,7 +25,7 @@
 #' defaulting value is `same`.
 #' @param models A list with four components
 #' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
+#' \item{subsample}{the method of subsampling in c(`kmeans`, `random`, `minibatchkmeans`), the defaulting value is `kmeans`.}
 #' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
 #' defaulting value is `lae`.}
 #' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
@@ -88,7 +88,7 @@ fit_lae_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-5,
 #' defaulting value is `same`.
 #' @param models A list with four components
 #' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
+#' \item{subsample}{the method of subsampling in c(`kmeans`, `random`, `minibatchkmeans`), the defaulting value is `kmeans`.}
 #' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
 #' defaulting value is `lae`.}
 #' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
@@ -152,7 +152,7 @@ fit_se_regression_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-5, a2s=N
 #' @param noise A character vector, taking value in c("same", "different"),
 #' indicates whether the noise variances in different locations are different,
 #' defaulting value is `same`.
-#' @param subsample The method of subsampling, the defaulting value is `kmeans`.
+#' @param subsample The method of subsampling in c(`kmeans`, `random`, `minibatchkmeans`), the defaulting value is `kmeans`.
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
@@ -262,7 +262,7 @@ fit_gl_regression_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-5, a2s=NULL,
 #' decides which objective function to be optimized, defaulting value is `posterior`.
 #' @param models A list with four components
 #' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
+#' \item{subsample}{the method of subsampling in c(`kmeans`, `random`, `minibatchkmeans`), the defaulting value is `kmeans`.}
 #' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
 #' defaulting value is `lae`.}
 #' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
@@ -329,7 +329,7 @@ fit_lae_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3,
 #' decides which objective function to be optimized, defaulting value is `posterior`.
 #' @param models A list with four components
 #' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
+#' \item{subsample}{the method of subsampling in c(`kmeans`, `random`, `minibatchkmeans`), the defaulting value is `kmeans`.}
 #' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
 #' defaulting value is `lae`.}
 #' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
@@ -394,16 +394,7 @@ fit_se_logit_mult_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, sigma=1e-3, a2s=N
 #' @param a2s A numeric vector, the searching range for bandwidth.
 #' @param approach A character vector, taking value in c("posterior", "marginal"),
 #' decides which objective function to be optimized, defaulting value is `posterior`.
-#' @param subsample The method of subsampling, the defaulting value is `kmeans`.
-#' @param models A list with four components
-#' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
-#' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
-#' defaulting value is `lae`.}
-#' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
-#' \item{root}{whether to square root eigenvalues of the two steps similarity matrix W,
-#' the defaulting value is `TRUE`.}
-#' }
+#' @param subsample The method of subsampling in c(`kmeans`, `random`, `minibatchkmeans`), the defaulting value is `kmeans`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'
 #' @return A list with two components including `posterior` and `Y_pred`,
@@ -502,7 +493,7 @@ fit_gl_logit_mult_gp_rcpp <- function(X, Y, X_new, K, sigma=1e-3, a2s=NULL,
 #' decides which objective function to be optimized, defaulting value is `posterior`.
 #' @param models A list with four components
 #' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
+#' \item{subsample}{the method of subsampling in c(`kmeans`, `random`, `minibatchkmeans`), the defaulting value is `kmeans`.}
 #' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
 #' defaulting value is `lae`.}
 #' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
@@ -572,7 +563,7 @@ fit_lae_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3,
 #' decides which objective function to be optimized, defaulting value is `posterior`.
 #' @param models A list with four components
 #' \describe{
-#' \item{subsample}{the method of subsampling, the defaulting value is `kmeans`.}
+#' \item{subsample}{the method of subsampling in c(`kmeans`, `random`, `minibatchkmeans`), the defaulting value is `kmeans`.}
 #' \item{kernel}{the type of kernel to compute cross similarity matrix W, the
 #' defaulting value is `lae`.}
 #' \item{gl}{the kind of graph Laplacian L, the defaulting value is `cluster-normalized`.}
@@ -641,7 +632,7 @@ fit_se_logit_gp_rcpp <- function(X, Y, X_new, s, r, K=-1, N=NULL, sigma=1e-3, a2
 #' @param a2s A numeric vector, the searching range for bandwidth.
 #' @param approach A character vector, taking value in c("posterior", "marginal"),
 #' decides which objective function to be optimized, defaulting value is `posterior`.
-#' @param subsample The method of subsampling, the defaulting value is `kmeans`.
+#' @param subsample The method of subsampling in c(`kmeans`, `random`, `minibatchkmeans`), the defaulting value is `kmeans`.
 #' @param output_cov Bool, whether to output covariance, defaulting value is `FALSE`.
 #' @param nstart Int, the number of random sets chosen in kmeans.
 #'

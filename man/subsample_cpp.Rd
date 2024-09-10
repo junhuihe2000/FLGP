@@ -11,9 +11,8 @@ subsample_cpp(X, s, method = "kmeans", nstart = 1L)
 
 \item{s}{An integer indicating the number of the subsampling.}
 
-\item{method}{How to subsample, characters in c("kmeans", "random"),
-including kmeans and random selection, the
-defaulting subsampling method is kmeans.}
+\item{method}{How to subsample, characters in c("kmeans", "random", "minibatchkmeans"),
+the defaulting subsampling method is \code{kmeans}.}
 
 \item{nstart}{An integer, the number of random sets chosen in kmeans,
 the defaulting value is \code{1}.}

@@ -47,7 +47,7 @@ decides which objective function to be optimized, defaulting value is \code{post
 
 \item{models}{A list with four components
 \describe{
-\item{subsample}{the method of subsampling, the defaulting value is \code{kmeans}.}
+\item{subsample}{the method of subsampling in c(\code{kmeans}, \code{random}, \code{minibatchkmeans}), the defaulting value is \code{kmeans}.}
 \item{kernel}{the type of kernel to compute cross similarity matrix W, the
 defaulting value is \code{lae}.}
 \item{gl}{the kind of graph Laplacian L, the defaulting value is \code{cluster-normalized}.}

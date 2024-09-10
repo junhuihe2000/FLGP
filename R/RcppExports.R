@@ -161,9 +161,8 @@ cross_similarity_lae_cpp <- function(X, U, r = 3L, gl = "rw") {
 #'
 #' @param X Original sample, a (n, d) matrix, each row indicates one point in R^d.
 #' @param s An integer indicating the number of the subsampling.
-#' @param method How to subsample, characters in c("kmeans", "random"),
-#' including kmeans and random selection, the
-#' defaulting subsampling method is kmeans.
+#' @param method How to subsample, characters in c("kmeans", "random", "minibatchkmeans"),
+#' the defaulting subsampling method is `kmeans`.
 #' @param nstart An integer, the number of random sets chosen in kmeans,
 #' the defaulting value is `1`.
 #'
@@ -190,10 +189,11 @@ subsample_cpp <- function(X, s, method = "kmeans", nstart = 1L) {
 #' @param output Bool, whether to output the distance matrix, defaulting value is `FALSE`.
 #' @param batch Int, the batch size, defaulting value is `100`.
 #'
-#' @returns If `output=FALSE`, `list(ind_knn)`, the indexes of KNN, a list with length n, each component of the list is a vector of length r,
-#'  indicating the indexes of KNN for the corresponding original point based on the chosen distance.
+#' @returns If `output=FALSE`, `list(ind_knn)`, the indexes of KNN, a matrix with dim (n,r), each row
+#'  indicates the indexes of KNN for the corresponding original point based on the chosen distance.
 #'  Otherwise `output=TRUE`, `list(ind_knn,distances_sp)`, a list with two components, the one is the indexes of KNN,
 #'  the other is the sparse distance matrix with dim(n,s).
+#'
 KNN_cpp <- function(X, U, r = 3L, distance = "Euclidean", output = FALSE, batch = 100L) {
     .Call(`_FLGP_KNN_cpp`, X, U, r, distance, output, batch)
 }

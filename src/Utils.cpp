@@ -46,6 +46,20 @@ Eigen::MatrixXd subsample_cpp(const Eigen::MatrixXd & X, int s, std::string meth
   } else if(method=="random") {
     Eigen::VectorXi rows = Rcpp::as<Eigen::VectorXi>(Rcpp::sample(n, s)).array()-1;
     U = mat_indexing(X, rows, Eigen::VectorXi::LinSpaced(d,0,d-1));
+  } else if(method=="minibatchkmeans") {
+    Rcpp::Environment ClusterR = Rcpp::Environment::namespace_env("ClusterR");
+    Rcpp::Function MiniBatchKmeans = ClusterR["MiniBatchKmeans"];
+    Rcpp::List mbkmeans = MiniBatchKmeans(Rcpp::Named("data")=Rcpp::wrap(X),
+                                          Rcpp::Named("clusters")=s,
+                                          Rcpp::Named("batch_size")=s*10,
+                                          Rcpp::Named("init_fraction")=s*20.0/n,
+                                          Rcpp::Named("num_init")=nstart);
+    U.resize(s, d+1);
+    U.leftCols(d) = Rcpp::as<Eigen::MatrixXd>(mbkmeans["centroids"]);
+    Eigen::VectorXi labels = KNN_cpp(X, U.leftCols(d), 1)["ind_knn"];
+    for(int i=0; i<s;i++) {
+      U(i,d) = (labels.array()==i).count();
+    }
   } else {
     Rcpp::stop("The subsample method is not supported!");
   }

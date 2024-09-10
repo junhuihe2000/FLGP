@@ -22,8 +22,8 @@ is Euclidean distance.}
 \item{batch}{Int, the batch size, defaulting value is \code{100}.}
 }
 \value{
-If \code{output=FALSE}, \code{list(ind_knn)}, the indexes of KNN, a list with length n, each component of the list is a vector of length r,
-indicating the indexes of KNN for the corresponding original point based on the chosen distance.
+If \code{output=FALSE}, \code{list(ind_knn)}, the indexes of KNN, a matrix with dim (n,r), each row
+indicates the indexes of KNN for the corresponding original point based on the chosen distance.
 Otherwise \code{output=TRUE}, \code{list(ind_knn,distances_sp)}, a list with two components, the one is the indexes of KNN,
 the other is the sparse distance matrix with dim(n,s).
 }

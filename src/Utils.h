@@ -18,9 +18,8 @@ Eigen::VectorXd pi_to_Y(const Eigen::VectorXd & pi);
 //'
 //' @param X Original sample, a (n, d) matrix, each row indicates one point in R^d.
 //' @param s An integer indicating the number of the subsampling.
-//' @param method How to subsample, characters in c("kmeans", "random"),
-//' including kmeans and random selection, the
-//' defaulting subsampling method is kmeans.
+//' @param method How to subsample, characters in c("kmeans", "random", "minibatchkmeans"),
+//' the defaulting subsampling method is `kmeans`.
 //' @param nstart An integer, the number of random sets chosen in kmeans,
 //' the defaulting value is `1`.
 //'
@@ -53,10 +52,11 @@ void graphLaplacian_cpp(Eigen::SparseMatrix<double,Eigen::RowMajor>& Z,
 //' @param output Bool, whether to output the distance matrix, defaulting value is `FALSE`.
 //' @param batch Int, the batch size, defaulting value is `100`.
 //'
-//' @returns If `output=FALSE`, `list(ind_knn)`, the indexes of KNN, a list with length n, each component of the list is a vector of length r,
-//'  indicating the indexes of KNN for the corresponding original point based on the chosen distance.
+//' @returns If `output=FALSE`, `list(ind_knn)`, the indexes of KNN, a matrix with dim (n,r), each row
+//'  indicates the indexes of KNN for the corresponding original point based on the chosen distance.
 //'  Otherwise `output=TRUE`, `list(ind_knn,distances_sp)`, a list with two components, the one is the indexes of KNN,
 //'  the other is the sparse distance matrix with dim(n,s).
+//'
 // [[Rcpp::export(KNN_cpp)]]
 Rcpp::List KNN_cpp(const Eigen::MatrixXd & X, const Eigen::MatrixXd & U, int r = 3,
                   std::string distance = "Euclidean", bool output = false, int batch=100);
