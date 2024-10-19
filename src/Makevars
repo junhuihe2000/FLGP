@@ -19,8 +19,8 @@ strippedLib: $(SHLIB)
 .phony: strippedLib
 
 ## delete before submitting to CRAN
-PKG_CXXFLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
-PKG_CXX11FLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
-PKG_CXX14FLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
+## PKG_CXXFLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
+## PKG_CXX11FLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
+## PKG_CXX14FLAGS =-Wno-ignored-attributes -Wa,-mbig-obj -O3
 
 

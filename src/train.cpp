@@ -312,7 +312,7 @@ ReturnValueReg train_rbf_regression_gp_cpp(void *data, std::string approach,
   if(res<0) {
     Rcpp::Rcout << "nlopt failed!" << "\n";
   }
-  Rcpp::Rcout << "The status is " << res << "\n";
+  // Rcpp::Rcout << "The status is " << res << "\n";
 
 
 
@@ -654,7 +654,7 @@ ReturnValueReg train_regression_gp_cpp(void *data, std::string approach,
   if(res<0) {
     Rcpp::Rcout << "nlopt failed!" << "\n";
   }
-  Rcpp::Rcout << "The status is " << res << "\n";
+  // Rcpp::Rcout << "The status is " << res << "\n";
 
 
 
